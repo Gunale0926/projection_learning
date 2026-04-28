@@ -1,0 +1,175 @@
+\section{Conservative Memory Proofs}
+\label{app:memory-proofs}
+
+\begin{theorem}[Exact associative binding, formal version of Theorem~\ref{thm:exact-binding:informal}]
+\label{thm:exact-binding:formal}
+Let $K\in\R^{r\times T}$ and $V\in\R^{m\times T}$. The set $\calC=\{W\in\R^{m\times r}:WK=V\}$ is nonempty if and only if $\ker K\subseteq\ker V$. If $\calC$ is nonempty, then
+\begin{align*}
+\argmin_{W\in\calC}\frac{1}{2}\norm{W-W_0}_F^2=W_0+(V-W_0K)K^+.
+\end{align*}
+\end{theorem}
+\begin{proof}
+If $WK=V$ and $a\in\ker K$, then
+\begin{align*}
+Va=WKa=0.
+\end{align*}
+Thus $\ker K\subseteq\ker V$.
+
+Assume $\ker K\subseteq\ker V$. Since $K^+K$ is the orthogonal projector onto $(\ker K)^\perp$, the condition implies
+\begin{align*}
+V=VK^+K.
+\end{align*}
+Thus $W=VK^+$ satisfies $WK=V$.
+
+Let $R=V-W_0K$ and $W=W_0+\Delta$. The projection problem is
+\begin{align*}
+\min_\Delta\frac{1}{2}\norm{\Delta}_F^2\quad \text{subject to}\quad \Delta K=R.
+\end{align*}
+The minimum-norm solution is
+\begin{align*}
+\Delta^\star=RK^+.
+\end{align*}
+Therefore
+\begin{align*}
+W^\star=W_0+(V-W_0K)K^+.
+\end{align*}
+\end{proof}
+
+\begin{theorem}[Innovation decomposition, formal version of Theorem~\ref{thm:innovation-decomposition:informal}]
+\label{thm:innovation-decomposition:formal}
+Assume $WK=V$. Let $\Pi=KK^+$, $z=(I-\Pi)k$, and $a=K^+k$. Then
+\begin{align*}
+Wk=Va+Wz.
+\end{align*}
+If $z=0$, $Wk$ is fixed over all old-feasible $W$. If $z\ne0$, the constraint $Wk=v$ is equivalent over old-feasible $W$ to $Wz=v-Va$.
+\end{theorem}
+\begin{proof}
+The decomposition is
+\begin{align*}
+k=KK^+k+(I-KK^+)k=Ka+z.
+\end{align*}
+Multiplying by $W$ gives
+\begin{align*}
+Wk=WKa+Wz=Va+Wz.
+\end{align*}
+If $z=0$, then $Wk=Va$ for every $W$ satisfying $WK=V$. If $z\ne0$, then
+\begin{align*}
+Wk=v\quad \Longleftrightarrow\quad Va+Wz=v\quad \Longleftrightarrow\quad Wz=v-Va.
+\end{align*}
+\end{proof}
+
+\begin{theorem}[Conflict impossibility, formal version of Theorem~\ref{thm:conflict-impossibility:informal}]
+\label{thm:conflict-impossibility:formal}
+Assume $W_tK=V$ and $z=(I-KK^+)k=0$. If $W_t+\Delta$ preserves old evidence, then $(W_t+\Delta)k=W_tk$. Hence $Wk=v$ is compatible with old evidence if and only if $v=W_tk$.
+\end{theorem}
+\begin{proof}
+Preserving old evidence means
+\begin{align*}
+(W_t+\Delta)K=V=W_tK.
+\end{align*}
+Thus
+\begin{align*}
+\Delta K=0.
+\end{align*}
+If $z=0$, then $k\in\Span(K)$, hence
+\begin{align*}
+\Delta k=0.
+\end{align*}
+Therefore
+\begin{align*}
+(W_t+\Delta)k=W_tk.
+\end{align*}
+\end{proof}
+
+\begin{theorem}[Hard Conservative Projection Memory]
+\label{thm:hard-cpm:formal}
+Assume $W_tK=V$, let $\Pi=KK^+$, $z=(I-\Pi)k\ne0$, and $e=v-W_tk$. Then
+\begin{align*}
+W_{t+1}=W_t+\frac{ez^\top}{\norm{z}^2}
+\end{align*}
+preserves $WK=V$, satisfies $Wk=v$, and minimizes $\norm{W-W_t}_F^2/2$ among all memories satisfying both constraints.
+\end{theorem}
+\begin{proof}
+Let $\Delta^\star=ez^\top/\norm{z}^2$. Since $z\perp\Span(K)$,
+\begin{align*}
+\Delta^\star K=0.
+\end{align*}
+Thus
+\begin{align*}
+W_{t+1}K=W_tK=V.
+\end{align*}
+Also $z^\top k=\norm{z}^2$, so
+\begin{align*}
+\Delta^\star k=e.
+\end{align*}
+Hence
+\begin{align*}
+W_{t+1}k=W_tk+e=v.
+\end{align*}
+For minimality, any feasible update $\Delta$ satisfies
+\begin{align*}
+\Delta K=0,\qquad \Delta k=e.
+\end{align*}
+Since $\Delta K=0$,
+\begin{align*}
+\Delta k=\Delta(I-\Pi)k=\Delta z.
+\end{align*}
+Thus the problem reduces to
+\begin{align*}
+\min_\Delta\frac{1}{2}\norm{\Delta}_F^2\quad \text{subject to}\quad \Delta z=e.
+\end{align*}
+The minimum-norm solution is $\Delta^\star=ez^\top/\norm{z}^2$.
+\end{proof}
+
+\begin{theorem}[Soft Conservative Projection Memory, formal version of Theorem~\ref{thm:soft-cpm:informal}]
+\label{thm:soft-cpm:formal}
+Assume $W_tK=V$, let $\Pi=KK^+$, $z=(I-\Pi)k\ne0$, and $e=v-W_tk$. The unique solution of
+\begin{align*}
+\argmin_{W:WK=V}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\frac{\eta}{2}\norm{Wk-v}^2\right\}
+\end{align*}
+is
+\begin{align*}
+W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{z}^2}ez^\top.
+\end{align*}
+Moreover,
+\begin{align*}
+W_{t+1}K=V,\qquad v-W_{t+1}k=\frac{1}{1+\eta\norm{z}^2}e.
+\end{align*}
+\end{theorem}
+\begin{proof}
+Write $W=W_t+\Delta$. The constraint $WK=V$ is equivalent to
+\begin{align*}
+\Delta K=0.
+\end{align*}
+Since $\Delta K=0$,
+\begin{align*}
+\Delta k=\Delta(I-\Pi)k=\Delta z.
+\end{align*}
+The objective becomes
+\begin{align*}
+\min_{\Delta:\Delta K=0}\frac{1}{2}\norm{\Delta}_F^2+\frac{\eta}{2}\norm{\Delta z-e}^2.
+\end{align*}
+The stationarity equation in the feasible subspace is
+\begin{align*}
+\Delta+\eta(\Delta z-e)z^\top=0.
+\end{align*}
+Let $\Delta=\alpha ez^\top$. Substitution gives
+\begin{align*}
+\alpha ez^\top+\eta(\alpha e\norm{z}^2-e)z^\top=0.
+\end{align*}
+Thus
+\begin{align*}
+\alpha(1+\eta\norm{z}^2)=\eta.
+\end{align*}
+Therefore
+\begin{align*}
+\Delta=\frac{\eta}{1+\eta\norm{z}^2}ez^\top.
+\end{align*}
+Since $z^\top K=0$, $W_{t+1}K=V$. The residual is
+\begin{align*}
+v-W_{t+1}k&=e-\Delta k\\
+&=e-\Delta z\\
+&=e-\frac{\eta\norm{z}^2}{1+\eta\norm{z}^2}e\\
+&=\frac{1}{1+\eta\norm{z}^2}e.
+\end{align*}
+\end{proof}

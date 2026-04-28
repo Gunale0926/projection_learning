@@ -1,0 +1,101 @@
+\newcommand{\etalchar}[1]{$^{#1}$}
+\begin{thebibliography}{BHM{\etalchar{+}}16}
+
+\bibitem[AW01]{azoury2001relative}
+Katy~S. Azoury and Manfred~K. Warmuth.
+\newblock Relative loss bounds for on-line density estimation with the
+  exponential family of distributions.
+\newblock {\em Machine Learning}, 43:211--246, 2001.
+
+\bibitem[BHM{\etalchar{+}}16]{ba2016using}
+Jimmy Ba, Geoffrey~E. Hinton, Volodymyr Mnih, Joel~Z. Leibo, and Catalin
+  Ionescu.
+\newblock Using fast weights to attend to the recent past.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~29, 2016.
+
+\bibitem[Bre67]{bregman1967relaxation}
+Lev~M. Bregman.
+\newblock The relaxation method of finding the common point of convex sets and
+  its application to the solution of problems in convex programming.
+\newblock {\em USSR Computational Mathematics and Mathematical Physics},
+  7(3):200--217, 1967.
+
+\bibitem[CDK{\etalchar{+}}06]{crammer2006online}
+Koby Crammer, Ofer Dekel, Joseph Keshet, Shai Shalev-Shwartz, and Yoram Singer.
+\newblock Online passive-aggressive algorithms.
+\newblock {\em Journal of Machine Learning Research}, 7:551--585, 2006.
+
+\bibitem[Haz16]{hazan2016introduction}
+Elad Hazan.
+\newblock {\em Introduction to Online Convex Optimization}.
+\newblock Foundations and Trends in Optimization, 2016.
+
+\bibitem[JCO{\etalchar{+}}17]{jaderberg2017decoupled}
+Max Jaderberg, Wojciech~Marian Czarnecki, Simon Osindero, Oriol Vinyals, Alex
+  Graves, David Silver, and Koray Kavukcuoglu.
+\newblock Decoupled neural interfaces using synthetic gradients.
+\newblock In {\em Proceedings of the 34th International Conference on Machine
+  Learning}, volume~70 of {\em Proceedings of Machine Learning Research}, pages
+  1627--1635, 2017.
+
+\bibitem[KVPF20]{katharopoulos2020transformers}
+Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and Fran{\c{c}}ois
+  Fleuret.
+\newblock Transformers are {RNNs}: Fast autoregressive transformers with linear
+  attention.
+\newblock In {\em Proceedings of the 37th International Conference on Machine
+  Learning}, volume 119 of {\em Proceedings of Machine Learning Research},
+  pages 5156--5165, 2020.
+
+\bibitem[RHW86]{rumelhart1986learning}
+David~E. Rumelhart, Geoffrey~E. Hinton, and Ronald~J. Williams.
+\newblock Learning representations by back-propagating errors.
+\newblock {\em Nature}, 323(6088):533--536, 1986.
+
+\bibitem[SIS21]{schlag2021linear}
+Imanol Schlag, Kazuki Irie, and J{\"u}rgen Schmidhuber.
+\newblock Linear transformers are secretly fast weight programmers.
+\newblock In {\em Proceedings of the 38th International Conference on Machine
+  Learning}, volume 139 of {\em Proceedings of Machine Learning Research},
+  pages 9355--9366, 2021.
+
+\bibitem[SLD{\etalchar{+}}25]{sun2025learning}
+Yu~Sun, Xinhao Li, Karan Dalal, Jiarui Xu, Arjun Vikram, Genghan Zhang, Yann
+  Dubois, Xinlei Chen, Xiaolong Wang, Sanmi Koyejo, Tatsunori Hashimoto, and
+  Carlos Guestrin.
+\newblock Learning to (learn at test time): {RNNs} with expressive hidden
+  states.
+\newblock In {\em Proceedings of the 42nd International Conference on Machine
+  Learning}, volume 267 of {\em Proceedings of Machine Learning Research},
+  pages 57503--57522, 2025.
+
+\bibitem[SS12]{shalev2012online}
+Shai Shalev-Shwartz.
+\newblock Online learning and online convex optimization.
+\newblock {\em Foundations and Trends in Machine Learning}, 4(2):107--194,
+  2012.
+
+\bibitem[SWL{\etalchar{+}}20]{sun2020test}
+Yu~Sun, Xiaolong Wang, Zhuang Liu, John Miller, Alexei~A. Efros, and Moritz
+  Hardt.
+\newblock Test-time training with self-supervision for generalization under
+  distribution shifts.
+\newblock In {\em Proceedings of the 37th International Conference on Machine
+  Learning}, volume 119 of {\em Proceedings of Machine Learning Research},
+  pages 9229--9248, 2020.
+
+\bibitem[Vov97]{vovk1997competitive}
+Volodya Vovk.
+\newblock Competitive on-line linear regression.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~10, 1997.
+
+\bibitem[Zin03]{zinkevich2003online}
+Martin Zinkevich.
+\newblock Online convex programming and generalized infinitesimal gradient
+  ascent.
+\newblock In {\em Proceedings of the 20th International Conference on Machine
+  Learning}, pages 928--936, 2003.
+
+\end{thebibliography}

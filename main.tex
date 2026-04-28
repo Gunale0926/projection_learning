@@ -1,0 +1,196 @@
+\input{_0_vars}
+
+\ifdefined\isarxiv
+\documentclass[11pt]{article}
+\usepackage[numbers]{natbib}
+\else
+\documentclass{article}
+\usepackage{neurips_2026}
+\fi
+
+\ifdefined\isarxiv
+
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{subfig}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{wrapfig,epsfig}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{epstopdf}
+
+
+\usepackage{bbm}
+\usepackage{dsfont}
+
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{multirow}
+\else 
+
+%%% The below packages are from NeurIPS 2025 template
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+\fi
+
+\ifdefined\isarxiv
+
+\else
+%%% The below packages are our own packages
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{subfig}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{wrapfig,epsfig}
+\usepackage{epstopdf}
+\usepackage{bbm}
+\usepackage{dsfont}
+
+\usepackage{multicol}
+\usepackage{multirow}
+\fi
+ 
+\allowdisplaybreaks
+
+\ifdefined\isarxiv
+
+\let\C\relax
+\usepackage{tikz}
+\usepackage{hyperref}  
+\hypersetup{colorlinks=true,citecolor=blue,linkcolor=blue} 
+\usetikzlibrary{arrows}
+\usepackage[margin=1in]{geometry}
+
+\else
+%%%Zhao: Usually the conference has default dark blue for cite/ref color. But in some year lik 2022 or 2023, we need to define color on own, the conference template no color. This year NeurIPS 2025, if you want the citation/ref to be color, you need the following lines, otherwise you can comment it out.
+\definecolor{mydarkblue}{rgb}{0,0.08,0.45}
+\hypersetup{colorlinks=true, citecolor=mydarkblue,linkcolor=mydarkblue}
+\fi
+ 
+\graphicspath{{./figs/}}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{notation}[theorem]{Notation}
+%\newtheorem{proof}[theorem]{Proof}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{fact}[theorem]{Fact}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{open}[theorem]{Open Problem}
+\newtheorem{property}[theorem]{Property}
+\newtheorem{hypothesis}[theorem]{Hypothesis}
+
+\input{_1_maths}
+
+\begin{document}
+
+\ifdefined\isarxiv
+%%% The below part is the title and author of ArXiv version.
+
+\date{}
+\title{\paperTitle}
+\author{%
+Anonymous
+}
+
+\else
+%%% The below part is the title and author of NeurIPS version.
+
+\title{\paperTitle}
+
+\author{%
+}
+
+\maketitle
+
+\fi
+
+\ifdefined\isarxiv
+\hypersetup{pageanchor=false}
+\pagenumbering{roman}
+\begin{titlepage}
+\maketitle
+
+\begin{abstract}
+\input{00_abstract}
+\end{abstract}
+\thispagestyle{empty}
+\end{titlepage}
+
+{\hypersetup{linkcolor=black}
+\tableofcontents
+}
+\newpage
+\hypersetup{pageanchor=true}
+\pagenumbering{arabic}
+
+\else
+
+\begin{abstract}
+\input{00_abstract}
+\end{abstract}
+
+\fi
+
+%%% The part below is the main body and reference
+
+\input{_2_body}
+
+\clearpage
+
+\ifdefined\isarxiv
+\bibliographystyle{alpha}
+\bibliography{ref}
+\else
+\bibliographystyle{alpha}
+\bibliography{ref}
+\fi
+
+%%% The part below is the appendix
+
+\newpage
+\onecolumn
+\appendix
+
+\begin{center}
+    \textbf{\LARGE Appendix }
+\end{center}
+
+\input{_3_app}
+
+\ifdefined\isarxiv
+\else
+\newpage
+\input{checklist}
+\fi
+
+\end{document}

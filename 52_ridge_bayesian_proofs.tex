@@ -1,0 +1,78 @@
+\section{Ridge and Bayesian Projection Memory Proofs}
+\label{app:ridge-proofs}
+
+\begin{theorem}[Ridge solution]
+\label{thm:ridge-solution:formal}
+Let
+\begin{align*}
+J_t(W)=\frac{\lambda}{2}\norm{W-W_0}_F^2+\frac{1}{2}\sum_{\tau=1}^t\rho_\tau\norm{Wk_\tau-v_\tau}^2.
+\end{align*}
+Define
+\begin{align*}
+A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top,\qquad B_t=\lambda W_0+\sum_{\tau=1}^t\rho_\tau v_\tau k_\tau^\top.
+\end{align*}
+Then the unique minimizer is $W_{t+1}=B_tA_t^{-1}$.
+\end{theorem}
+\begin{proof}
+Differentiate:
+\begin{align*}
+\nabla J_t(W)=\lambda(W-W_0)+\sum_{\tau=1}^t\rho_\tau(Wk_\tau-v_\tau)k_\tau^\top.
+\end{align*}
+At optimum,
+\begin{align*}
+0=\lambda(W-W_0)+\sum_{\tau=1}^t\rho_\tau(Wk_\tau-v_\tau)k_\tau^\top.
+\end{align*}
+Thus
+\begin{align*}
+W\left(\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top\right)=\lambda W_0+\sum_{\tau=1}^t\rho_\tau v_\tau k_\tau^\top.
+\end{align*}
+Since $\lambda>0$, $A_t$ is invertible. Hence
+\begin{align*}
+W_{t+1}=B_tA_t^{-1}.
+\end{align*}
+\end{proof}
+
+\begin{theorem}[Recursive ridge update]
+\label{thm:ridge-recursive:formal}
+Let $P_t=A_{t-1}^{-1}$ and $W_t=B_{t-1}P_t$. Define
+\begin{align*}
+g_t=\frac{\rho_tP_tk_t}{1+\rho_t k_t^\top P_tk_t}.
+\end{align*}
+Then
+\begin{align*}
+W_{t+1}=W_t+(v_t-W_tk_t)g_t^\top,\qquad P_{t+1}=P_t-\frac{\rho_tP_tk_tk_t^\top P_t}{1+\rho_t k_t^\top P_tk_t}.
+\end{align*}
+\end{theorem}
+\begin{proof}
+The Sherman-Morrison identity gives
+\begin{align*}
+P_{t+1}=A_t^{-1}=P_t-\frac{\rho_tP_tk_tk_t^\top P_t}{1+\rho_t k_t^\top P_tk_t}.
+\end{align*}
+Let $a_t=k_t^\top P_tk_t$. Then
+\begin{align*}
+k_t^\top P_{t+1}=k_t^\top P_t-\frac{\rho_ta_t k_t^\top P_t}{1+\rho_ta_t}=\frac{k_t^\top P_t}{1+\rho_ta_t}.
+\end{align*}
+Using $B_t=B_{t-1}+\rho_tv_tk_t^\top$,
+\begin{align*}
+W_{t+1}&=B_tP_{t+1}\\
+&=B_{t-1}P_{t+1}+\rho_tv_tk_t^\top P_{t+1}\\
+&=W_t-\frac{\rho_tW_tk_tk_t^\top P_t}{1+\rho_ta_t}+\frac{\rho_tv_tk_t^\top P_t}{1+\rho_ta_t}\\
+&=W_t+(v_t-W_tk_t)\frac{\rho_tk_t^\top P_t}{1+\rho_ta_t}\\
+&=W_t+(v_t-W_tk_t)g_t^\top.
+\end{align*}
+\end{proof}
+
+\begin{theorem}[Bayesian ridge projection memory, formal version of Theorem~\ref{thm:bayesian-ridge:informal}]
+\label{thm:bayesian-ridge:formal}
+Assume each row $w_j$ of $W$ has prior $w_j\sim\mathcal N(w_{0,j},\lambda^{-1}I)$ and observations satisfy $v_t=Wk_t+\varepsilon_t$ with $\varepsilon_t\sim\mathcal N(0,\rho_t^{-1}I_m)$ independently over time. Then the posterior mean and MAP estimate are $B_tA_t^{-1}$.
+\end{theorem}
+\begin{proof}
+The negative log posterior, up to constants independent of $W$, is
+\begin{align*}
+\frac{\lambda}{2}\norm{W-W_0}_F^2+\frac{1}{2}\sum_{\tau=1}^t\rho_\tau\norm{Wk_\tau-v_\tau}^2.
+\end{align*}
+This is $J_t(W)$. The posterior is Gaussian because the prior is Gaussian and the observation model is linear Gaussian. Hence the posterior mean equals the MAP. By Theorem~\ref{thm:ridge-solution:formal}, this value is
+\begin{align*}
+B_tA_t^{-1}.
+\end{align*}
+\end{proof}

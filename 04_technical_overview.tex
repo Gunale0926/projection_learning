@@ -1,0 +1,99 @@
+\section{Technical Overview}
+\label{sec:technical-overview}
+
+This section sketches the proof ideas. Full formal statements and proofs appear in Appendices~\ref{app:projection-proofs}, \ref{app:memory-proofs}, and \ref{app:ridge-proofs}.
+
+\begin{theorem}[Projection characterization, proof sketch for Theorem~\ref{thm:projection-characterization:formal}]
+\label{thm:projection-characterization:sketch}
+The informal statement is Theorem~\ref{thm:projection-characterization:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+The optimality condition for $p=\argmin_{s\in\calC}D_\psi(s,s_0)$ is
+\begin{align*}
+\ip{\nabla\psi(p)-\nabla\psi(s_0)}{u-p}\ge0\qquad \forall u\in\calC.
+\end{align*}
+The Bregman three-point identity gives
+\begin{align*}
+D_\psi(u,s_0)-D_\psi(u,p)-D_\psi(p,s_0)=\ip{\nabla\psi(s_0)-\nabla\psi(p)}{p-u}.
+\end{align*}
+The two displays are equivalent. This proves both directions.
+\end{proof}
+
+\begin{theorem}[Exact binding, proof sketch for Theorem~\ref{thm:exact-binding:formal}]
+\label{thm:exact-binding:sketch}
+The informal statement is Theorem~\ref{thm:exact-binding:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+If $WK=V$ and $Ka=0$, then
+\begin{align*}
+Va=WKa=0.
+\end{align*}
+Thus $\ker K\subseteq\ker V$. Conversely this nullspace condition implies
+\begin{align*}
+V=VK^+K,
+\end{align*}
+so $W=VK^+$ is feasible. For projection, write $W=W_0+\Delta$ and $R=V-W_0K$. The problem becomes
+\begin{align*}
+\min_\Delta\frac{1}{2}\norm{\Delta}_F^2\quad \text{subject to}\quad \Delta K=R.
+\end{align*}
+The minimum-norm feasible solution is $\Delta=RK^+$.
+\end{proof}
+
+\begin{theorem}[Innovation and conflict, proof sketch for Theorems~\ref{thm:innovation-decomposition:formal} and \ref{thm:conflict-impossibility:formal}]
+\label{thm:innovation-conflict:sketch}
+The informal statements are Theorems~\ref{thm:innovation-decomposition:informal} and \ref{thm:conflict-impossibility:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Using \eqref{eq:innovation},
+\begin{align*}
+k=KK^+k+(I-KK^+)k=Ka+z.
+\end{align*}
+If $WK=V$, then
+\begin{align*}
+Wk=WKa+Wz=Va+Wz.
+\end{align*}
+If $z=0$, then $Wk=Va$ for every old-feasible $W$. If an update $\Delta$ preserves old evidence, then $\Delta K=0$ and hence $\Delta k=0$ whenever $k\in\Span(K)$. Thus contradiction cannot be repaired without breaking old evidence.
+\end{proof}
+
+\begin{theorem}[Soft CPM, proof sketch for Theorem~\ref{thm:soft-cpm:formal}]
+\label{thm:soft-cpm:sketch}
+The informal statement is Theorem~\ref{thm:soft-cpm:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Set $W=W_t+\Delta$ and $e=v-W_tk$. Since $W_tK=V$, preserving old evidence is $\Delta K=0$. Because $\Delta K=0$,
+\begin{align*}
+\Delta k=\Delta(I-\Pi)k=\Delta z.
+\end{align*}
+The objective becomes
+\begin{align*}
+\min_{\Delta:\Delta K=0}\frac{1}{2}\norm{\Delta}_F^2+\frac{\eta}{2}\norm{\Delta z-e}^2.
+\end{align*}
+The stationarity equation inside this subspace is
+\begin{align*}
+\Delta+\eta(\Delta z-e)z^\top=0.
+\end{align*}
+Solving with $\Delta=\alpha ez^\top$ yields
+\begin{align*}
+\alpha=\frac{\eta}{1+\eta\norm{z}^2}.
+\end{align*}
+The residual satisfies
+\begin{align*}
+v-W_{t+1}k=e-\Delta z=\frac{1}{1+\eta\norm{z}^2}e.
+\end{align*}
+\end{proof}
+
+\begin{theorem}[Ridge and Bayesian memory, proof sketch for Theorem~\ref{thm:bayesian-ridge:formal}]
+\label{thm:bayesian-ridge:sketch}
+The informal statement is Theorem~\ref{thm:bayesian-ridge:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Differentiating $J_t$ gives
+\begin{align*}
+0=\lambda(W-W_0)+\sum_{\tau=1}^t\rho_\tau(Wk_\tau-v_\tau)k_\tau^\top.
+\end{align*}
+Rearranging,
+\begin{align*}
+W\left(\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top\right)=\lambda W_0+\sum_{\tau=1}^t\rho_\tau v_\tau k_\tau^\top.
+\end{align*}
+Thus $W=B_tA_t^{-1}$. Under the Gaussian prior and observation model, the negative log posterior equals $J_t(W)$ up to constants, so the posterior mean and MAP coincide with this minimizer.
+\end{proof}

@@ -1,0 +1,71 @@
+\section{Main Results}
+\label{sec:main-results}
+
+\subsection{Projection as the canonical repair update}
+
+\begin{theorem}[Projection characterization, informal version of Theorem~\ref{thm:projection-characterization:formal}]
+\label{thm:projection-characterization:informal}
+Let $\calC\subseteq S$ be closed and convex. A point $p\in\calC$ is the Bregman projection of $s_0$ onto $\calC$ if and only if, for every $u\in\calC$,
+\begin{align*}
+D_\psi(u,p)+D_\psi(p,s_0)\le D_\psi(u,s_0).
+\end{align*}
+\end{theorem}
+
+This says that minimal repair and global stability with respect to all feasible ideal states are the same condition.
+
+\subsection{Exact binding and capacity}
+
+\begin{theorem}[Exact associative binding, informal version of Theorem~\ref{thm:exact-binding:formal}]
+\label{thm:exact-binding:informal}
+For key-value matrices $K\in\R^{r\times T}$ and $V\in\R^{m\times T}$, the constraint set $\{W:WK=V\}$ is nonempty if and only if $\ker K\subseteq\ker V$. When it is nonempty, the Euclidean projection of $W_0$ onto this set is
+\begin{align*}
+W^\star=W_0+(V-W_0K)K^+.
+\end{align*}
+In particular, if $K$ has full column rank, then arbitrary values can be exactly bound.
+\end{theorem}
+
+Thus an $r$-dimensional key space exactly stores arbitrary values for at most $r$ independent keys. Beyond that rank, values must obey the same linear relations as keys.
+
+\subsection{Innovation, conflict, and conservative writing}
+
+\begin{theorem}[Innovation decomposition, informal version of Theorem~\ref{thm:innovation-decomposition:formal}]
+\label{thm:innovation-decomposition:informal}
+Assume old evidence is $WK=V$ and decompose a new key as in \eqref{eq:innovation}. Every old-feasible memory satisfies
+\begin{align*}
+Wk=Va+Wz.
+\end{align*}
+If $z=0$, the value at $k$ is already fixed by old evidence. If $z\ne0$, the new evidence constrains only the innovation direction through $Wz=v-Va$.
+\end{theorem}
+
+\begin{theorem}[Conflict impossibility, informal version of Theorem~\ref{thm:conflict-impossibility:formal}]
+\label{thm:conflict-impossibility:informal}
+If $z=0$, then no update preserving $WK=V$ can change $Wk$. Hence evidence $Wk=v$ is compatible with old evidence if and only if $v=W_tk$.
+\end{theorem}
+
+\begin{theorem}[Soft Conservative Projection Memory, informal version of Theorem~\ref{thm:soft-cpm:formal}]
+\label{thm:soft-cpm:informal}
+Assume $W_tK=V$ and $z\ne0$. The constrained soft repair problem
+\begin{align*}
+W_{t+1}=\argmin_{W:WK=V}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\frac{\eta}{2}\norm{Wk-v}^2\right\}
+\end{align*}
+has the closed form
+\begin{align*}
+W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{z}^2}(v-W_tk)z^\top.
+\end{align*}
+It preserves old constraints and contracts the new residual by the factor $(1+\eta\norm{z}^2)^{-1}$.
+\end{theorem}
+
+\subsection{Ridge and Bayesian memory}
+
+\begin{theorem}[Ridge and Bayesian projection memory, informal version of Theorem~\ref{thm:bayesian-ridge:formal}]
+\label{thm:bayesian-ridge:informal}
+The ridge objective
+\begin{align*}
+J_t(W)=\frac{\lambda}{2}\norm{W-W_0}_F^2+\frac{1}{2}\sum_{\tau=1}^t\rho_\tau\norm{Wk_\tau-v_\tau}^2
+\end{align*}
+has minimizer $W_{t+1}=B_tA_t^{-1}$, where
+\begin{align*}
+A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top,\qquad B_t=\lambda W_0+\sum_{\tau=1}^t\rho_\tau v_\tau k_\tau^\top.
+\end{align*}
+The same matrix is the posterior mean and MAP estimate under a Gaussian linear observation model.
+\end{theorem}

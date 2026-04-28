@@ -1,0 +1,21 @@
+\contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
+\contentsline {paragraph}{Organization.}{1}{section*.2}%
+\contentsline {section}{\numberline {2}Preliminaries}{2}{section.2}%
+\contentsline {section}{\numberline {3}Main Results}{2}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Projection as the canonical repair update}{2}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Exact binding and capacity}{2}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Innovation, conflict, and conservative writing}{3}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Ridge and Bayesian memory}{3}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Technical Overview}{3}{section.4}%
+\contentsline {section}{\numberline {5}Conclusion}{5}{section.5}%
+\contentsline {section}{\numberline {A}Appendix Roadmap}{8}{appendix.A}%
+\contentsline {section}{\numberline {B}Limitations}{8}{appendix.B}%
+\contentsline {section}{\numberline {C}Related Work}{8}{appendix.C}%
+\contentsline {paragraph}{Backpropagation and runtime updates.}{8}{section*.4}%
+\contentsline {paragraph}{Bregman projection and online optimization.}{9}{section*.5}%
+\contentsline {paragraph}{Passive-aggressive learning and least squares.}{9}{section*.6}%
+\contentsline {paragraph}{Test-time training and expressive hidden states.}{9}{section*.7}%
+\contentsline {paragraph}{Fast weights and linear attention.}{9}{section*.8}%
+\contentsline {section}{\numberline {D}Projection Learning Proofs}{9}{appendix.D}%
+\contentsline {section}{\numberline {E}Conservative Memory Proofs}{12}{appendix.E}%
+\contentsline {section}{\numberline {F}Ridge and Bayesian Projection Memory Proofs}{15}{appendix.F}%

@@ -1,0 +1,12 @@
+\section{Related Work}
+\label{app:related}
+
+\paragraph{Backpropagation and runtime updates.} Backpropagation supplies differentiable credit assignment for static computation graphs \citep{rumelhart1986learning}. Synthetic gradients decouple modules by predicting downstream gradient information \citep{jaderberg2017decoupled}. Projection Learning decouples runtime updates differently: the update is not a predicted derivative, but the solution of a local state-repair problem.
+
+\paragraph{Bregman projection and online optimization.} Bregman projections originate in convex feasibility and optimization \citep{bregman1967relaxation}. Online convex optimization and mirror descent use related geometries to bound regret and movement \citep{zinkevich2003online,shalev2012online,hazan2016introduction}. The present paper uses this geometry as a runtime-learning semantics: evidence defines consistency, and projection defines the least disruptive repair.
+
+\paragraph{Passive-aggressive learning and least squares.} Passive-aggressive algorithms solve minimal-change constrained updates for supervised online learning \citep{crammer2006online}. Recursive least squares and online ridge regression yield classical closed-form updates and loss bounds \citep{vovk1997competitive,azoury2001relative}. Conservative Projection Memory adapts these ideas to internal neural state and adds the innovation/conflict decomposition induced by old evidence.
+
+\paragraph{Test-time training and expressive hidden states.} Test-time training updates model parameters on self-supervised objectives at inference time \citep{sun2020test}. TTT layers make hidden states themselves trainable models updated on test sequences \citep{sun2025learning}. Conservative Projection Memory targets the same need for runtime adaptation, but replaces test-time backpropagation with closed-form projection updates.
+
+\paragraph{Fast weights and linear attention.} Fast weights store temporary information in rapidly changing associative matrices \citep{ba2016using}. Linear attention can be interpreted through recurrent fast-weight updates \citep{katharopoulos2020transformers,schlag2021linear}. Conservative Projection Memory differs by writing residuals rather than raw values and by writing in the key innovation subspace rather than along the raw key.
