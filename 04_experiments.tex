@@ -1,7 +1,7 @@
 \section{Computational Checks}
 \label{sec:experiments}
 
-The theory above is structural, but the model is meant to be executable. We include small reproducible computational checks. These are not meant to settle broad benchmark performance; they test whether refine-or-repair behavior appears in controlled settings. Stronger empirical claims would require comparisons to kNN and nearest-centroid methods, online trees, LVQ, RLS or online ridge, passive-aggressive updates, replay-buffer SGD, TTT-style adaptation, and stronger frozen-encoder baselines. The accompanying script is in the experiment directory and uses PyTorch for the backpropagation baselines and NumPy for the distinction-memory methods.
+The theory above is structural, but the model is meant to be executable. We include small reproducible computational checks. These are not meant to settle broad benchmark performance; they test whether refine-or-repair behavior appears in controlled settings. The checks include backpropagation, cache and nearest-neighbor memory, nearest-centroid memory, hidden-regime sequence prediction, and ridge-style local adapters where they are directly comparable. Stronger empirical claims would still require a broader suite with online trees, LVQ, RLS, passive-aggressive updates, replay-buffer SGD, TTT-style adaptation, fast-weight or linear-attention memory, and stronger frozen-encoder baselines. The accompanying script is in the experiment directory and uses PyTorch for the backpropagation baselines and NumPy for the distinction-memory methods.
 
 The first task is a two-context XOR stream. In the first context the label is XOR of two Gaussian cluster signs; in the second context the labels are flipped. The context coordinate is observable, but the learner must discover the relevant distinction. We compare three learners. The offline MLP is trained by ordinary backpropagation on the full stream for 500 epochs and should be read as a batch upper bound, not as a runtime learner. The online MLP predicts each example and then performs one backpropagation step on that example. The DGM-style distinction memory uses the same online protocol: predict first, then observe and refine-or-repair. Results are averaged over five seeds with 100 examples per context.
 
@@ -36,6 +36,27 @@ Refine+repair & 9 & $0.939$ & $0.967$ \\
 \label{tab:repair-refine-ablation}
 \end{table}
 
+The most direct check of the runtime-learning claim is a hidden-regime online sequence task. A hidden regime chooses the next-token transition map. The learner is not given the regime label; it observes only a noisy continuous cue and the current token, predicts the next token, and then receives the next-token consequence. This setting separates cache-like repair from missing-distinction refinement: the same current token can require different next tokens in different regimes.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{p{0.28\linewidth}p{0.22\linewidth}cc}
+\toprule
+Model & Runtime state & Prequential accuracy & Held-out accuracy \\
+\midrule
+Cache LM & token counts & $0.362\pm0.029$ & $0.285\pm0.049$ \\
+Budgeted $k$NN-LM & 64 examples & $0.583\pm0.010$ & $0.346\pm0.106$ \\
+Nearest-centroid memory & 16 centroids & $0.278\pm0.035$ & $0.235\pm0.024$ \\
+DGM repair only & one local memory & $0.079\pm0.017$ & $0.055\pm0.015$ \\
+DGM refine+repair & graph memory & $\mathbf{0.617\pm0.040}$ & $\mathbf{0.680\pm0.065}$ \\
+Backprop MLP, online & one backprop step & $0.292\pm0.020$ & $0.282\pm0.086$ \\
+\bottomrule
+\end{tabular}
+\caption{Hidden-regime online sequence prediction, averaged over five seeds. The useful operation is to create distinctions when identical tokens have regime-dependent consequences. The refine+repair run had monotone local scoring-objective decrease at accepted refinements in all runs.}
+\label{tab:hidden-regime-check}
+\end{table}
+
 We also run small online image-stream checks on MNIST and CIFAR-10 using cached local datasets. These are deliberately reported as sanity checks, not as evidence that DGM is a competitive image classifier. In these experiments the distinction-memory method uses exemplar/prototype repair. The online backpropagation baseline sees each example once and performs one gradient step. Offline backpropagation is again a batch upper bound.
 
 \begin{table}[t]
@@ -54,7 +75,7 @@ CIFAR-10 & $0.273\pm0.003$ & $0.137\pm0.010$ & $0.243\pm0.008$ \\
 
 These experiments test a specific thesis rather than a broad benchmark claim. When the representation lacks a useful distinction, one gradient step on the current example is a weak runtime update. A distinction-memory system can instead create or retrieve a local concept and then repair local state. With full offline access and many epochs, backpropagation remains strong, as expected. The image-stream results should mainly be read as implementation checks; the more relevant settings are context switching, few-shot adaptation with a frozen encoder, long-document memory, repeated syntax regimes, and hidden task identity.
 
-For a stronger adapter benchmark, we train a shared convolutional encoder and freeze it. The adaptation problem is then deliberately narrow: given only five labeled support examples per class, adapt the readout. We compare DGM-Ridge, a closed-form projection adapter from Section~\ref{sec:large-model-training}, against a one-pass backpropagation head and a 200-step backpropagation head on the same frozen embeddings. This isolates the large-model use case: a strong backbone already exists, and the question is whether runtime adaptation should be a gradient loop or a closed-form memory repair.
+For a stronger adapter benchmark, we train a shared convolutional encoder and freeze it. The adaptation problem is then deliberately narrow: given only five labeled support examples per class, adapt the readout. We compare nearest-neighbor memory, DGM-Ridge as a closed-form projection adapter from Section~\ref{sec:large-model-training}, a one-pass backpropagation head, and a 200-step backpropagation head on the same frozen embeddings. This isolates the large-model use case: a strong backbone already exists, and the question is whether runtime adaptation should be a gradient loop, a nonparametric memory, or a closed-form local repair.
 
 \begin{table}[t]
 \centering
@@ -64,14 +85,16 @@ Dataset & Method & Accuracy & Adapter time \\
 \midrule
 MNIST, 5-shot & one-pass backprop head & $0.100\pm0.000$ & $0.0002$s \\
 MNIST, 5-shot & 200-step backprop head & $0.332\pm0.009$ & $0.0320$s \\
-MNIST, 5-shot & DGM-Ridge & $\mathbf{0.623\pm0.003}$ & $\mathbf{0.0018}$s \\
+MNIST, 5-shot & kNN memory & $0.486\pm0.005$ & $0.0006$s \\
+MNIST, 5-shot & DGM-Ridge & $\mathbf{0.623\pm0.003}$ & $0.0018$s \\
 \midrule
 CIFAR-10, 5-shot & one-pass backprop head & $0.115\pm0.014$ & $0.0003$s \\
 CIFAR-10, 5-shot & 200-step backprop head & $0.359\pm0.009$ & $0.0325$s \\
-CIFAR-10, 5-shot & DGM-Ridge & $\mathbf{0.397\pm0.010}$ & $\mathbf{0.0004}$s \\
+CIFAR-10, 5-shot & kNN memory & $0.355\pm0.005$ & $0.0006$s \\
+CIFAR-10, 5-shot & DGM-Ridge & $\mathbf{0.397\pm0.010}$ & $0.0004$s \\
 \bottomrule
 \end{tabular}
-\caption{Few-shot adapter benchmark on frozen embeddings. DGM-Ridge fits the adapter by a closed-form projection solve. It is substantially faster than the tuned backpropagation head and achieves higher accuracy in this local run. The one-pass head is slightly cheaper but does not learn a useful classifier.}
+\caption{Few-shot adapter benchmark on frozen embeddings. The kNN memory row is the nonparametric retrieval baseline on the same support examples. DGM-Ridge fits the adapter by a closed-form projection solve. It is substantially faster than the tuned backpropagation head and achieves higher accuracy in this local run.}
 \label{tab:adapter-benchmark}
 \end{table}
 

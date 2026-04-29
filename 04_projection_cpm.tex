@@ -11,7 +11,7 @@ f_W(\omega)=W\phi_\calP(\omega).
 \end{align*}
 This is exactly a table over the atoms of $\calP$: every state inside the same atom receives the same value.
 
-\begin{theorem}[One-hot memory is partition-measurable, informal version of Theorem~\ref{thm:one-hot-measurable:formal}]
+\begin{theorem}[One-hot memory is partition-measurable]
 \label{thm:one-hot-measurable:informal}
 For every $W\in\R^{m\times n}$, the map $f_W(\omega)=W\phi_\calP(\omega)$ is $\calP$-measurable. Conversely, every $\calP$-measurable map $f:\Omega\to\R^m$ is represented by some $W$ through $f=f_W$.
 \end{theorem}
@@ -22,7 +22,7 @@ Thus a one-hot associative memory is not merely analogous to a partition. It is 
 
 Conservative Projection Memory detects conflict when a new key has zero innovation but nonzero residual. In the one-hot finite representation, this diagnostic is exactly the statement that two world states have been placed in the same atom despite requiring different values.
 
-\begin{theorem}[CPM conflict equals missing distinction, informal version of Theorem~\ref{thm:cpm-conflict-distinction:formal}]
+\begin{theorem}[CPM conflict equals missing distinction]
 \label{thm:cpm-conflict-distinction:informal}
 Let $\omega,\omega'\in B_i$ for an atom $B_i\in\calP$, and suppose required values satisfy $v(\omega)\ne v(\omega')$. Let $k=\phi_\calP(\omega)=\phi_\calP(\omega')=e_i$. If $We_i=v(\omega)$ has already been committed, then evidence requiring $We_i=v(\omega')$ has CPM innovation $z=0$ and residual $e\ne0$.
 \end{theorem}

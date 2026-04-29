@@ -11,10 +11,42 @@ The guiding rule is
 \end{align*}
 Refinement creates a new concept when existing concepts are too coarse. Repair updates a local model inside the existing graph. For a simple classifier, repair can be an exemplar or sufficient-statistic update. For a richer local memory, repair can be Projection Memory or CPM.
 
-This is not only a prototype method. Nearest-neighbor and nearest-centroid methods retrieve similar examples, but they do not refine an explicit information structure after consequence conflicts. Decision trees refine information, but force distinctions into a rooted hierarchy and do not attach repairable local memories to graph concepts. Sparse MoE layers route to trained experts, whereas DGM creates runtime concepts from observed conflicts. Cache and $k$NN language models retrieve recent contexts, whereas DGM separates redundant evidence, novel evidence, and contradictory evidence through graph-generated distinctions before repairing next-token memories.
+This is not only a prototype method. Nearest-neighbor and nearest-centroid methods retrieve similar examples, but they do not refine an explicit information structure after consequence conflicts. Decision trees refine information, but force distinctions into a rooted hierarchy and do not attach repairable local memories to graph concepts. Sparse MoE layers route to trained experts, whereas DGM creates runtime concepts from observed conflicts. Cache and $k$NN language models retrieve recent contexts, whereas DGM separates redundant evidence, novel evidence, and contradictory evidence through graph-generated distinctions before repairing next-token memories. The distinction from nearby methods is summarized as follows.
+
+\begin{center}
+\small
+\begin{tabular}{p{0.18\linewidth}p{0.25\linewidth}p{0.45\linewidth}}
+\toprule
+Method family & What it has & What it lacks relative to DGM \\
+\midrule
+$k$NN/cache & retrieval & no refine-or-repair rule and no edge-generated distinctions \\
+Decision tree & refinement & no graph concepts and no local repair memory \\
+MoE & routing & trained experts rather than runtime concept creation \\
+TTT & runtime adaptation & gradient/self-supervised updates, not a distinction graph \\
+Fast weights & dynamic memory & residual writes without concept refinement \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 The theory explains why the two operations should not be collapsed. If two states lie in the same atom but require different outputs, no measurable predictor over the current partition can satisfy both. This is not an optimization failure; it is a missing distinction. Conversely, if the current concept is adequate and only its local state is stale, creating a new concept is unnecessary. The model should update the local memory.
 
-We formalize both sides. Minimal information refinement is the smallest partition or sigma-algebra update that makes new evidence observable. Its value is exact under standard losses: conditional mutual information for log loss and conditional variance reduction for squared loss. The DGM data structure adds the engineering layer missing from the pure refinement principle: graph-induced partitions, edge-gated routing, canonical local memories, statistically guarded penalized refine-or-repair rules, language-modeling integration, and train/test APIs. The exact information-structure object is Hard-DGM, whose routing is determined by graph distinctions together with prototype geometry. Soft-DGM is the differentiable relaxation used for neural training and large-model integration. We also describe DGM Transformer layers whose read paths are differentiable and whose write paths are detached, so that large models can learn to use DGM memory during training without backpropagating through the entire memory history.
+We formalize both sides. Minimal information refinement is the smallest partition or sigma-algebra update that makes new evidence observable. Its value is exact under standard losses: conditional mutual information for log loss and conditional variance reduction for squared loss. The DGM data structure adds the engineering layer missing from the pure refinement principle: graph-induced partitions, edge-gated routing, canonical local memories, statistically guarded penalized refine-or-repair rules, language-modeling integration, and train/test APIs. The exact information-structure object is anchor-DGM: frozen anchors and distinction edges define the formal sigma-algebra, while movable centroids are retrieval statistics for the soft read path. The canonical large-model layer is DGM-Embedding. We treat DGM-Adapter as an optional residual extension because it requires an explicit modeling choice for the hidden residual target. In both cases the read path is differentiable and the write path is detached, so that large models can learn to use DGM memory during training without backpropagating through the entire memory history.
+
+\begin{center}
+\small
+\begin{tabular}{p{0.30\linewidth}p{0.58\linewidth}}
+\toprule
+Mechanism & Formal claim \\
+\midrule
+Minimal refinement & Smallest information update making evidence measurable \\
+Contradiction & No current measurable predictor resolves conflict inside an atom \\
+Edge generator & Adds a binary distinction between confused anchors \\
+Edge-gated routing & Soft relaxation of hard edge compatibility \\
+Sample-split refinement & Accepted refinement has positive guarded gain \\
+Local repair & Updates statistics without changing the anchor-generated information structure \\
+DGM-Embedding & Forward-only next-token memory correction with detached writes \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \paragraph{Organization.} Section~\ref{sec:preliminaries} fixes notation and information structures. Section~\ref{sec:minimal-refinement} proves the refinement principle and the contradiction theorem. Section~\ref{sec:value} quantifies the value of distinctions. Section~\ref{sec:algorithms} defines DGM as a concrete model and algorithm, including a language-modeling instance. Section~\ref{sec:large-model-training} gives a scalable DGM layer for large-model training. Section~\ref{sec:projection-bridge} relates local repair to Projection Learning and CPM. Section~\ref{sec:technical-overview} gives proof sketches. Section~\ref{sec:experiments} gives executable checks. Section~\ref{sec:conclusion} concludes.

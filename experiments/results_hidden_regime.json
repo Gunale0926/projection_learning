@@ -1,0 +1,267 @@
+{
+  "hidden_regime_comparison": {
+    "budgeted_knn_lm": {
+      "prequential_accuracy_mean": 0.5831018518518517,
+      "prequential_accuracy_std": 0.00987940617262654,
+      "prequential_log_loss_mean": 4.342031120785615,
+      "prequential_log_loss_std": 0.33776335547282677,
+      "test_accuracy_mean": 0.3458333333333333,
+      "test_accuracy_std": 0.10620346657114538
+    },
+    "cache_lm": {
+      "prequential_accuracy_mean": 0.3615740740740741,
+      "prequential_accuracy_std": 0.028813168660728816,
+      "prequential_log_loss_mean": 1.4434036947350914,
+      "prequential_log_loss_std": 0.068888740073185,
+      "test_accuracy_mean": 0.2847222222222222,
+      "test_accuracy_std": 0.0492149989997278
+    },
+    "dataset": "hidden_regime_online_sequence",
+    "description": "A hidden regime selects the next-token transition map. The learner observes only a noisy continuous cue and the current token, predicts the next token prequentially, then receives the next-token consequence.",
+    "nearest_centroid_memory": {
+      "prequential_accuracy_mean": 0.27754629629629635,
+      "prequential_accuracy_std": 0.035164239013781906,
+      "prequential_log_loss_mean": 2.0702655762187585,
+      "prequential_log_loss_std": 0.11163356803216384,
+      "test_accuracy_mean": 0.23541666666666666,
+      "test_accuracy_std": 0.023945749513287044
+    },
+    "online_mlp": {
+      "prequential_accuracy_mean": 0.29224537037037035,
+      "prequential_accuracy_std": 0.019686135695319695,
+      "prequential_log_loss_mean": 2.216819999311728,
+      "prequential_log_loss_std": 0.05378301587320034,
+      "test_accuracy_mean": 0.2815972222222222,
+      "test_accuracy_std": 0.08607610175426092
+    },
+    "refine_repair": {
+      "prequential_accuracy_mean": 0.617013888888889,
+      "prequential_accuracy_std": 0.04029107911487886,
+      "prequential_log_loss_mean": 5.348305674990778,
+      "prequential_log_loss_std": 0.625234839536445,
+      "test_accuracy_mean": 0.679513888888889,
+      "test_accuracy_std": 0.06474181570374192
+    },
+    "refine_repair_monotone_all_runs": true,
+    "repair_only": {
+      "prequential_accuracy_mean": 0.07928240740740741,
+      "prequential_accuracy_std": 0.01740349764012221,
+      "prequential_log_loss_mean": 2.798127153344625,
+      "prequential_log_loss_std": 0.00627400127388618,
+      "test_accuracy_mean": 0.05520833333333334,
+      "test_accuracy_std": 0.014500425706820206
+    },
+    "runs": [
+      {
+        "budgeted_knn_lm": {
+          "prequential_accuracy": 0.5891203703703703,
+          "prequential_log_loss": 4.462881711866776,
+          "test_accuracy": 0.22395833333333334
+        },
+        "cache_lm": {
+          "prequential_accuracy": 0.3715277777777778,
+          "prequential_log_loss": 1.4326037982759583,
+          "test_accuracy": 0.3194444444444444
+        },
+        "n_test": 576,
+        "n_train": 1728,
+        "nearest_centroid_memory": {
+          "prequential_accuracy": 0.2638888888888889,
+          "prequential_log_loss": 2.2090506516230937,
+          "prototypes": 16,
+          "test_accuracy": 0.21875
+        },
+        "online_mlp": {
+          "prequential_accuracy": 0.29224537037037035,
+          "prequential_log_loss": 2.167898054471738,
+          "test_accuracy": 0.3090277777777778
+        },
+        "refine_repair": {
+          "leaves": 84,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.6585648148148148,
+          "prequential_log_loss": 4.708831915384211,
+          "splits": 83,
+          "test_accuracy": 0.7170138888888888
+        },
+        "repair_only": {
+          "leaves": 1,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.1099537037037037,
+          "prequential_log_loss": 2.7918134182754852,
+          "splits": 0,
+          "test_accuracy": 0.036458333333333336
+        },
+        "seed": 4000
+      },
+      {
+        "budgeted_knn_lm": {
+          "prequential_accuracy": 0.59375,
+          "prequential_log_loss": 4.122365680522808,
+          "test_accuracy": 0.4565972222222222
+        },
+        "cache_lm": {
+          "prequential_accuracy": 0.3125,
+          "prequential_log_loss": 1.5456469892988858,
+          "test_accuracy": 0.22395833333333334
+        },
+        "n_test": 576,
+        "n_train": 1728,
+        "nearest_centroid_memory": {
+          "prequential_accuracy": 0.22974537037037038,
+          "prequential_log_loss": 2.0653883287393846,
+          "prototypes": 16,
+          "test_accuracy": 0.2760416666666667
+        },
+        "online_mlp": {
+          "prequential_accuracy": 0.26157407407407407,
+          "prequential_log_loss": 2.277369369296739,
+          "test_accuracy": 0.1909722222222222
+        },
+        "refine_repair": {
+          "leaves": 93,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.6122685185185185,
+          "prequential_log_loss": 5.410791713297434,
+          "splits": 92,
+          "test_accuracy": 0.7083333333333334
+        },
+        "repair_only": {
+          "leaves": 1,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.06712962962962964,
+          "prequential_log_loss": 2.7983606747416094,
+          "splits": 0,
+          "test_accuracy": 0.046875
+        },
+        "seed": 4100
+      },
+      {
+        "budgeted_knn_lm": {
+          "prequential_accuracy": 0.5723379629629629,
+          "prequential_log_loss": 4.93783568263123,
+          "test_accuracy": 0.2465277777777778
+        },
+        "cache_lm": {
+          "prequential_accuracy": 0.3697916666666667,
+          "prequential_log_loss": 1.432191214405901,
+          "test_accuracy": 0.2326388888888889
+        },
+        "n_test": 576,
+        "n_train": 1728,
+        "nearest_centroid_memory": {
+          "prequential_accuracy": 0.2725694444444444,
+          "prequential_log_loss": 2.181900259054117,
+          "prototypes": 16,
+          "test_accuracy": 0.21006944444444445
+        },
+        "online_mlp": {
+          "prequential_accuracy": 0.2951388888888889,
+          "prequential_log_loss": 2.2671832236304277,
+          "test_accuracy": 0.21006944444444445
+        },
+        "refine_repair": {
+          "leaves": 87,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.6620370370370371,
+          "prequential_log_loss": 4.6436719819055,
+          "splits": 86,
+          "test_accuracy": 0.7621527777777778
+        },
+        "repair_only": {
+          "leaves": 1,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.06770833333333333,
+          "prequential_log_loss": 2.8022424456567006,
+          "splits": 0,
+          "test_accuracy": 0.0642361111111111
+        },
+        "seed": 4200
+      },
+      {
+        "budgeted_knn_lm": {
+          "prequential_accuracy": 0.5700231481481481,
+          "prequential_log_loss": 3.97295395371146,
+          "test_accuracy": 0.4826388888888889
+        },
+        "cache_lm": {
+          "prequential_accuracy": 0.35358796296296297,
+          "prequential_log_loss": 1.473337303288999,
+          "test_accuracy": 0.3506944444444444
+        },
+        "n_test": 576,
+        "n_train": 1728,
+        "nearest_centroid_memory": {
+          "prequential_accuracy": 0.2835648148148148,
+          "prequential_log_loss": 1.9330492844418774,
+          "prototypes": 16,
+          "test_accuracy": 0.2482638888888889
+        },
+        "online_mlp": {
+          "prequential_accuracy": 0.28877314814814814,
+          "prequential_log_loss": 2.230240923945012,
+          "test_accuracy": 0.4322916666666667
+        },
+        "refine_repair": {
+          "leaves": 87,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.5538194444444444,
+          "prequential_log_loss": 6.323762809256679,
+          "splits": 86,
+          "test_accuracy": 0.5850694444444444
+        },
+        "repair_only": {
+          "leaves": 1,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.0642361111111111,
+          "prequential_log_loss": 2.807417188531343,
+          "splits": 0,
+          "test_accuracy": 0.078125
+        },
+        "seed": 4300
+      },
+      {
+        "budgeted_knn_lm": {
+          "prequential_accuracy": 0.5902777777777778,
+          "prequential_log_loss": 4.214118575195796,
+          "test_accuracy": 0.3194444444444444
+        },
+        "cache_lm": {
+          "prequential_accuracy": 0.40046296296296297,
+          "prequential_log_loss": 1.3332391684057128,
+          "test_accuracy": 0.296875
+        },
+        "n_test": 576,
+        "n_train": 1728,
+        "nearest_centroid_memory": {
+          "prequential_accuracy": 0.33796296296296297,
+          "prequential_log_loss": 1.9619393572353219,
+          "prototypes": 16,
+          "test_accuracy": 0.22395833333333334
+        },
+        "online_mlp": {
+          "prequential_accuracy": 0.32349537037037035,
+          "prequential_log_loss": 2.1414084252147245,
+          "test_accuracy": 0.265625
+        },
+        "refine_repair": {
+          "leaves": 87,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.5983796296296297,
+          "prequential_log_loss": 5.6544699551100654,
+          "splits": 86,
+          "test_accuracy": 0.625
+        },
+        "repair_only": {
+          "leaves": 1,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.08738425925925926,
+          "prequential_log_loss": 2.790802039517987,
+          "splits": 0,
+          "test_accuracy": 0.050347222222222224
+        },
+        "seed": 4400
+      }
+    ]
+  }
+}

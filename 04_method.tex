@@ -7,7 +7,7 @@ Refinement increases what the learner can condition on. This does not mean that 
 
 The first fact is purely order-theoretic. If $\calG$ contains all events in $\calF$, then every $\calF$-measurable predictor is also $\calG$-measurable. The decision class has only grown.
 
-\begin{theorem}[Bayes-risk monotonicity, informal version of Theorem~\ref{thm:risk-monotonicity:formal}]
+\begin{theorem}[Bayes-risk monotonicity]
 \label{thm:risk-monotonicity:informal}
 If $\calF\subseteq\calG$, then for every loss $L$,
 \begin{align*}
@@ -21,7 +21,7 @@ This is a population statement. It says that information cannot hurt the best po
 
 For a finite target variable $Y$, log loss asks the learner to output a conditional distribution. The optimal prediction under $\calF$ is the conditional law of $Y$ given $\calF$, and the optimal risk is conditional entropy.
 
-\begin{theorem}[Log-loss value, informal version of Theorem~\ref{thm:log-value:formal}]
+\begin{theorem}[Log-loss value]
 \label{thm:log-value:informal}
 Let $Y$ be finite and let the loss be $-\log q(Y)$. If $\calF\subseteq\calG$, then
 \begin{align*}
@@ -35,7 +35,7 @@ Thus, for classification and language modeling, a refinement is useful exactly t
 
 For $Y\in L^2(\Omega;\R^d)$ and squared loss, the optimal predictor under $\calF$ is $\E[Y\mid\calF]$. Refinement helps precisely when it changes the conditional mean.
 
-\begin{theorem}[Squared-loss value, informal version of Theorem~\ref{thm:squared-value:formal}]
+\begin{theorem}[Squared-loss value]
 \label{thm:squared-value:informal}
 Let $Y\in L^2(\Omega;\R^d)$ and let $L(Y,a)=\norm{Y-a}_2^2$. If $\calF\subseteq\calG$, then
 \begin{align*}

@@ -245,6 +245,110 @@ class DPMExemplarClassifier(DPMClassifier):
         return votes / votes.sum()
 
 
+class TokenCacheLM:
+    def __init__(self, vocab: int, token_offset: int, alpha: float = 1.0) -> None:
+        self.vocab = vocab
+        self.token_offset = token_offset
+        self.alpha = alpha
+        self.counts = np.zeros((vocab, vocab), dtype=np.float64)
+
+    def _token(self, h: np.ndarray) -> int:
+        return int(np.argmax(h[self.token_offset : self.token_offset + self.vocab]))
+
+    def predict_proba(self, h: np.ndarray) -> np.ndarray:
+        row = self.counts[self._token(h)]
+        return (row + self.alpha / self.vocab) / (row.sum() + self.alpha)
+
+    def observe(self, h: np.ndarray, y: int) -> None:
+        self.counts[self._token(h), int(y)] += 1.0
+
+
+class BudgetedKNNMemory:
+    def __init__(self, n_classes: int, dim: int, budget: int = 128, k_neighbors: int = 5) -> None:
+        self.n_classes = n_classes
+        self.dim = dim
+        self.budget = budget
+        self.k_neighbors = k_neighbors
+        self.x_seen: list[np.ndarray] = []
+        self.y_seen: list[int] = []
+
+    def predict_proba(self, h: np.ndarray) -> np.ndarray:
+        if not self.x_seen:
+            return np.full(self.n_classes, 1.0 / self.n_classes)
+        x = np.stack(self.x_seen)
+        y = np.asarray(self.y_seen, dtype=np.int64)
+        dist = np.linalg.norm(x - h[None, :], axis=1)
+        k = min(self.k_neighbors, len(y))
+        idx = np.argpartition(dist, k - 1)[:k]
+        weights = 1.0 / (dist[idx] + 1e-3)
+        votes = np.zeros(self.n_classes, dtype=float)
+        for label, weight in zip(y[idx], weights, strict=True):
+            votes[int(label)] += float(weight)
+        votes += 1e-6
+        return votes / votes.sum()
+
+    def observe(self, h: np.ndarray, y: int) -> None:
+        self.x_seen.append(np.asarray(h, dtype=float))
+        self.y_seen.append(int(y))
+        if len(self.y_seen) > self.budget:
+            self.x_seen.pop(0)
+            self.y_seen.pop(0)
+
+
+class OnlineCentroidMemory:
+    def __init__(
+        self,
+        n_classes: int,
+        dim: int,
+        max_prototypes: int = 48,
+        create_radius: float = 1.1,
+        alpha: float = 1.0,
+    ) -> None:
+        self.n_classes = n_classes
+        self.dim = dim
+        self.max_prototypes = max_prototypes
+        self.create_radius = create_radius
+        self.alpha = alpha
+        self.centroids: list[np.ndarray] = []
+        self.counts: list[np.ndarray] = []
+        self.n: list[float] = []
+
+    def _nearest(self, h: np.ndarray) -> tuple[int, float]:
+        x = np.stack(self.centroids)
+        dist = np.linalg.norm(x - h[None, :], axis=1)
+        idx = int(np.argmin(dist))
+        return idx, float(dist[idx])
+
+    def predict_proba(self, h: np.ndarray) -> np.ndarray:
+        if not self.centroids:
+            return np.full(self.n_classes, 1.0 / self.n_classes)
+        idx, _ = self._nearest(h)
+        row = self.counts[idx]
+        return (row + self.alpha / self.n_classes) / (row.sum() + self.alpha)
+
+    def observe(self, h: np.ndarray, y: int) -> None:
+        h = np.asarray(h, dtype=float)
+        if not self.centroids:
+            self.centroids.append(h.copy())
+            row = np.zeros(self.n_classes, dtype=float)
+            row[int(y)] = 1.0
+            self.counts.append(row)
+            self.n.append(1.0)
+            return
+        idx, dist = self._nearest(h)
+        if dist > self.create_radius and len(self.centroids) < self.max_prototypes:
+            self.centroids.append(h.copy())
+            row = np.zeros(self.n_classes, dtype=float)
+            row[int(y)] = 1.0
+            self.counts.append(row)
+            self.n.append(1.0)
+            return
+        self.n[idx] += 1.0
+        eta = 1.0 / self.n[idx]
+        self.centroids[idx] = (1.0 - eta) * self.centroids[idx] + eta * h
+        self.counts[idx][int(y)] += 1.0
+
+
 def make_xor_gaussians(n: int, rng: np.random.Generator, noise: float = 0.35) -> tuple[np.ndarray, np.ndarray]:
     centers = np.array([[-1.0, -1.0], [-1.0, 1.0], [1.0, -1.0], [1.0, 1.0]])
     labels = np.array([0, 1, 1, 0], dtype=np.int64)
@@ -421,6 +525,28 @@ def train_online(model: DPMClassifier, x: np.ndarray, y: np.ndarray) -> dict[str
         "prequential_accuracy": correct / len(y),
         "prequential_log_loss": log_loss / len(y),
     }
+
+
+def online_train_memory(model: object, x: np.ndarray, y: np.ndarray) -> dict[str, float]:
+    correct = 0
+    log_loss = 0.0
+    for row, label in zip(x, y, strict=True):
+        proba = model.predict_proba(row)
+        pred = int(np.argmax(proba))
+        correct += int(pred == int(label))
+        log_loss += -math.log(max(float(proba[int(label)]), 1e-12))
+        model.observe(row, int(label))
+    return {
+        "prequential_accuracy": correct / len(y),
+        "prequential_log_loss": log_loss / len(y),
+    }
+
+
+def evaluate_memory(model: object, x: np.ndarray, y: np.ndarray) -> float:
+    preds = []
+    for row in x:
+        preds.append(int(np.argmax(model.predict_proba(row))))
+    return float(np.mean(np.asarray(preds, dtype=np.int64) == y))
 
 
 def run_dpm_classification(seed: int) -> dict[str, object]:
@@ -778,6 +904,149 @@ def run_synthetic_lm_comparison(seed: int) -> dict[str, object]:
     }
 
 
+def make_hidden_regime_stream(
+    seed: int,
+    n_blocks: int,
+    block_len: int,
+    n_regimes: int = 4,
+    vocab: int = 16,
+    cue_dim: int = 4,
+    cue_noise: float = 0.30,
+    transition_noise: float = 0.02,
+    centers: Optional[np.ndarray] = None,
+    perms: Optional[np.ndarray] = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    rng = np.random.default_rng(seed)
+    if centers is None:
+        centers = rng.normal(size=(n_regimes, cue_dim))
+        centers /= np.linalg.norm(centers, axis=1, keepdims=True)
+    if perms is None:
+        perms = np.stack([rng.permutation(vocab) for _ in range(n_regimes)])
+    rows: list[np.ndarray] = []
+    labels: list[int] = []
+    prev_regime = -1
+    token = int(rng.integers(0, vocab))
+    for _ in range(n_blocks):
+        regime = int(rng.integers(0, n_regimes - 1))
+        if regime >= prev_regime and prev_regime >= 0:
+            regime += 1
+        prev_regime = regime
+        for _ in range(block_len):
+            cue = centers[regime] + cue_noise * rng.normal(size=cue_dim)
+            onehot = np.zeros(vocab, dtype=float)
+            onehot[token] = 1.0
+            rows.append(np.concatenate([cue, onehot]))
+            if rng.random() < transition_noise:
+                next_token = int(rng.integers(0, vocab))
+            else:
+                next_token = int(perms[regime, token])
+            labels.append(next_token)
+            token = next_token
+    return np.asarray(rows, dtype=float), np.asarray(labels, dtype=np.int64)
+
+
+def run_one_hidden_regime(seed: int) -> dict[str, object]:
+    vocab = 16
+    cue_dim = 4
+    task_rng = np.random.default_rng(seed)
+    centers = task_rng.normal(size=(4, cue_dim))
+    centers /= np.linalg.norm(centers, axis=1, keepdims=True)
+    perms = np.stack([task_rng.permutation(vocab) for _ in range(4)])
+    x_train, y_train = make_hidden_regime_stream(
+        seed + 1,
+        n_blocks=96,
+        block_len=18,
+        vocab=vocab,
+        cue_dim=cue_dim,
+        centers=centers,
+        perms=perms,
+    )
+    x_test, y_test = make_hidden_regime_stream(
+        seed + 2,
+        n_blocks=32,
+        block_len=18,
+        vocab=vocab,
+        cue_dim=cue_dim,
+        transition_noise=0.0,
+        centers=centers,
+        perms=perms,
+    )
+    dim = x_train.shape[1]
+    models: dict[str, object] = {
+        "cache_lm": TokenCacheLM(vocab=vocab, token_offset=cue_dim, alpha=1.0),
+        "budgeted_knn_lm": BudgetedKNNMemory(n_classes=vocab, dim=dim, budget=64, k_neighbors=5),
+        "nearest_centroid_memory": OnlineCentroidMemory(
+            n_classes=vocab,
+            dim=dim,
+            max_prototypes=16,
+            create_radius=1.05,
+            alpha=1.0,
+        ),
+        "repair_only": DPMClassifier(
+            n_classes=vocab,
+            dim=dim,
+            lambda_penalty=1e9,
+            max_depth=0,
+            rng=np.random.default_rng(seed + 10),
+        ),
+        "refine_repair": DPMExemplarClassifier(
+            n_classes=vocab,
+            dim=dim,
+            lambda_penalty=0.02,
+            tau=1e-9,
+            min_leaf=32,
+            min_child=6,
+            buffer_size=160,
+            max_depth=12,
+            max_candidates=160,
+            k_neighbors=1,
+            rng=np.random.default_rng(seed + 20),
+        ),
+    }
+    out: dict[str, object] = {"seed": seed, "n_train": int(len(y_train)), "n_test": int(len(y_test))}
+    for name, model in models.items():
+        metrics = online_train_memory(model, x_train, y_train)
+        row: dict[str, object] = {
+            **metrics,
+            "test_accuracy": evaluate_memory(model, x_test, y_test),
+        }
+        if isinstance(model, DPMClassifier):
+            row["leaves"] = len(model.leaves())
+            row["splits"] = model.internal_count()
+            row["objective_monotone_at_splits"] = all(rec["decrease"] > 0 for rec in model.split_records)
+        if isinstance(model, OnlineCentroidMemory):
+            row["prototypes"] = len(model.centroids)
+        out[name] = row
+    online_mlp = train_mlp_online(x_train, y_train, x_test, y_test, seed=seed + 30, lr=0.03, n_classes=vocab)
+    out["online_mlp"] = online_mlp
+    return out
+
+
+def run_hidden_regime_comparison(seed: int) -> dict[str, object]:
+    runs = [run_one_hidden_regime(seed + 100 * i) for i in range(5)]
+    names = [
+        "cache_lm",
+        "budgeted_knn_lm",
+        "nearest_centroid_memory",
+        "repair_only",
+        "refine_repair",
+        "online_mlp",
+    ]
+    summary: dict[str, object] = {
+        "dataset": "hidden_regime_online_sequence",
+        "description": "A hidden regime selects the next-token transition map. The learner observes only a noisy continuous cue and the current token, predicts the next token prequentially, then receives the next-token consequence.",
+        "runs": runs,
+    }
+    for name in names:
+        rows = [r[name] for r in runs]
+        keys = ["prequential_accuracy", "prequential_log_loss", "test_accuracy"]
+        summary[name] = summarize(rows, keys)
+    summary["refine_repair_monotone_all_runs"] = all(
+        bool(r["refine_repair"]["objective_monotone_at_splits"]) for r in runs
+    )
+    return summary
+
+
 def run_projection_memory_check(seed: int) -> dict[str, float]:
     rng = np.random.default_rng(seed)
     max_abs_error = 0.0
@@ -809,9 +1078,34 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--output", type=Path, default=Path("experiments/results_dpm.json"))
+    parser.add_argument("--suite", choices=["all", "hidden"], default="all")
     args = parser.parse_args()
 
+    if args.suite == "hidden":
+        results = {"hidden_regime_comparison": run_hidden_regime_comparison(args.seed + 4000)}
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(results, indent=2, sort_keys=True))
+        hidden = results["hidden_regime_comparison"]
+        print("Hidden-regime online sequence prediction")
+        for name in [
+            "cache_lm",
+            "budgeted_knn_lm",
+            "nearest_centroid_memory",
+            "repair_only",
+            "refine_repair",
+            "online_mlp",
+        ]:
+            row = hidden[name]
+            print(
+                f"{name:24s} preq_acc={row['prequential_accuracy_mean']:.3f}+/-{row['prequential_accuracy_std']:.3f} "
+                f"test_acc={row['test_accuracy_mean']:.3f}+/-{row['test_accuracy_std']:.3f}"
+            )
+        print(f"refine_repair_monotone_all_runs={hidden['refine_repair_monotone_all_runs']}")
+        print(f"wrote {args.output}")
+        return
+
     results = {
+        "hidden_regime_comparison": run_hidden_regime_comparison(args.seed + 4000),
         "image_backprop_comparison": run_image_backprop_comparison(args.seed + 2000),
         "synthetic_lm_comparison": run_synthetic_lm_comparison(args.seed + 3000),
         "dpm_sanity": run_dpm_classification(args.seed),

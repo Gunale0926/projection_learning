@@ -14,7 +14,7 @@ Let $\calP$ be a finite partition and let $E\subseteq\Omega$ be a new binary dis
 \end{align}
 This notation simply keeps the nonempty pieces obtained by cutting each old atom by $E$.
 
-\begin{theorem}[Minimal finite refinement, informal version of Theorem~\ref{thm:minimal-refinement:formal}]
+\begin{theorem}[Minimal finite refinement]
 \label{thm:minimal-refinement:informal}
 Let $\calP$ be a finite partition of $\Omega$ and let $E\subseteq\Omega$. The partition $\calP_E$ is the unique minimal partition that refines $\calP$ and makes $E$ measurable. More precisely, if $\calQ$ refines $\calP$ and $E$ is $\calQ$-measurable, then $\calQ$ refines $\calP_E$.
 \end{theorem}
@@ -29,7 +29,7 @@ For general spaces, the same operation is the join. If the current information i
 \label{eq:join-update}
 \end{align}
 
-\begin{theorem}[Minimal sigma-algebra refinement, informal version of Theorem~\ref{thm:sigma-refinement:formal}]
+\begin{theorem}[Minimal sigma-algebra refinement]
 \label{thm:sigma-refinement:informal}
 Let $\calF\subseteq\calA$ be a sigma-algebra and let $Z$ be a random variable. The join $\calF\vee\sigma(Z)$ is the smallest sigma-algebra $\calG$ such that $\calF\subseteq\calG$ and $Z$ is $\calG$-measurable.
 \end{theorem}
@@ -40,7 +40,7 @@ Thus the same object governs finite decision-tree splits and measurable-space re
 
 Minimal refinement is necessary when the current information identifies states that the target separates. This is the simplest obstruction to pure optimization.
 
-\begin{theorem}[Contradiction requires distinction, informal version of Theorem~\ref{thm:contradiction:formal}]
+\begin{theorem}[Contradiction requires distinction]
 \label{thm:contradiction:informal}
 Let $\calP$ be a partition of $\Omega$ and let $y:\Omega\to A$ be a required output. Suppose $\omega,\omega'$ lie in the same atom of $\calP$ but $y(\omega)\ne y(\omega')$. Then no $\calP$-measurable predictor $f:\Omega\to A$ satisfies both $f(\omega)=y(\omega)$ and $f(\omega')=y(\omega')$.
 \end{theorem}
