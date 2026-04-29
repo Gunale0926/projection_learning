@@ -1,26 +1,32 @@
 \contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
 \contentsline {paragraph}{Organization.}{1}{section*.2}%
 \contentsline {section}{\numberline {2}Preliminaries}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Notation}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Projection geometry}{2}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Associative evidence}{2}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Statement convention}{2}{subsection.2.4}%
 \contentsline {section}{\numberline {3}Main Results}{2}{section.3}%
-\contentsline {subsection}{\numberline {3.1}Projection as the canonical repair update}{2}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}Relation to gradient learning}{2}{subsection.3.2}%
-\contentsline {subsection}{\numberline {3.3}Exact binding and capacity}{3}{subsection.3.3}%
-\contentsline {subsection}{\numberline {3.4}Innovation, conflict, and conservative writing}{3}{subsection.3.4}%
-\contentsline {subsection}{\numberline {3.5}Ridge and Bayesian memory}{4}{subsection.3.5}%
-\contentsline {section}{\numberline {4}Algorithms and Complexity}{5}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Streaming Conservative Projection Memory}{5}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Ridge Projection Memory}{6}{subsection.4.2}%
-\contentsline {subsection}{\numberline {4.3}Training and inference}{6}{subsection.4.3}%
-\contentsline {section}{\numberline {5}Technical Overview}{6}{section.5}%
-\contentsline {section}{\numberline {6}Conclusion}{10}{section.6}%
-\contentsline {section}{\numberline {A}Appendix Roadmap}{13}{appendix.A}%
-\contentsline {section}{\numberline {B}Limitations}{13}{appendix.B}%
-\contentsline {section}{\numberline {C}Related Work}{13}{appendix.C}%
-\contentsline {paragraph}{Backpropagation and runtime updates.}{13}{section*.4}%
-\contentsline {paragraph}{Bregman projection and online optimization.}{14}{section*.5}%
-\contentsline {paragraph}{Passive-aggressive learning and least squares.}{14}{section*.6}%
-\contentsline {paragraph}{Test-time training and expressive hidden states.}{14}{section*.7}%
-\contentsline {paragraph}{Fast weights and linear attention.}{14}{section*.8}%
-\contentsline {section}{\numberline {D}Projection Learning Proofs}{14}{appendix.D}%
-\contentsline {section}{\numberline {E}Conservative Memory Proofs}{18}{appendix.E}%
-\contentsline {section}{\numberline {F}Ridge and Bayesian Projection Memory Proofs}{24}{appendix.F}%
+\contentsline {subsection}{\numberline {3.1}Projection is forced by stability}{3}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Gradient learning is a linearized case}{3}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Binding has algebraic capacity}{4}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Innovation is the safe write direction}{4}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Conservative repair is optimal}{5}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}The online hard update is the batch projection}{6}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Ridge memory turns exact repair into statistical repair}{6}{subsection.3.7}%
+\contentsline {section}{\numberline {4}Algorithms and Complexity}{7}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Streaming Conservative Projection Memory}{7}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Ridge Projection Memory}{8}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Training and inference}{8}{subsection.4.3}%
+\contentsline {section}{\numberline {5}Technical Overview}{9}{section.5}%
+\contentsline {section}{\numberline {6}Conclusion}{13}{section.6}%
+\contentsline {section}{\numberline {A}Appendix Roadmap}{16}{appendix.A}%
+\contentsline {section}{\numberline {B}Limitations}{16}{appendix.B}%
+\contentsline {section}{\numberline {C}Related Work}{17}{appendix.C}%
+\contentsline {paragraph}{Backpropagation and runtime updates.}{17}{section*.4}%
+\contentsline {paragraph}{Bregman projection and online optimization.}{17}{section*.5}%
+\contentsline {paragraph}{Passive-aggressive learning and least squares.}{17}{section*.6}%
+\contentsline {paragraph}{Test-time training and expressive hidden states.}{17}{section*.7}%
+\contentsline {paragraph}{Fast weights and linear attention.}{17}{section*.8}%
+\contentsline {section}{\numberline {D}Projection Learning Proofs}{17}{appendix.D}%
+\contentsline {section}{\numberline {E}Conservative Memory Proofs}{21}{appendix.E}%
+\contentsline {section}{\numberline {F}Ridge and Bayesian Projection Memory Proofs}{27}{appendix.F}%

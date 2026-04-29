@@ -3,7 +3,7 @@
 
 \begin{theorem}[Ridge solution]
 \label{thm:ridge-solution:formal}
-Let
+Let $W_0\in\R^{m\times r}$, $\lambda>0$, $\rho_\tau\ge0$, $k_\tau\in\R^r$, and $v_\tau\in\R^m$. Let
 \begin{align*}
 J_t(W)=\frac{\lambda}{2}\norm{W-W_0}_F^2+\frac{1}{2}\sum_{\tau=1}^t\rho_\tau\norm{Wk_\tau-v_\tau}^2.
 \end{align*}
@@ -34,7 +34,7 @@ W_{t+1}=B_tA_t^{-1}.
 
 \begin{theorem}[Recursive ridge update]
 \label{thm:ridge-recursive:formal}
-Let $P_t=A_{t-1}^{-1}$ and $W_t=B_{t-1}P_t$. Define
+Under the notation of Theorem~\ref{thm:ridge-solution:formal}, let $P_t=A_{t-1}^{-1}$ and $W_t=B_{t-1}P_t$. Define
 \begin{align*}
 g_t=\frac{\rho_tP_tk_t}{1+\rho_t k_t^\top P_tk_t}.
 \end{align*}
@@ -64,9 +64,9 @@ W_{t+1}&=B_tP_{t+1}\\
 
 \begin{theorem}[Ridge bound, formal version of Theorem~\ref{thm:ridge-competitive:informal}]
 \label{thm:ridge-competitive:formal}
-Let
+Let $W_0\in\R^{m\times r}$, $\lambda>0$, $\rho_t\ge0$, $k_t\in\R^r$, and $v_t\in\R^m$. With $J_t$ and $A_t$ as in Theorem~\ref{thm:ridge-solution:formal}, let
 \begin{align*}
-W_t=\argmin_WJ_{t-1}(W),\qquad P_t=A_{t-1}^{-1},\qquad a_t=k_t^\top P_tk_t,\qquad e_t=v_t-W_tk_t.
+W_t=\argmin_{W\in\R^{m\times r}}J_{t-1}(W),\qquad P_t=A_{t-1}^{-1},\qquad a_t=k_t^\top P_tk_t,\qquad e_t=v_t-W_tk_t.
 \end{align*}
 For every $U\in\R^{m\times r}$,
 \begin{align*}
@@ -107,7 +107,7 @@ Multiplying by $2$ proves the claim.
 
 \begin{theorem}[Log-determinant information identity, formal version of Theorem~\ref{thm:logdet-info:informal}]
 \label{thm:logdet-info:formal}
-Let $A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top$ and $a_t=k_t^\top A_{t-1}^{-1}k_t$. Then
+Let $\lambda>0$, $\rho_t\ge0$, $k_t\in\R^r$, $A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top$, and $a_t=k_t^\top A_{t-1}^{-1}k_t$. Then
 \begin{align*}
 \sum_{t=1}^T\log(1+\rho_ta_t)=\log\frac{\det A_T}{\det A_0}.
 \end{align*}
@@ -128,7 +128,7 @@ Summing over $t$ gives the identity.
 
 \begin{theorem}[Bayesian ridge projection memory, formal version of Theorem~\ref{thm:bayesian-ridge:informal}]
 \label{thm:bayesian-ridge:formal}
-Assume each row $w_j$ of $W$ has prior $w_j\sim\mathcal N(w_{0,j},\lambda^{-1}I)$ and observations satisfy $v_t=Wk_t+\varepsilon_t$ with $\varepsilon_t\sim\mathcal N(0,\rho_t^{-1}I_m)$ independently over time. Then the posterior mean and MAP estimate are $B_tA_t^{-1}$.
+Let $W\in\R^{m\times r}$ and $\rho_t>0$. Assume each row $w_j$ of $W$ has prior $w_j\sim\mathcal N(w_{0,j},\lambda^{-1}I)$ and observations satisfy $v_t=Wk_t+\varepsilon_t$ with $k_t\in\R^r$, $v_t\in\R^m$, and $\varepsilon_t\sim\mathcal N(0,\rho_t^{-1}I_m)$ independently over time. Then the posterior mean and MAP estimate are $B_tA_t^{-1}$.
 \end{theorem}
 \begin{proof}
 The negative log posterior, up to constants independent of $W$, is

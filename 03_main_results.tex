@@ -1,7 +1,11 @@
 \section{Main Results}
 \label{sec:main-results}
 
-\subsection{Projection as the canonical repair update}
+This section states the main results in the order in which the argument is meant to be read. The first result identifies projection as the unique geometric form of stable repair. The next results explain why gradients still appear as a special case. The memory results then specialize the principle to associative state, where the notions of capacity, novelty, conflict, and optimal repair become explicit linear algebra.
+
+\subsection{Projection is forced by stability}
+
+Suppose new evidence determines a closed convex set $\calC$ of acceptable states. A runtime learner should move from $s_0$ to a state in $\calC$, but it should not disturb the state more than the evidence requires. The following theorem says that this intuitive requirement has an exact geometric form. Projection is equivalent to a Pythagorean inequality against every feasible ideal state.
 
 \begin{theorem}[Projection characterization, informal version of Theorem~\ref{thm:projection-characterization:formal}]
 \label{thm:projection-characterization:informal}
@@ -11,15 +15,17 @@ D_\psi(u,p)+D_\psi(p,s_0)\le D_\psi(u,s_0).
 \end{align*}
 \end{theorem}
 
-This says that minimal repair and global stability with respect to all feasible ideal states are the same condition.
+The left side has two terms: the remaining distance from the new state $p$ to a feasible ideal $u$, and the price paid to move from $s_0$ to $p$. The theorem says that this sum is never larger than the original distance from $s_0$ to $u$. Thus projection is not just a way to satisfy evidence; it is the update that pays for its own movement by becoming closer to every state that could have explained the evidence.
 
-\subsection{Relation to gradient learning}
+\subsection{Gradient learning is a linearized case}
+
+Projection Learning should not be read as an opposition to gradient descent. The relationship is more precise: soft projection is an implicit mirror step, and explicit gradient descent is obtained by replacing the new-state gradient by the old-state gradient. In this sense, gradient learning is the linearized local shadow of projection learning.
 
 \begin{theorem}[Soft projection as implicit mirror descent, informal version of Theorem~\ref{thm:implicit-md:formal}]
 \label{thm:implicit-md:informal}
 Let $\ell_t$ be differentiable and suppose the soft projection optimum is interior:
 \begin{align*}
-s_{t+1}=\argmin_s\{D_\psi(s,s_t)+\eta\ell_t(s)\}.
+s_{t+1}=\argmin_{s\in S}\{D_\psi(s,s_t)+\eta\ell_t(s)\}.
 \end{align*}
 Then
 \begin{align*}
@@ -28,11 +34,13 @@ Then
 For $\psi(s)=\norm{s}_2^2/2$, this becomes implicit gradient descent. Replacing $\nabla\ell_t(s_{t+1})$ by $\nabla\ell_t(s_t)$ gives ordinary explicit gradient descent.
 \end{theorem}
 
+The distinction matters at runtime. A gradient step asks how the loss changes at the old state. A projection step asks which new state jointly stays near the old state and explains the evidence. For a quadratic consistency loss, this implicit update has an exact closed form.
+
 \begin{theorem}[Quadratic projection memory as exact implicit gradient descent, informal version of Theorem~\ref{thm:pml-implicit:formal}]
 \label{thm:pml-implicit:informal}
-Let $\ell(W)=\norm{Wk-v}^2/2$. The Euclidean soft projection update
+Let $k\in\R^r$, $v\in\R^m$, $W_t\in\R^{m\times r}$, and $\ell(W)=\norm{Wk-v}^2/2$. The Euclidean soft projection update
 \begin{align*}
-W_{t+1}=\argmin_W\left\{\frac{1}{2}\norm{W-W_t}_F^2+\eta\ell(W)\right\}
+W_{t+1}=\argmin_{W\in\R^{m\times r}}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\eta\ell(W)\right\}
 \end{align*}
 is the implicit gradient step $W_{t+1}=W_t-\eta\nabla\ell(W_{t+1})$ and has the closed form
 \begin{align*}
@@ -41,38 +49,56 @@ W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{k}^2}(v-W_tk)k^\top.
 Its residual contracts by $(1+\eta\norm{k}^2)^{-1}$ for all $\eta>0$.
 \end{theorem}
 
-\subsection{Exact binding and capacity}
+This theorem separates Projection Memory from naive fast-weight accumulation. The update is residual-correcting, normalized, and unconditionally contractive for the current evidence. The next question is what happens when there is more than one piece of evidence.
+
+\subsection{Binding has algebraic capacity}
+
+Associative memory begins with a set of desired bindings $Wk_i=v_i$. Stacking the keys and values gives the constraint $WK=V$. Not every such system is feasible: if the keys have a linear relation, the values must obey the same relation. The following theorem gives the exact feasibility condition and the closest feasible memory.
 
 \begin{theorem}[Exact associative binding, informal version of Theorem~\ref{thm:exact-binding:formal}]
 \label{thm:exact-binding:informal}
 For key-value matrices $K\in\R^{r\times T}$ and $V\in\R^{m\times T}$, the constraint set $\{W:WK=V\}$ is nonempty if and only if $\ker K\subseteq\ker V$. When it is nonempty, the Euclidean projection of $W_0$ onto this set is
 \begin{align*}
-W^\star=W_0+(V-W_0K)K^+.
+W^\star=W_0+(V-W_0K)K^\dagger.
 \end{align*}
 In particular, if $K$ has full column rank, then arbitrary values can be exactly bound.
 \end{theorem}
 
-Thus an $r$-dimensional key space exactly stores arbitrary values for at most $r$ independent keys. Beyond that rank, values must obey the same linear relations as keys.
+The theorem gives a capacity law. An $r$-dimensional key space can bind arbitrary values for at most $r$ linearly independent keys. After the key span is exhausted, additional values are not free choices; they are constrained by the linear relations already present in the keys. This is where runtime learning first encounters a hard boundary: some evidence is not new knowledge but a demand to violate previous structure.
 
-\subsection{Innovation, conflict, and conservative writing}
+\subsection{Innovation is the safe write direction}
+
+Now imagine the memory already satisfies old evidence $WK=V$, and a new pair $(k,v)$ arrives. Decompose the new key into the part already explained by old keys and the part outside their span:
+\begin{align*}
+k=Ka+z,\qquad a=K^\dagger k,\qquad z=(I-KK^\dagger)k.
+\end{align*}
+The memory has freedom only on the innovation direction $z$. Everything in the old span is already fixed by $V$.
 
 \begin{theorem}[Innovation decomposition, informal version of Theorem~\ref{thm:innovation-decomposition:formal}]
 \label{thm:innovation-decomposition:informal}
-Assume old evidence is $WK=V$ and decompose a new key as in \eqref{eq:innovation}. Every old-feasible memory satisfies
+Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $k\in\R^r$, and $v\in\R^m$. Assume old evidence is $WK=V$ and decompose the new key as in \eqref{eq:innovation}. Every old-feasible memory satisfies
 \begin{align*}
 Wk=Va+Wz.
 \end{align*}
 If $z=0$, the value at $k$ is already fixed by old evidence. If $z\ne0$, the new evidence constrains only the innovation direction through $Wz=v-Va$.
 \end{theorem}
 
+This result is the hinge of the paper. It says that a safe runtime update should not write along the raw key $k$. The raw key contains old components that are already committed. The only direction that can carry new information without disturbing old constraints is $z$.
+
 \begin{theorem}[Conflict impossibility, informal version of Theorem~\ref{thm:conflict-impossibility:formal}]
 \label{thm:conflict-impossibility:informal}
-If $z=0$, then no update preserving $WK=V$ can change $Wk$. Hence evidence $Wk=v$ is compatible with old evidence if and only if $v=W_tk$.
+Let $W_tK=V$ and let $z=(I-KK^\dagger)k$. If $z=0$, then no update preserving $WK=V$ can change $Wk$. Hence evidence $Wk=v$ is compatible with old evidence if and only if $v=W_tk$.
 \end{theorem}
+
+Thus conflict is not a training failure. It is an algebraic fact: the new constraint asks the memory to assign a different value to a key whose value is already implied by old evidence. A runtime learner should detect this case rather than blindly take a larger step.
+
+\subsection{Conservative repair is optimal}
+
+When $z\ne0$, the new evidence can be repaired while preserving old constraints. The soft version trades exact satisfaction for controlled movement. It is the proximal repair of the current residual inside the old-feasible affine subspace.
 
 \begin{theorem}[Soft Conservative Projection Memory, informal version of Theorem~\ref{thm:soft-cpm:formal}]
 \label{thm:soft-cpm:informal}
-Assume $W_tK=V$ and $z\ne0$. The constrained soft repair problem
+Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, and $v\in\R^m$. Assume $W_tK=V$, define $z=(I-KK^\dagger)k$, and suppose $z\ne0$. The constrained soft repair problem
 \begin{align*}
 W_{t+1}=\argmin_{W:WK=V}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\frac{\eta}{2}\norm{Wk-v}^2\right\}
 \end{align*}
@@ -83,9 +109,11 @@ W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{z}^2}(v-W_tk)z^\top.
 It preserves old constraints and contracts the new residual by the factor $(1+\eta\norm{z}^2)^{-1}$.
 \end{theorem}
 
+The denominator is not an implementation trick. It is the price of implicit repair in the innovation direction. Large innovation permits a strong contraction with modest movement. Small innovation means the key is almost already explained by previous evidence, so a large residual is difficult to repair safely.
+
 \begin{theorem}[No-free-repair lower bound, informal version of Theorem~\ref{thm:no-free-repair:formal}]
 \label{thm:no-free-repair:informal}
-Assume $W_tK=V$, $z=(I-\Pi)k$, and $e=v-W_tk$. Let an update $W_t+\Delta$ preserve old constraints, so $\Delta K=0$. If the post-update residual obeys
+Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, and $v\in\R^m$. Assume $W_tK=V$, $\Pi=KK^\dagger$, $z=(I-\Pi)k$, and $e=v-W_tk$. Let an update $W_t+\Delta$ preserve old constraints, so $\Delta K=0$. If the post-update residual obeys
 \begin{align*}
 \norm{v-(W_t+\Delta)k}\le\gamma\norm{e}
 \end{align*}
@@ -96,29 +124,41 @@ for $0\le\gamma<1$ and $z\ne0$, then
 If $z=0$ and $e\ne0$, no such contraction is possible while preserving old constraints.
 \end{theorem}
 
+This lower bound explains the novelty-conflict diagnostic. Small $\norm{z}$ and large $\norm{e}$ are not merely bad for Conservative Projection Memory; they are intrinsically expensive for any update that preserves old evidence.
+
 \begin{theorem}[Optimal contraction, informal version of Theorem~\ref{thm:optimal-contraction:formal}]
 \label{thm:optimal-contraction:informal}
-Fix $0\le\gamma\le1$ and $z\ne0$. Among all updates preserving $\Delta K=0$ and achieving exact residual $v-(W_t+\Delta)k=\gamma e$, the minimum-Frobenius-norm update is
+Under the notation of Theorem~\ref{thm:no-free-repair:informal}, fix $0\le\gamma\le1$ and suppose $z\ne0$. Among all updates preserving $\Delta K=0$ and achieving exact residual $v-(W_t+\Delta)k=\gamma e$, the minimum-Frobenius-norm update is
 \begin{align*}
 \Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}^2}.
 \end{align*}
 It attains the lower bound in Theorem~\ref{thm:no-free-repair:informal}. Soft CPM is the special case $\gamma=(1+\eta\norm{z}^2)^{-1}$.
 \end{theorem}
 
+Together, the lower bound and the optimality theorem say that Conservative Projection Memory is not merely conservative; it is as conservative as possible for its chosen amount of residual repair.
+
+\subsection{The online hard update is the batch projection}
+
+The hard conservative update exactly satisfies each compatible new constraint. A natural worry is that doing this sequentially might be greedy and order-dependent. The next theorem removes that worry in the compatible case: the sequential hard procedure returns the same memory as the batch projection onto all evidence.
+
 \begin{theorem}[Sequential hard CPM equals batch projection, informal version of Theorem~\ref{thm:sequential-batch:formal}]
 \label{thm:sequential-batch:informal}
 For compatible evidence $(k_t,v_t)_{t=1}^T$, sequential hard CPM with redundant steps skipped returns
 \begin{align*}
-W_{T+1}=\argmin_{W:WK_T=V_T}\frac{1}{2}\norm{W-W_0}_F^2=W_0+(V_T-W_0K_T)K_T^+.
+W_{T+1}=\argmin_{W:WK_T=V_T}\frac{1}{2}\norm{W-W_0}_F^2=W_0+(V_T-W_0K_T)K_T^\dagger.
 \end{align*}
 Thus the online hard update exactly tracks the batch Euclidean projection solution.
 \end{theorem}
 
-\subsection{Ridge and Bayesian memory}
+This result completes the exact story. Projection gives the closest memory satisfying all compatible evidence; innovation tells the online learner where the next constraint has new degrees of freedom; hard CPM follows those degrees of freedom and arrives at the same point as the batch solution.
+
+\subsection{Ridge memory turns exact repair into statistical repair}
+
+Exact preservation is appropriate when evidence is trusted and the protected constraints should not move. Long noisy streams require a softer object: evidence should accumulate with weights, old information should regularize the state, and uncertain directions should be updated cautiously. Ridge Projection Memory is that statistical version.
 
 \begin{theorem}[Ridge and Bayesian projection memory, informal version of Theorem~\ref{thm:bayesian-ridge:formal}]
 \label{thm:bayesian-ridge:informal}
-The ridge objective
+Let $W_0\in\R^{m\times r}$, $\lambda>0$, $\rho_\tau\ge0$, $k_\tau\in\R^r$, and $v_\tau\in\R^m$. The ridge objective
 \begin{align*}
 J_t(W)=\frac{\lambda}{2}\norm{W-W_0}_F^2+\frac{1}{2}\sum_{\tau=1}^t\rho_\tau\norm{Wk_\tau-v_\tau}^2
 \end{align*}
@@ -129,11 +169,13 @@ A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top,\qquad B_t=\lambda W_0
 The same matrix is the posterior mean and MAP estimate under a Gaussian linear observation model.
 \end{theorem}
 
+The inverse covariance in ridge memory plays the role that the protected subspace plays in exact CPM. It remembers which key directions have already been supported by evidence and scales future updates accordingly.
+
 \begin{theorem}[Ridge bound, informal version of Theorem~\ref{thm:ridge-competitive:formal}]
 \label{thm:ridge-competitive:informal}
-Let the pre-update ridge state and covariance be
+Under the notation of Theorem~\ref{thm:bayesian-ridge:informal}, let the pre-update ridge state and covariance be
 \begin{align*}
-W_t=\argmin_W J_{t-1}(W),\qquad P_t=\left(\lambda I+\sum_{\tau<t}\rho_\tau k_\tau k_\tau^\top\right)^{-1}.
+W_t=\argmin_{W\in\R^{m\times r}}J_{t-1}(W),\qquad P_t=\left(\lambda I+\sum_{\tau<t}\rho_\tau k_\tau k_\tau^\top\right)^{-1}.
 \end{align*}
 Define $a_t=k_t^\top P_tk_t$. For every comparator $U$,
 \begin{align*}
@@ -141,10 +183,14 @@ Define $a_t=k_t^\top P_tk_t$. For every comparator $U$,
 \end{align*}
 \end{theorem}
 
+The normalized loss weights errors by the leverage $a_t$. A direction that is uncertain has high leverage and receives a cautious normalized penalty; a direction that has become well supported is judged more directly. The corresponding information growth is exactly log-determinantal.
+
 \begin{theorem}[Log-determinant information identity, informal version of Theorem~\ref{thm:logdet-info:formal}]
 \label{thm:logdet-info:informal}
-Let $A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top$ and $a_t=k_t^\top A_{t-1}^{-1}k_t$. Then
+Let $\lambda>0$, $\rho_t\ge0$, $k_t\in\R^r$, $A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top$, and $a_t=k_t^\top A_{t-1}^{-1}k_t$. Then
 \begin{align*}
 \sum_{t=1}^T\log(1+\rho_ta_t)=\log\frac{\det A_T}{\det A_0}.
 \end{align*}
 \end{theorem}
+
+This identity gives the statistical version of the capacity story. Exact CPM counts independent innovation directions; ridge memory measures accumulated evidence volume through the log determinant of the key covariance.

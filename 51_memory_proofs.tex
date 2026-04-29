@@ -5,7 +5,7 @@
 \label{thm:exact-binding:formal}
 Let $K\in\R^{r\times T}$ and $V\in\R^{m\times T}$. The set $\calC=\{W\in\R^{m\times r}:WK=V\}$ is nonempty if and only if $\ker K\subseteq\ker V$. If $\calC$ is nonempty, then
 \begin{align*}
-\argmin_{W\in\calC}\frac{1}{2}\norm{W-W_0}_F^2=W_0+(V-W_0K)K^+.
+\argmin_{W\in\calC}\frac{1}{2}\norm{W-W_0}_F^2=W_0+(V-W_0K)K^\dagger.
 \end{align*}
 \end{theorem}
 \begin{proof}
@@ -15,11 +15,11 @@ Va=WKa=0.
 \end{align*}
 Thus $\ker K\subseteq\ker V$.
 
-Assume $\ker K\subseteq\ker V$. Since $K^+K$ is the orthogonal projector onto $(\ker K)^\perp$, the condition implies
+Assume $\ker K\subseteq\ker V$. Since $K^\dagger K$ is the orthogonal projector onto $(\ker K)^\perp$, the condition implies
 \begin{align*}
-V=VK^+K.
+V=VK^\dagger K.
 \end{align*}
-Thus $W=VK^+$ satisfies $WK=V$.
+Thus $W=VK^\dagger$ satisfies $WK=V$.
 
 Let $R=V-W_0K$ and $W=W_0+\Delta$. The projection problem is
 \begin{align*}
@@ -27,17 +27,17 @@ Let $R=V-W_0K$ and $W=W_0+\Delta$. The projection problem is
 \end{align*}
 The minimum-norm solution is
 \begin{align*}
-\Delta^\star=RK^+.
+\Delta^\star=RK^\dagger.
 \end{align*}
 Therefore
 \begin{align*}
-W^\star=W_0+(V-W_0K)K^+.
+W^\star=W_0+(V-W_0K)K^\dagger.
 \end{align*}
 \end{proof}
 
 \begin{theorem}[Innovation decomposition, formal version of Theorem~\ref{thm:innovation-decomposition:informal}]
 \label{thm:innovation-decomposition:formal}
-Assume $WK=V$. Let $\Pi=KK^+$, $z=(I-\Pi)k$, and $a=K^+k$. Then
+Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W\in\R^{m\times r}$, $k\in\R^r$, and $v\in\R^m$. Assume $WK=V$. Let $\Pi=KK^\dagger$, $z=(I-\Pi)k$, and $a=K^\dagger k$. Then
 \begin{align*}
 Wk=Va+Wz.
 \end{align*}
@@ -46,7 +46,7 @@ If $z=0$, $Wk$ is fixed over all old-feasible $W$. If $z\ne0$, the constraint $W
 \begin{proof}
 The decomposition is
 \begin{align*}
-k=KK^+k+(I-KK^+)k=Ka+z.
+k=KK^\dagger k+(I-KK^\dagger)k=Ka+z.
 \end{align*}
 Multiplying by $W$ gives
 \begin{align*}
@@ -60,7 +60,7 @@ Wk=v\quad \Longleftrightarrow\quad Va+Wz=v\quad \Longleftrightarrow\quad Wz=v-Va
 
 \begin{theorem}[Conflict impossibility, formal version of Theorem~\ref{thm:conflict-impossibility:informal}]
 \label{thm:conflict-impossibility:formal}
-Assume $W_tK=V$ and $z=(I-KK^+)k=0$. If $W_t+\Delta$ preserves old evidence, then $(W_t+\Delta)k=W_tk$. Hence $Wk=v$ is compatible with old evidence if and only if $v=W_tk$.
+Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, and $v\in\R^m$. Assume $W_tK=V$ and $z=(I-KK^\dagger)k=0$. If $W_t+\Delta$ preserves old evidence, then $(W_t+\Delta)k=W_tk$. Hence $Wk=v$ is compatible with old evidence if and only if $v=W_tk$.
 \end{theorem}
 \begin{proof}
 Preserving old evidence means
@@ -83,7 +83,7 @@ Therefore
 
 \begin{theorem}[Hard Conservative Projection Memory]
 \label{thm:hard-cpm:formal}
-Assume $W_tK=V$, let $\Pi=KK^+$, $z=(I-\Pi)k\ne0$, and $e=v-W_tk$. Then
+Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, and $v\in\R^m$. Assume $W_tK=V$, let $\Pi=KK^\dagger$, $z=(I-\Pi)k\ne0$, and $e=v-W_tk$. Then
 \begin{align*}
 W_{t+1}=W_t+\frac{ez^\top}{\norm{z}^2}
 \end{align*}
@@ -123,11 +123,11 @@ The minimum-norm solution is $\Delta^\star=ez^\top/\norm{z}^2$.
 
 \begin{theorem}[No-free-repair lower bound, formal version of Theorem~\ref{thm:no-free-repair:informal}]
 \label{thm:no-free-repair:formal}
-Assume $W_tK=V$, let $\Pi=KK^+$, $z=(I-\Pi)k$, and $e=v-W_tk$. Let $W_t+\Delta$ preserve old constraints, so $\Delta K=0$. If $z\ne0$ and
+Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, $v\in\R^m$, and $0\le\gamma<1$. Assume $W_tK=V$, let $\Pi=KK^\dagger$, $z=(I-\Pi)k$, and $e=v-W_tk$. Let $W_t+\Delta$ preserve old constraints, so $\Delta K=0$. If $z\ne0$ and
 \begin{align*}
 \norm{v-(W_t+\Delta)k}\le\gamma\norm{e}
 \end{align*}
-for $0\le\gamma<1$, then
+then
 \begin{align*}
 \norm{\Delta}_F\ge\frac{(1-\gamma)\norm{e}}{\norm{z}}.
 \end{align*}
@@ -159,7 +159,7 @@ If $z\ne0$, division gives the result. If $z=0$, then $\Delta z=0$ and $e^+=e$, 
 
 \begin{theorem}[Optimal contraction, formal version of Theorem~\ref{thm:optimal-contraction:informal}]
 \label{thm:optimal-contraction:formal}
-Assume $z\ne0$ and fix $0\le\gamma\le1$. Among all updates satisfying
+Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, $v\in\R^m$, and $0\le\gamma\le1$. Assume $W_tK=V$, let $\Pi=KK^\dagger$, $z=(I-\Pi)k\ne0$, and $e=v-W_tk$. Among all updates satisfying
 \begin{align*}
 \Delta K=0,\qquad v-(W_t+\Delta)k=\gamma e,
 \end{align*}
@@ -201,7 +201,7 @@ The norm is
 
 \begin{theorem}[Sequential hard CPM equals batch projection, formal version of Theorem~\ref{thm:sequential-batch:informal}]
 \label{thm:sequential-batch:formal}
-Let $(k_t,v_t)_{t=1}^T$ be compatible evidence, and let $K_t=[k_1,\ldots,k_t]$ and $V_t=[v_1,\ldots,v_t]$. Initialize $W_1=W_0$. At step $t$, let $\Pi_{t-1}=K_{t-1}K_{t-1}^+$ and $z_t=(I-\Pi_{t-1})k_t$. If $z_t=0$, make no update. If $z_t\ne0$, apply hard CPM:
+Let $(k_t,v_t)_{t=1}^T$ be compatible evidence, and let $K_t=[k_1,\ldots,k_t]$ and $V_t=[v_1,\ldots,v_t]$. Initialize $W_1=W_0$. At step $t$, let $\Pi_{t-1}=K_{t-1}K_{t-1}^\dagger$ and $z_t=(I-\Pi_{t-1})k_t$. If $z_t=0$, make no update. If $z_t\ne0$, apply hard CPM:
 \begin{align*}
 W_{t+1}=W_t+\frac{(v_t-W_tk_t)z_t^\top}{\norm{z_t}^2}.
 \end{align*}
@@ -240,7 +240,7 @@ The Euclidean projection characterization onto the affine set $\calC_t$ gives $W
 
 \begin{theorem}[Soft Conservative Projection Memory, formal version of Theorem~\ref{thm:soft-cpm:informal}]
 \label{thm:soft-cpm:formal}
-Assume $W_tK=V$, let $\Pi=KK^+$, $z=(I-\Pi)k\ne0$, and $e=v-W_tk$. The unique solution of
+Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, $v\in\R^m$, and $\eta>0$. Assume $W_tK=V$, let $\Pi=KK^\dagger$, $z=(I-\Pi)k\ne0$, and $e=v-W_tk$. The unique solution of
 \begin{align*}
 \argmin_{W:WK=V}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\frac{\eta}{2}\norm{Wk-v}^2\right\}
 \end{align*}

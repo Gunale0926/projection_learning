@@ -1,33 +1,37 @@
 \section{Algorithms and Complexity}
 \label{sec:algorithms}
 
-Projection memory separates slow trainable parameters from fast runtime state. The slow parameters are the backbone and the maps $K,V,B$. They are trained by ordinary backpropagation. The fast state is updated by projection both during training and inference.
+The theory becomes an algorithm once the learner keeps two kinds of objects separate. The slow parameters are the backbone and the maps $K,V,B$ that decide which features become keys, values, and memory readouts. These parameters are trained by ordinary backpropagation. The fast state is the runtime memory. It is updated by the same projection rule during training and inference.
+
+At each step the algorithm asks two questions. The innovation norm asks whether the current key contains a direction not protected by old evidence. The residual norm asks whether the current memory already predicts the value associated with that key. Together they distinguish novelty, redundancy, and conflict.
 
 \subsection{Streaming Conservative Projection Memory}
 
-The exact conservative algorithm maintains $W_t\in\R^{m\times r}$ and an orthonormal basis $Q_t\in\R^{r\times q_t}$ for protected key directions.
+The exact conservative algorithm maintains a memory $W_t\in\R^{m\times r}$ and an orthonormal basis $Q_t\in\R^{r\times q_t}$ for protected key directions. The projector $Q_tQ_t^\top$ is the computational form of the old key span.
 
 \begin{itemize}
 \item {\bf Part 1. Read.} Given $h_t\in\R^d$, compute
 \begin{align*}
 k_t=Kh_t,\qquad v_t=Vh_t,\qquad r_t=W_tk_t,\qquad \tilde h_t=h_t+Br_t.
 \end{align*}
+The model first reads from the old state. This read-before-write convention prevents the current value from being immediately copied into its own prediction.
 \item {\bf Part 2. Diagnose.} Compute
 \begin{align*}
 z_t=k_t-Q_tQ_t^\top k_t,\qquad e_t=v_t-W_tk_t.
 \end{align*}
-\item {\bf Part 3. Write.} If $\norm{z_t}^2>\varepsilon$, update
+Here $\norm{z_t}$ measures novelty of the key direction, while $\norm{e_t}$ measures surprise of the value under the current memory.
+\item {\bf Part 3. Repair.} If $\norm{z_t}^2>\varepsilon$, update
 \begin{align*}
 W_{t+1}=W_t+\frac{\eta_t}{1+\eta_t\norm{z_t}^2}e_tz_t^\top
 \end{align*}
-and optionally append $z_t/\norm{z_t}$ to $Q_t$. If $\norm{z_t}^2\le\varepsilon$ and $\norm{e_t}$ is small, the evidence is redundant. If $\norm{z_t}^2\le\varepsilon$ and $\norm{e_t}$ is large, the evidence is conflicting relative to protected memory.
+and optionally append $z_t/\norm{z_t}$ to $Q_t$. If $\norm{z_t}^2\le\varepsilon$ and $\norm{e_t}$ is small, the evidence is redundant. If $\norm{z_t}^2\le\varepsilon$ and $\norm{e_t}$ is large, the evidence is conflicting relative to protected memory and cannot be safely repaired without relaxing old commitments.
 \end{itemize}
 
-The per-step overhead is
+The exact algorithm is useful when the system should protect a finite set of remembered directions. Its per-step overhead is
 \begin{align*}
 O(d(r+m)+dm+mr+rq_t).
 \end{align*}
-If $m=r$ and $q_t\le r$, this is
+If $m=r$ and $q_t\le r$, this becomes
 \begin{align*}
 O(dr+mr+r^2).
 \end{align*}
@@ -35,8 +39,11 @@ The runtime state cost is
 \begin{align*}
 O(mr+rq_t).
 \end{align*}
+Since at most $r$ independent key directions can be protected exactly, $q_t\le r$ in the exact finite-rank regime.
 
 \subsection{Ridge Projection Memory}
+
+When evidence is noisy or the stream is long, exact preservation can be too rigid. Ridge Projection Memory replaces the protected subspace by an inverse covariance $P_t$. Directions with strong accumulated key evidence get smaller future gains; unsupported directions remain plastic.
 
 The ridge algorithm maintains $W_t\in\R^{m\times r}$ and $P_t\in\R^{r\times r}$, initialized by
 \begin{align*}
@@ -48,6 +55,8 @@ g_t&=\frac{\rho_tP_tk_t}{1+\rho_tk_t^\top P_tk_t},\\
 W_{t+1}&=W_t+(v_t-W_tk_t)g_t^\top,\\
 P_{t+1}&=P_t-\frac{\rho_tP_tk_tk_t^\top P_t}{1+\rho_tk_t^\top P_tk_t}.
 \end{align*}
+This is the recursive form of the ridge projection solution and also the Bayesian posterior update for the linear-Gaussian memory model.
+
 The per-step overhead is
 \begin{align*}
 O(d(r+m)+dm+mr+r^2),
@@ -56,14 +65,16 @@ and the runtime state cost is
 \begin{align*}
 O(mr+r^2).
 \end{align*}
+For small $r$ and $m$, the update is a forward pass plus low-rank state repair rather than an inference-time backward pass.
 
 \subsection{Training and inference}
 
-The same state update is used in training and inference.
+The same state-update rule is used during training and inference. Training learns the slow maps that make projection useful; inference uses the learned maps and continues to update only the fast state.
+
 \begin{itemize}
-\item {\bf Part 1. Fully unrolled training.} Projection updates are unrolled and differentiated through. This trains $K,V,B$ for long-horizon memory effects but stores runtime states across the sequence.
-\item {\bf Part 2. Truncated state-gradient training.} Gradients are propagated through only the most recent $H$ state updates, giving state memory $O(HM_s)$ for runtime-state size $M_s$.
-\item {\bf Part 3. Detached-state training.} Projection updates are executed with stop-gradient. This has inference-like memory cost, but long-horizon credit to $V$ may require auxiliary consistency losses or periodic unrolling.
+\item {\bf Part 1. Fully unrolled training.} Projection updates are unrolled and differentiated through. This gives $K,V,B$ direct long-horizon credit for how their keys and values shape future memory, at the cost of storing runtime states across the sequence.
+\item {\bf Part 2. Truncated state-gradient training.} Gradients are propagated through only the most recent $H$ state updates, giving state memory $O(HM_s)$ for runtime-state size $M_s$. This is the natural analogue of truncated backpropagation through time.
+\item {\bf Part 3. Detached-state training.} Projection updates are executed with stop-gradient. This has inference-like memory cost. Since long-horizon credit to $V$ is weakened, one may add local consistency losses or occasionally unroll state gradients.
 \end{itemize}
 
 At inference, there is no backward pass. The cost per token is

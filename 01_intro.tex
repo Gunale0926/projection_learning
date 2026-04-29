@@ -1,30 +1,34 @@
 \section{Introduction}
 \label{sec:intro}
 
-Backpropagation made hidden representations trainable by turning learning into differentiation through a static computation graph. This is the right primitive when the object being optimized is a parameterized function and the task is to distribute a scalar error through differentiable structure. Runtime learning asks for a different primitive. A deployed system receives evidence after it has already formed state, and the update must incorporate that evidence without changing what the evidence does not touch.
+Backpropagation gives a clean mathematical primitive for train-time learning. A differentiable model produces an error, and the chain rule distributes that error through the computation graph. This is the right language when learning means changing static parameters to reduce a global objective.
 
-The central problem is therefore not only optimization but controlled repair. If the current state is $s_t$ and the evidence at time $t$ determines a set of acceptable states $\calC_t$, the natural update is
+Runtime learning has a different demand. A deployed system already has state: memories, estimates, cached structure, and commitments induced by previous observations. New evidence should change the state only where the evidence forces change. If the update is too weak, the system fails to adapt; if it is too broad, the system destroys information that was not contradicted. The basic problem is therefore not merely descent of a loss, but controlled repair of state under evidence.
+
+Projection Learning formalizes this repair principle. Let $S$ be a closed convex state space, let $\psi:S\to\R$ be differentiable and strictly convex, and define
+\begin{align*}
+D_\psi(u,v)=\psi(u)-\psi(v)-\ip{\nabla\psi(v)}{u-v}.
+\end{align*}
+If evidence at time $t$ gives a closed convex consistency set $\calC_t\subseteq S$, the hard update is
 \begin{align*}
 s_{t+1}=\argmin_{s\in\calC_t}D_\psi(s,s_t).
 \end{align*}
-If the evidence is noisy, the corresponding soft update is
+If evidence is soft, represented by a convex loss $\ell_t:S\to\R$ and weight $\eta_t>0$, the update is
 \begin{align*}
-s_{t+1}=\argmin_s\{D_\psi(s,s_t)+\eta_t\ell_t(s)\}.
+s_{t+1}=\argmin_{s\in S}\{D_\psi(s,s_t)+\eta_t\ell_t(s)\}.
 \end{align*}
-This paper studies these updates as a runtime learning principle. We call the principle Projection Learning: learning is minimal consistency repair.
+The guiding question is simple: among the states that satisfy, or best approximate, the new evidence, which one changes the old state the least?
 
-The first contribution is a characterization theorem. Bregman projection is not merely one possible update. It is exactly the update that satisfies the evidence and obeys a Pythagorean inequality against every feasible ideal state. Thus the variational rule is equivalent to a stability statement: after projection, the learner has not moved away from any state that also satisfies the evidence.
-
-The second contribution is a canonical neural realization called Conservative Projection Memory. A runtime memory is a matrix $W_t\in\R^{m\times r}$, and evidence is a key-value constraint $Wk_t=v_t$. If old keys form $K_{t-1}$, the correct write direction is not $k_t$ but the innovation
+The canonical neural instance studied here is Conservative Projection Memory. A runtime memory is a matrix $W_t\in\R^{m\times r}$, and a hidden state produces a key $k_t\in\R^r$ and value $v_t\in\R^m$. The evidence asks for $Wk_t=v_t$. If old keys form $K_{t-1}$, the safe write direction is the innovation
 \begin{align*}
-z_t=(I-\Pi_{t-1})k_t,\qquad \Pi_{t-1}=K_{t-1}K_{t-1}^+.
+z_t=(I-\Pi_{t-1})k_t,\qquad \Pi_{t-1}=K_{t-1}K_{t-1}^\dagger,
 \end{align*}
-The soft update is
+where $K_{t-1}^\dagger$ is the Moore-Penrose pseudoinverse. The soft conservative repair is
 \begin{align*}
 W_{t+1}=W_t+\frac{\eta_t}{1+\eta_t\norm{z_t}^2}(v_t-W_tk_t)z_t^\top.
 \end{align*}
-This is the smallest update that repairs the new residual while preserving old constraints whenever such preservation is possible.
+Thus the memory does not write along the raw key. It writes only along the part of the key not already explained by protected evidence.
 
-The innovation view gives the mechanism its semantics. If $\norm{z_t}$ is large, the key contains new information and the state can be updated in a new direction. If $z_t=0$ and the implied value agrees with the evidence, the observation is redundant. If $z_t=0$ and the value disagrees, the evidence is contradictory: no update can satisfy it while preserving the old bindings. The method therefore exposes novelty and conflict as algebraic facts, not as hidden consequences of an optimizer.
+This innovation rule is the core intuition of the paper. Large innovation means the key contains a new direction. Small innovation with small residual means the evidence is redundant. Small innovation with large residual means the evidence conflicts with what the memory has committed to preserve. The theory below turns this intuition into exact feasibility laws, optimality statements, and online algorithms.
 
-\paragraph{Organization.} Section~\ref{sec:preliminaries} fixes notation and the projection geometry. Section~\ref{sec:main-results} states the main informal results. Section~\ref{sec:algorithms} gives executable algorithms and complexity. Section~\ref{sec:technical-overview} gives proof sketches. Section~\ref{sec:conclusion} concludes. Appendix~\ref{app:roadmap} gives a guide to the appendix; Appendix~\ref{app:limitations} states limitations; Appendix~\ref{app:related} discusses related work; the remaining appendices contain formal statements and proofs.
+\paragraph{Organization.} Section~\ref{sec:preliminaries} fixes notation. Section~\ref{sec:main-results} develops the main results as a sequence from projection geometry to conservative memory. Section~\ref{sec:algorithms} gives algorithms and complexity. Section~\ref{sec:technical-overview} gives proof sketches. Section~\ref{sec:conclusion} concludes.

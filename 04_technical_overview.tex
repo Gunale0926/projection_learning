@@ -72,13 +72,13 @@ Va=WKa=0.
 \end{align*}
 Thus $\ker K\subseteq\ker V$. Conversely this nullspace condition implies
 \begin{align*}
-V=VK^+K,
+V=VK^\dagger K,
 \end{align*}
-so $W=VK^+$ is feasible. For projection, write $W=W_0+\Delta$ and $R=V-W_0K$. The problem becomes
+so $W=VK^\dagger$ is feasible. For projection, write $W=W_0+\Delta$ and $R=V-W_0K$. The problem becomes
 \begin{align*}
 \min_\Delta\frac{1}{2}\norm{\Delta}_F^2\quad \text{subject to}\quad \Delta K=R.
 \end{align*}
-The minimum-norm feasible solution is $\Delta=RK^+$.
+The minimum-norm feasible solution is $\Delta=RK^\dagger$.
 \end{proof}
 
 \begin{theorem}[Innovation and conflict, proof sketch for Theorems~\ref{thm:innovation-decomposition:formal} and \ref{thm:conflict-impossibility:formal}]
@@ -88,7 +88,7 @@ The informal statements are Theorems~\ref{thm:innovation-decomposition:informal}
 \begin{proof}[Proof sketch]
 Using \eqref{eq:innovation},
 \begin{align*}
-k=KK^+k+(I-KK^+)k=Ka+z.
+k=KK^\dagger k+(I-KK^\dagger)k=Ka+z.
 \end{align*}
 If $WK=V$, then
 \begin{align*}

@@ -119,7 +119,7 @@ Combining proves the claim.
 \label{thm:implicit-md:formal}
 Let $\ell_t$ be differentiable and let
 \begin{align*}
-s_{t+1}=\argmin_s\{D_\psi(s,s_t)+\eta\ell_t(s)\}.
+s_{t+1}=\argmin_{s\in S}\{D_\psi(s,s_t)+\eta\ell_t(s)\}.
 \end{align*}
 If $s_{t+1}$ is an interior optimum, then
 \begin{align*}
@@ -148,9 +148,9 @@ Rearranging proves the mirror form. If $\psi(s)=\norm{s}_2^2/2$, then $\nabla\ps
 
 \begin{theorem}[Quadratic projection memory as implicit gradient descent, formal version of Theorem~\ref{thm:pml-implicit:informal}]
 \label{thm:pml-implicit:formal}
-Let $\ell(W)=\norm{Wk-v}^2/2$. The update
+Let $k\in\R^r$, $v\in\R^m$, $W_t\in\R^{m\times r}$, $\eta>0$, and $\ell(W)=\norm{Wk-v}^2/2$. The update
 \begin{align*}
-W_{t+1}=\argmin_W\left\{\frac{1}{2}\norm{W-W_t}_F^2+\eta\ell(W)\right\}
+W_{t+1}=\argmin_{W\in\R^{m\times r}}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\eta\ell(W)\right\}
 \end{align*}
 is equivalent to
 \begin{align*}
