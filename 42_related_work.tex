@@ -1,81 +1,40 @@
 \section{Related Work}
 \label{app:related}
 
-Distinction Graph Machines sit at the intersection of several mature lines of work: adaptive category creation, online splitting, prototype learning, cache and retrieval language models, fast weights, memory-augmented networks, sparse routing, test-time adaptation, and continual learning. The paper should therefore not claim novelty for prototypes, runtime memory, online expansion, or retrieval alone. The specific claim is narrower: DGM separates runtime learning into consequence-forced refinement of the information structure and local repair of state inside the current structure, and implements this separation as a graph of anchored concepts, edge-generated distinctions, and repairable local memories.
+The relevant comparison is not whether DGM uses prototypes, memory, routing, or online updates. All of these ingredients have long histories. The question is whether a runtime learner distinguishes two operations that are often collapsed: repairing state inside the current representation, and refining the representation when consequences reveal a missing distinction.
 
-\paragraph{Closest ancestors and non-novel components.}
-The components of DGM have clear ancestors. ART, online trees, Hoeffding trees, Mondrian forests, LVQ, SOMs, Growing Neural Gas, and prototype learning already contain category creation, splitting, or prototype growth. Passive-aggressive learning, online ridge/RLS, fast weights, linear attention, Projection Memory, and CPM already contain local runtime repair. Cache language models, $k$NN-LMs, Memorizing Transformers, RETRO/RAG, memory networks, MoE layers, TTA, and TTT already contain retrieval, sparse routing, or runtime adaptation. The DGM contribution is not any one component in isolation. It is the runtime-learning decomposition:
+\subsection{Methods that repair without refining}
+
+Cache language models and $k$NN-LMs store or retrieve context-token examples at inference time \citep{grave2017improving,khandelwal2020generalization}. Memorizing Transformers, RETRO, RAG, and sparse retrieval systems extend this idea with larger or external stores \citep{wu2022memorizing,borgeaud2022improving,lewis2020retrieval,rae2016scaling}. These methods make past examples available, but the default response to surprise is more storage or retrieval, not the creation of a new runtime concept forced by consequence conflict.
+
+Fast weights, linear attention memories, delta-rule updates, passive-aggressive learning, online ridge/RLS, and Projection Memory repair associative state inside a fixed geometry \citep{ba2016using,katharopoulos2020transformers,schlag2021linear,crammer2006online,vovk1997competitive,bregman1967relaxation,tikhonov1977solutions,hoerl1970ridge}. CPM is especially close to our repair side because it detects zero innovation with nonzero residual as a conflict. DGM uses this diagnosis differently: a zero-innovation conflict is evidence that the current atom is too coarse, so projection-style repair should stop until the information structure is refined.
+
+Test-time adaptation and test-time training update model state or parameters by optimizing an inference-time objective \citep{sun2020test,wang2021tent,niu2022eata,zhang2022memo,sun2025learning}. These methods ask what surrogate loss should be optimized at test time. DGM asks a prior structural question: is the error repairable under the current distinctions, or does it reveal a missing distinction?
+
+These methods are not wrong. They solve the stale-state half of runtime learning. They do not, by themselves, provide an explicit consequence-forced refinement operation.
+
+\subsection{Methods that refine without local repair}
+
+Decision trees, online trees, Hoeffding trees, adaptive trees, extremely fast decision trees, and Mondrian forests refine leaves using information gain, variance reduction, or streaming split tests \citep{breiman1984classification,domingos2000mining,bifet2009adaptive,manapragada2018extremely,lakshminarayanan2014mondrian}. These are the closest algorithmic relatives of DGM's refinement test. The difference is structural: trees store distinctions in a rooted hierarchy, while DGM stores local pairwise distinction edges between runtime concepts and attaches repairable memories to the resulting nodes.
+
+Adaptive Resonance Theory addresses stable incremental category creation under mismatch and vigilance \citep{carpenter1987massively,carpenter1987art2,grossberg2013adaptive}. Prototype methods, LVQ, SOMs, neural gas, growing neural gas, and Prototypical Networks represent regions or classes by stored centers or exemplars \citep{kohonen1990self,kohonen1995self,martinetz1991neural,fritzke1995growing,snell2017prototypical}. DGM shares the vocabulary of category creation and prototypes, but its concepts are operational hidden-state concepts whose edges are consequence-forced binary generators. The node is not only a region; it is a place where local memory can be repaired after the distinction is accepted.
+
+Concept Bottleneck Models and Formal Concept Analysis emphasize explicit concept structures \citep{koh2020concept,ganter1999formal}. DGM should not be read as claiming human-interpretable concepts by default. Its concepts are runtime concepts: hidden-state anchors, centroids, local memories, and pairwise distinctions created from prediction consequences.
+
+These methods solve the refinement half in various forms. They typically do not pair refinement with graph-gated neural local memories that continue to be repaired after the split.
+
+\subsection{Methods that route without runtime concept creation}
+
+Mixture-of-experts, Switch Transformers, and Product-Key Memory route tokens or queries to sparse trained capacity \citep{shazeer2017outrageously,fedus2022switch,lample2019large}. Memory Networks, End-to-End Memory Networks, Neural Turing Machines, and Differentiable Neural Computers learn external read/write controllers \citep{weston2015memory,sukhbaatar2015end,graves2014neural,graves2016hybrid}. These systems are important precedents for sparse reads and external memory. DGM differs in write semantics: the routed objects are runtime-created concepts whose edges generate an information structure and whose memories are repaired locally.
+
+Continual learning studies forgetting, replay, regularization, and capacity growth across task sequences \citep{kirkpatrick2017overcoming,lopezpaz2017gradient,rusu2016progressive,yoon2018lifelong}. DGM is complementary. It is an instance-level runtime data structure for local concept growth and memory repair, not a complete task-sequence continual learning system.
+
+\subsection{DGM's position}
+
+DGM combines refinement and repair but keeps them distinct:
 \[
 \text{missing consequence distinction}\Rightarrow\text{refine},
 \qquad
 \text{stale local state}\Rightarrow\text{repair}.
 \]
-The graph layer is the implementation of this decomposition: edges are consequence-forced binary generators that both induce an information structure and enter routing, while node memories are repaired only after the current concept is treated as adequate.
-
-\begin{center}
-\small
-\begin{tabular}{p{0.20\linewidth}p{0.31\linewidth}p{0.39\linewidth}}
-\toprule
-Family & Similar to DGM & Missing relative to DGM \\
-\midrule
-ART & stable category creation under mismatch & vigilance/resonance is a category-match rule, not a graph-generated measurable structure that gates local memories \\
-Online trees & consequence-driven refinement & rooted hierarchy; no local pairwise distinction graph with repairable node memories \\
-Prototype learning & anchors, centroids, and exemplar-like concepts & similarity organization without consequence-forced distinction edges \\
-Cache/$k$NN-LM & hidden-state retrieval memory & appends and retrieves contexts; does not create runtime concepts and edges after consequence conflict \\
-Fast weights & dynamic key-value memory & local repair without a prior missing-distinction diagnosis \\
-TTT/TTA & runtime adaptation & optimizes surrogate or test-time losses rather than selecting refine versus repair \\
-MoE and PKM & sparse routing to capacity & static trained experts or keys, not runtime concept creation from contradiction \\
-MANNs & external memory read/write & learned controller, not explicit refinement semantics \\
-Continual learning & forgetting control and capacity growth & task-level adaptation, not instance-level DGM state \\
-CBM/FCA & concepts and concept structure & human-given or lattice concepts, not runtime consequence-forced graph \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\paragraph{Refine: concept and category growth.}
-Adaptive resonance, online decision trees, Hoeffding-style streaming trees, Mondrian forests, prototype methods, LVQ, SOMs, and growing neural gas all address some form of category creation or refinement. DGM inherits this concern but changes the refinement object. A DGM refinement creates an anchored runtime concept and local pairwise edges whose binary generators are used by routing. The node also carries a repairable memory, so refinement does not merely create a new region; it creates a new place where local state can be repaired.
-
-\paragraph{Repair: local runtime state update.}
-Passive-aggressive learning, online convex optimization, RLS, ridge updates, fast weights, linear attention, Projection Memory, and CPM all provide mechanisms for changing a predictor in a fixed representation. DGM uses such mechanisms as local memories, but only after diagnosing that the representation is adequate. If the same current atom must support incompatible consequences, DGM treats that as a missing distinction rather than asking a fixed local memory to absorb the conflict.
-
-\paragraph{Retrieve and adapt: memory and runtime adaptation.}
-Cache LMs, $k$NN-LMs, Memorizing Transformers, RETRO/RAG, MoE, memory-augmented networks, TTA, and TTT all retrieve, route, or adapt at runtime. DGM is closest to this family in its DGM-Embedding layer. The boundary is the write semantics: cache and retrieval methods mostly add or look up examples, and TTT/TTA choose losses for adaptation; DGM creates new runtime concepts and distinction edges when a consequence conflict shows that retrieval alone is not enough.
-
-\paragraph{Adaptive resonance and stability-plasticity.}
-Adaptive Resonance Theory (ART) is the closest conceptual ancestor of DGM. ART systems were designed for stable incremental category learning under the stability-plasticity dilemma: existing recognition codes should remain stable, while mismatching inputs can trigger new categories through vigilance and resonance mechanisms \citep{carpenter1987massively,carpenter1987art2,grossberg2013adaptive}. This is close to DGM's decision to create a new anchored concept when the current atom cannot absorb observed consequences. The difference is the object being refined. ART categories are resonance-controlled recognition codes. DGM concepts are nodes in a graph whose edges are binary distinction generators; these edges induce a finite information structure and gate local neural memories. In short, ART asks whether an input resonates with an existing category, while DGM asks whether the current concept is too coarse or whether its local memory is merely wrong.
-
-\paragraph{Online trees and refinement.}
-Classical decision trees use information gain or variance reduction as splitting criteria, and online decision trees such as VFDT/Hoeffding trees decide splits from streaming sufficient statistics \citep{domingos2000mining}. Hoeffding Adaptive Trees, Extremely Fast Decision Trees, and Mondrian Forests further address evolving streams, more aggressive splitting, and online random-forest growth \citep{bifet2009adaptive,manapragada2018extremely,lakshminarayanan2014mondrian}. These methods are the closest algorithmic relatives of DGM's refinement test. A tree asks which feature split a leaf should use. DGM asks whether the current concept is too coarse, or whether the local memory attached to that concept should be repaired. Online trees store distinctions in a rooted hierarchy. DGM generalizes the hard-routing tree view into a graph: new concepts add local pairwise distinction edges and local memories without rewriting a single root-to-leaf path.
-
-\paragraph{Prototype systems and concept growth.}
-Prototype methods represent data by stored exemplars or centers, including nearest-neighbor methods, LVQ, SOMs, neural gas, and growing neural gas \citep{kohonen1990self,kohonen1995self,martinetz1991neural,fritzke1995growing}. Prototypical Networks learn embedding spaces in which class means support few-shot classification \citep{snell2017prototypical}. DGM uses anchors and movable centroids, so it shares the computational vocabulary of prototype systems. The distinction is semantic. Prototype methods organize input similarity. DGM organizes consequence-relevant distinctions. A new DGM node is not created merely because an input is far in embedding space; it is created when the local concept fails to absorb observed consequences. Prototypes represent similarity, whereas DGM edges represent necessary dissimilarity.
-
-\paragraph{Concept structures.}
-Concept Bottleneck Models use supervised human-provided concepts as an intermediate representation that can be inspected or intervened on at test time \citep{koh2020concept}. Formal Concept Analysis builds concept lattices from object-attribute incidence relations \citep{ganter1999formal}. These works are related in vocabulary and in their emphasis on structured concepts. DGM should not be read as claiming human-interpretable concepts by default. Its concepts are runtime or operational concepts: hidden-state regions, local memories, and pairwise distinctions created from prediction consequences.
-
-\paragraph{Projection learning and online repair.}
-Bregman projection, mirror descent, proximal methods, passive-aggressive updates, online convex optimization, and online ridge/RLS-style methods provide minimal-change updates in fixed feature spaces \citep{bregman1967relaxation,zinkevich2003online,crammer2006online,shalev2012online,hazan2016introduction,vovk1997competitive,azoury2001relative}. Conservative Projection Memory uses this idea for runtime associative repair. In this paper, projection-style update is not the whole learner; it is the repair half of a refine-or-repair system. Passive-aggressive and ridge methods update predictors over a fixed representation. DGM adds the complementary operation: when the current atom is too coarse, refine the information structure before repairing a local predictor.
-
-\paragraph{Fast weights and linear attention.}
-Fast weights use rapidly changing associative state as short-term memory \citep{ba2016using}. Linear attention can be written as a recurrent key-value memory, and delta-rule variants correct current key-value mappings with residual writes \citep{katharopoulos2020transformers,schlag2021linear}. This overlaps directly with the CPM-style local repair formula: residual writes repair a key-value memory. DGM's distinction is that repair is conditioned on the representation being adequate. CPM adds a protected-evidence geometry: it writes along innovation, detects conflict when innovation vanishes but residual remains, and treats such conflict as evidence for a missing distinction. DGM uses CPM or ridge repair inside a concept after the relevant distinction structure has been fixed.
-
-\paragraph{Cache, $k$NN, and retrieval language models.}
-Continuous cache models, sparse memory systems, $k$NN-LMs, Memorizing Transformers, RETRO, and retrieval-augmented generation improve language modeling by retrieving recent contexts, datastore entries, or external text chunks \citep{grave2017improving,rae2016scaling,khandelwal2020generalization,wu2022memorizing,borgeaud2022improving,lewis2020retrieval}. DGM-Embedding is intentionally close to this family: it stores hidden-state concepts and next-token embedding memories, and it produces logit corrections. The difference is the update semantics. Cache and $k$NN language models retrieve past contexts. DGM separates redundant observations, novel concepts, and contradictory consequences before repairing local next-token memory. Retrieval is not only similarity search; it is edge-gated by consequence-forced distinctions.
-
-\paragraph{Memory-augmented neural networks.}
-Memory Networks, End-to-End Memory Networks, Neural Turing Machines, and Differentiable Neural Computers combine neural controllers with external memory and differentiable read/write operations \citep{weston2015memory,sukhbaatar2015end,graves2014neural,graves2016hybrid}. These systems learn how to use memory end-to-end. DGM uses a more explicit runtime state: graph edges create observable distinctions, and local memories are repaired by sufficient statistics, ridge, or projection rules. This trades the generality of an arbitrary differentiable memory controller for a specific diagnosis of runtime error: missing distinction versus stale local state.
-
-\paragraph{Sparse experts, product-key memories, and routing.}
-Mixture-of-experts and Switch Transformers increase parameter capacity by routing tokens to a small number of trained experts \citep{shazeer2017outrageously,fedus2022switch}. Product-Key Memory uses a structured key space to add large memory layers with sparse lookup \citep{lample2019large}. A DGM layer has a similar sparse read path, but the selected objects are runtime-created concepts with local memories and edge-generated information structure. MoE increases static trained capacity; DGM changes adaptive state during interaction. Combining MoE with cache or $k$NN retrieval still does not create new experts from runtime contradiction or refine a graph of consequence-forced distinctions.
-
-\paragraph{Test-time adaptation and TTT.}
-Test-time training updates model parameters at inference time using self-supervised losses \citep{sun2020test}. Tent adapts by entropy minimization, EATA adds sample selection and anti-forgetting regularization, and MEMO uses augmentation consistency for test-time robustness \citep{wang2021tent,niu2022eata,zhang2022memo}. TTT layers go further by treating the hidden state itself as a machine learning model updated on the test sequence \citep{sun2025learning}. These methods share DGM's interest in runtime adaptation. The update differs: TTT asks what loss should be optimized at test time; DGM asks whether an error indicates a missing distinction or a stale local memory. DGM updates runtime state through forward-only sufficient-statistic, projection, or graph-refinement rules, rather than requiring inference-time backpropagation through an inner objective.
-
-\paragraph{Continual learning and dynamic expansion.}
-Continual learning studies catastrophic forgetting, replay or episodic constraints, regularization, and capacity expansion across task sequences. EWC penalizes movement of important parameters, GEM uses episodic memory to constrain gradients, Progressive Networks add columns for new tasks, and Dynamically Expandable Networks add or split units during lifelong learning \citep{kirkpatrick2017overcoming,lopezpaz2017gradient,rusu2016progressive,yoon2018lifelong}. DGM is complementary to this area. It provides an instance-level runtime data structure for local concept growth and memory repair; it is not by itself a complete solution to task-sequence continual learning.
-
-\paragraph{Information theory, statistical decision theory, and backpropagation.}
-The measure-theoretic formalism follows the standard language of sigma-algebras, generated information, and conditional expectation \citep{billingsley1995probability,kallenberg2002foundations}. The Bayes-risk order is related to Blackwell comparison of experiments and classical statistical decision theory \citep{blackwell1953equivalent,berger1985statistical}. The log-loss identity is the standard relation between logarithmic scoring, conditional entropy, and mutual information, while the squared-loss identity is the orthogonal decomposition of conditional expectations in $L^2$ \citep{cover2006elements,gneiting2007strictly}. Our contribution is to place these identities inside a runtime-learning story: the value of learning a distinction is its reduction in Bayes risk. Backpropagation supplies differentiable credit assignment for fixed computation graphs \citep{rumelhart1986learning}. Distinction Learning addresses a different failure mode: the current information structure may not contain the distinctions needed for any measurable predictor to succeed. The resulting position is:
-\[
-\text{distinction refinement} \quad + \quad \text{local state repair} \quad + \quad \text{differentiable slow-parameter learning}.
-\]
+The measure-theoretic formalism follows standard sigma-algebra and conditional-expectation language \citep{billingsley1995probability,kallenberg2002foundations}. The Bayes-risk order is related to Blackwell comparison and statistical decision theory \citep{blackwell1953equivalent,berger1985statistical}. The log-loss and squared-loss value identities are standard information-theoretic and Hilbert-space facts \citep{cover2006elements,gneiting2007strictly}. The contribution is to place these facts inside a runtime-learning model: not every error is a gradient, and some errors are missing distinctions.

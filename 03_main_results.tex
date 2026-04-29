@@ -1,7 +1,7 @@
-\section{Minimal Information Refinement}
+\section{Minimal Refinement}
 \label{sec:minimal-refinement}
 
-The primitive operation in this paper is refinement. The learner has an information structure and receives evidence that a new event or variable must become observable. The correct update should add that observability and nothing else. The sigma-algebra language is standard measure-theoretic probability, while the finite partition language is the corresponding finite special case \citep{billingsley1995probability,kallenberg2002foundations}. This section states the finite theorem first because it is the clearest form of the idea: split only the atoms cut by the evidence.
+Once a contradiction shows that the current atom is too coarse, the next question is not how to grow the largest possible model. It is: what is the smallest legitimate information update? The primitive operation in this paper is minimal refinement. The learner has an information structure and receives evidence that a new event or variable must become observable. The correct update adds that observability and nothing else. The sigma-algebra language is standard measure-theoretic probability, while the finite partition language is the corresponding finite special case \citep{billingsley1995probability,kallenberg2002foundations}. This section states the finite theorem first because it is the clearest form of the idea: split only the atoms cut by the evidence.
 
 \subsection{The finite refinement rule}
 
@@ -19,7 +19,7 @@ This notation simply keeps the nonempty pieces obtained by cutting each old atom
 Let $\calP$ be a finite partition of $\Omega$ and let $E\subseteq\Omega$. The partition $\calP_E$ is the unique minimal partition that refines $\calP$ and makes $E$ measurable. More precisely, if $\calQ$ refines $\calP$ and $E$ is $\calQ$-measurable, then $\calQ$ refines $\calP_E$.
 \end{theorem}
 
-The theorem gives a canonical update. We do not search over all refined representations; the evidence itself determines the least one. An atom untouched by $E$ is left unchanged. An atom crossed by $E$ is split into the two pieces that the evidence can now distinguish.
+The theorem gives a canonical update. We do not search over all refined representations; the evidence itself determines the least one. An atom untouched by $E$ is left unchanged. An atom crossed by $E$ is split into the two pieces that the evidence can now distinguish. This is the formal version of ``create the missing distinction and nothing else.''
 
 \subsection{The sigma-algebra form}
 
@@ -34,15 +34,4 @@ For general spaces, the same operation is the join of sigma-algebras. If the cur
 Let $\calF\subseteq\calA$ be a sigma-algebra and let $Z$ be a random variable. The join $\calF\vee\sigma(Z)$ is the smallest sigma-algebra $\calG$ such that $\calF\subseteq\calG$ and $Z$ is $\calG$-measurable.
 \end{theorem}
 
-Thus the same object governs finite decision-tree splits and measurable-space refinement. A distinction is not an auxiliary feature added after learning; it is a change in the sigma-algebra of what the learner can condition on.
-
-\subsection{Contradiction inside an atom}
-
-Minimal refinement is necessary when the current information identifies states that the target separates. This is the simplest obstruction to pure optimization.
-
-\begin{theorem}[Contradiction requires distinction]
-\label{thm:contradiction:informal}
-Let $\calP$ be a partition of $\Omega$ and let $y:\Omega\to A$ be a required output. Suppose $\omega,\omega'$ lie in the same atom of $\calP$ but $y(\omega)\ne y(\omega')$. Then no $\calP$-measurable predictor $f:\Omega\to A$ satisfies both $f(\omega)=y(\omega)$ and $f(\omega')=y(\omega')$.
-\end{theorem}
-
-The conclusion is structural, not algorithmic. A larger step size, a different optimizer, or more iterations cannot produce two different outputs on states that the representation forces to be the same. The missing operation is not descent. It is refinement.
+Thus the same object governs finite decision-tree splits and measurable-space refinement. A distinction is not an auxiliary feature added after learning; it is a change in the sigma-algebra of what the learner can condition on. The contradiction theorem in Section~\ref{sec:preliminaries} says when such a change is necessary; minimal refinement says how little information needs to be added.

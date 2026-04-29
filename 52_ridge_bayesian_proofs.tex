@@ -212,6 +212,21 @@ Apply Hoeffding's inequality to the empirical risk of the old state and to the e
 Because $\calH$ is fixed before scoring or generated from data independent of $\calB^{\mathrm{score}}$, Hoeffding's inequality applies conditionally on $\calH$. Taking a union bound over the old state and the $\abs{\calH}$ candidate states gives the displayed $\epsilon_m$. On this event, each gain is a difference of two risks, so empirical and population gain differ by at most $2\epsilon_m$. The implication follows by subtracting this deviation from the empirical gain lower bound.
 \end{proof}
 
+\begin{corollary}[Bounded language-model refinement score, formal version of Corollary~\ref{cor:lm-clipped-refinement:informal}]
+\label{cor:lm-clipped-refinement:formal}
+For language modeling, let
+\begin{align*}
+\ell_{\mathrm{clip}}(x_{\le t},x_{t+1})
+=
+\frac{1}{L_{\max}}
+\min\{-\log p(x_{t+1}\mid x_{\le t}),L_{\max}\}
+\end{align*}
+for a fixed $L_{\max}>0$. If the scoring buffer, empirical gain, and population gain in Theorem~\ref{thm:safe-refinement:formal} are computed using $\ell_{\mathrm{clip}}$, then the theorem applies to language-model refinement decisions made with this clipped score. In particular, an accepted refinement has positive clipped population gain after paying complexity cost and margin $\tau$ with probability at least $1-\delta$.
+\end{corollary}
+\begin{proof}
+The clipped score satisfies $0\le \ell_{\mathrm{clip}}\le 1$. Substituting this bounded loss into Theorem~\ref{thm:safe-refinement:formal} gives the claim directly. The statement is only about the clipped score; raw negative log likelihood is unbounded and would require a separate concentration assumption.
+\end{proof}
+
 \begin{theorem}[Anchor-stable DGM information structure, formal version of Theorem~\ref{thm:anchor-stable:informal}]
 \label{thm:anchor-stable:formal}
 Let

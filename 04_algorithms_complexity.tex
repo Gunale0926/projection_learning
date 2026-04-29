@@ -1,13 +1,17 @@
 \section{Distinction Graph Machines}
 \label{sec:algorithms}
 
-The tree model is a useful finite special case, but it is not the most natural runtime data structure. A tree makes every decision through one irreversible path. A more flexible object is a graph of concepts: local memories live at prototypes, and distinctions live on edges between prototypes that have been confused. The central object is
+The theory so far says what must happen when an atom is wrong: the learner must add a distinction. A runtime model then needs a data structure that can create distinctions without destroying the local state that is still useful. A tree is a useful finite special case, but it is not the most natural runtime data structure. A tree makes every decision through one rooted path. Hidden-state conflicts are often local: a new concept may need to be separated from a few confused neighbors without rewriting a global hierarchy.
+
+\subsection{Why a graph, not a tree?}
+
+DGM uses a graph of concepts. Local memories live at nodes, and distinctions live on edges between concepts that have been confused. The central object is
 \begin{align*}
 \text{DGM}=\text{graph-generated information structure}+\text{local memory repair}.
 \end{align*}
 This section defines that object. The graph is not metadata: its edges generate the finite information structure and gate the read path. The partition and generated-sigma-algebra language follows standard finite measurable-space constructions \citep{billingsley1995probability,kallenberg2002foundations}. The main-text statements below give the operational theorem forms; full proofs are collected in Appendix~\ref{app:algorithm-bridge-proofs}.
 
-\subsection{State and graph-generated information}
+\subsection{State: anchors, centroids, memories, and edges}
 
 Let $\phi_\theta:\calX\to\R^d$ be an encoder and write $h=\phi_\theta(x)$. A Distinction Graph Machine has runtime state
 \begin{align*}
@@ -15,7 +19,9 @@ Let $\phi_\theta:\calX\to\R^d$ be an encoder and write $h=\phi_\theta(x)$. A Dis
 \qquad
 G_t=(V_t,E_t).
 \end{align*}
-Here $a_j\in\R^d$ is a frozen distinction anchor, $c_j\in\R^d$ is a retrieval centroid, $M_j$ is a local memory, $n_j$ is a usage count, and $E_t$ is a set of distinction edges. A new concept is initialized with $a_j=c_j=h$. Subsequent repair may move $c_j$, but anchors are fixed once created, so old distinctions keep their original semantics. An edge $e=(i,j)$ stores a linear distinction
+Each component has a role forced by the refine-or-repair split. A runtime concept needs a stable identity, so $a_j\in\R^d$ is a frozen distinction anchor. Retrieval must adapt as more examples arrive, so $c_j\in\R^d$ is a movable retrieval centroid. State inside an adequate concept must be repairable, so $M_j$ is a local memory and $n_j$ is a usage count. If a concept is created because it was confused with existing concepts, that confusion should not disappear after the update; it becomes an edge in $E_t$. A new concept is initialized with $a_j=c_j=h$. Subsequent repair may move $c_j$, but anchors are fixed once created, so old distinctions keep their original semantics.
+
+An edge $e=(i,j)$ stores a linear distinction
 \begin{align*}
 u_e=\frac{a_i-a_j}{\norm{a_i-a_j}_2},\qquad b_e=\frac{1}{2}u_e^\top(a_i+a_j),
 \end{align*}
@@ -37,6 +43,41 @@ form a finite partition $\calP_t^G$ of hidden-state space, and the generated sig
 \calP_{t+1}^G=\calP_t^G\vee\sigma(g_e).
 \end{align*}
 Anchors generate the distinction skeleton. Centroids and local memories are adaptive statistics attached to atoms or sparse neighborhoods of this graph-generated partition.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,>=stealth]
+\fill[black] (1.0,1.0) circle (0.08);
+\fill[black] (4.0,1.4) circle (0.08);
+\fill[black] (2.6,3.0) circle (0.08);
+\draw[thick] (1.0,1.0) -- (4.0,1.4);
+\draw[thick] (4.0,1.4) -- (2.6,3.0);
+\draw[dashed] (2.45,0.25) -- (2.25,2.25);
+\draw[dashed] (3.05,2.1) -- (4.65,3.4);
+\draw[blue,thick] (1.35,1.25) circle (0.16);
+\draw[blue,thick] (3.75,1.1) circle (0.16);
+\draw[blue,thick] (2.25,2.75) circle (0.16);
+\node[font=\scriptsize] at (0.72,0.68) {$a_i$};
+\node[font=\scriptsize] at (4.32,1.72) {$a_j$};
+\node[font=\scriptsize] at (2.85,3.26) {$a_k$};
+\node[font=\scriptsize,blue] at (1.6,1.55) {$c_i$};
+\node[font=\scriptsize,blue] at (3.95,0.78) {$c_j$};
+\node[font=\scriptsize,blue] at (2.0,2.45) {$c_k$};
+\draw[rounded corners,fill=green!10] (0.25,1.55) rectangle (1.35,2.05);
+\draw[rounded corners,fill=green!10] (4.35,0.55) rectangle (5.45,1.05);
+\draw[rounded corners,fill=green!10] (1.35,3.25) rectangle (2.45,3.75);
+\node[font=\scriptsize] at (0.8,1.8) {$M_i$};
+\node[font=\scriptsize] at (4.9,0.8) {$M_j$};
+\node[font=\scriptsize] at (1.9,3.5) {$M_k$};
+\fill[orange!80] (5.4,2.7) circle (0.09);
+\node[font=\scriptsize] at (5.75,2.7) {query};
+\draw[->,orange!80,thick] (5.3,2.6) -- (3.05,2.95);
+\draw[->,orange!80,thick] (5.25,2.55) -- (4.15,1.55);
+\node[font=\scriptsize,align=center] at (3.0,0.05) {edges generate distinctions; centroids retrieve; node memories repair};
+\end{tikzpicture}
+\caption{DGM state. Anchors are stable concept identities, centroids are movable retrieval statistics, edges are distinction generators, and node memories are repaired after a concept is judged adequate.}
+\label{fig:dgm-state}
+\end{figure}
 
 \begin{theorem}[Prototype distinction separates its endpoints]
 \label{thm:prototype-edge:informal}
@@ -160,6 +201,26 @@ D_t=\max_{i,r\in N(h)}\norm{\mu_i(h)-\mu_r(h)}_2,
 \end{align*}
 and for language modeling the log-loss surprise $-\log p_{j^\star}(x_{t+1}\mid x_{\le t})$ is the local disagreement signal.
 
+The edges created by a refinement are attached to a concrete confused-neighbor set. Let $\operatorname{Div}_{\calY}(M_i,M_r;h)$ denote a task-appropriate consequence divergence, such as total variation for classifiers, Euclidean mean distance for regression memories, or next-token distribution divergence for language models. Define
+\begin{align*}
+\operatorname{Confused}(h,y)
+=
+\left\{
+i\in N(h):
+L(y,M_i(h))>\tau_{\mathrm{conflict}}
+\ \text{or}\
+\operatorname{Div}_{\calY}(M_i,M_{j^\star};h)>\tau_{\mathrm{disagree}}
+\right\}.
+\end{align*}
+When a budget of at most $q$ new edges is used, DGM takes $\operatorname{Confused}_q(h,y)$ to be the $q$ highest-scoring members of this set under
+\begin{align*}
+\operatorname{score}_i(h,y)
+=
+\alpha_i(h)L(y,M_i(h))
++\gamma_{\mathrm{div}}\operatorname{Div}_{\calY}(M_i,M_{j^\star};h).
+\end{align*}
+If the set is empty but refinement is otherwise accepted, the implementation falls back to the highest-score candidates in $N(h)\setminus\{j^\star\}$. Thus ``confused neighbors'' is an operator, not an informal phrase.
+
 If $\rho_t$ is small, the information structure is treated as adequate and the machine tries to repair the local state. Repair is guarded rather than blindly committed. The implementation proposes a small set of repair candidates, such as a memory-only update, a memory-plus-centroid update, and one or more reduced centroid steps:
 \begin{align*}
 \calC_{\mathrm{repair}}(\calS_t,h,y)
@@ -192,7 +253,7 @@ a_{\mathrm{new}}=h,\qquad
 c_{\mathrm{new}}=h,\qquad
 M_{\mathrm{new}}=\operatorname{InitMemory}(h,y),
 \end{align*}
-and adds $q$ distinction edges from the new anchored concept to the confused neighbors. Let $\widehat R(\calS;\calB_t^{\mathrm{score}})$ be the empirical local loss on the scoring buffer after routing with state $\calS$. The refinement gain is
+and adds distinction edges from the new anchored concept to $\operatorname{Confused}_q(h,y)$. Let $\widehat R(\calS;\calB_t^{\mathrm{score}})$ be the empirical local loss on the scoring buffer after routing with state $\calS$. The refinement gain is
 \begin{align*}
 \Delta_{\mathrm{refine}}
 =\widehat R(\calS_t;\calB_t^{\mathrm{score}})
@@ -226,7 +287,7 @@ Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m
 \State propose repair candidates with anchors and edges fixed
 \State commit the best candidate satisfying the guarded repair test \eqref{eq:guarded-repair}; otherwise leave state unchanged or enter refinement test
 \Else
-\State form a candidate new anchor/centroid from $h$ and $\calB_t^{\mathrm{prop}}$, with candidate edges to confused neighbors
+\State form a candidate new anchor/centroid from $h$ and $\calB_t^{\mathrm{prop}}$, with candidate edges to $\operatorname{Confused}_q(h,y)$
 \State estimate $\Delta_{\mathrm{refine}}$ on the held-out scoring buffer $\calB_t^{\mathrm{score}}$
 \If{$\Delta_{\mathrm{refine}}>\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q+\tau+2\epsilon_m$ and $D_t>\tau_{\mathrm{disagree}}$}
 \State commit the new anchored concept and its distinction edges
@@ -278,6 +339,18 @@ Consequently every empirical gain $\widehat\Delta(g)$ differs from its populatio
 has positive population gain after paying complexity cost and margin $\tau$.
 \end{theorem}
 
+\begin{corollary}[Bounded language-model refinement score]
+\label{cor:lm-clipped-refinement:informal}
+For language modeling, raw next-token negative log likelihood is unbounded. Fix $L_{\max}>0$ and define the clipped normalized score
+\begin{align*}
+\ell_{\mathrm{clip}}(x_{\le t},x_{t+1})
+=
+\frac{1}{L_{\max}}
+\min\{-\log p(x_{t+1}\mid x_{\le t}),L_{\max}\}.
+\end{align*}
+If refinement proposal and scoring use $\ell_{\mathrm{clip}}$, then Theorem~\ref{thm:safe-refinement:informal} applies to clipped-loss refinement gain. An accepted refinement has positive clipped population gain after cost and margin with the stated high probability. This corollary does not claim positive gain for the raw unbounded negative log likelihood without additional tail assumptions.
+\end{corollary}
+
 \begin{theorem}[Anchor-stable DGM information structure]
 \label{thm:anchor-stable:informal}
 Let
@@ -296,9 +369,9 @@ If a repair step changes only retrieval centroids $c_j$, local memories $M_j$, a
 If there is a common nonnegative potential $\Phi(\calS)$ and every accepted refinement decreases $\Phi$ by at least $\tau>0$, then the number of accepted refinements is at most $\Phi(\calS_0)/\tau$. In particular, this applies to a fixed scoring buffer or validation objective. The local-buffer descent theorem alone should not be read as a global finiteness result when the scoring buffer changes over time.
 \end{corollary}
 
-\subsection{Why graph memory is different from a tree}
+\subsection{Trees as a hard-routing special case}
 
-A tree stores distinctions as a hierarchy. A mistake near the root changes every downstream routing decision. A graph stores distinctions locally between concepts. Creating a new concept does not rewrite old paths; it adds a local alternative and edges explaining why the new concept differs from its neighbors.
+A tree stores distinctions as a hierarchy. A mistake near the root changes every downstream routing decision. A graph stores distinctions locally between concepts. Creating a new concept does not rewrite old paths; it adds a local alternative and edges explaining why the new concept differs from its neighbors. Trees are still contained in the view below, but as a constrained hard-routing case.
 
 \begin{proposition}[Trees as generalized hard-DGMs]
 \label{prop:tree-as-dgm:informal}
@@ -319,12 +392,13 @@ It contributes the score
 \begin{align*}
 \ell_{\mathrm{DGM}}(y\mid h)=\sum_{j\in N(h)}\alpha_j(h)E[y]^\top r_j.
 \end{align*}
-Repair is the sufficient-statistic update
+Repair is the sufficient-statistic update, applied for every selected $j\in N(h)$ with all unselected memories unchanged:
 \begin{align*}
 r_j^+=\frac{n_jr_j+\alpha_j(h)E[y]}{n_j+\alpha_j(h)},
 \qquad
 n_j^+=n_j+\alpha_j(h).
 \end{align*}
+The low-cost hard-update variant is recovered by setting $\alpha_{j^\star}=1$ for the highest-weight prototype and $\alpha_j=0$ for all $j\ne j^\star$.
 
 \paragraph{DGM-Ridge.} For few-shot adaptation or local readout repair, a memory stores a small support set $Z\in\R^{n\times d}$ and labels $Y\in\R^{n\times C}$. The closed-form adapter is the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}:
 \begin{align*}
@@ -334,44 +408,10 @@ n_j^+=n_j+\alpha_j(h).
 \end{align*}
 This is the canonical stronger adapter version. Projection Memory and CPM are advanced repair rules inside $M_j$ after the graph has fixed the relevant local concept; Section~\ref{sec:projection-bridge} treats that relation directly.
 
-\subsection{Language modeling instance}
+\subsection{From DGM to DGM-Embedding}
 \label{sec:language-dgm}
 
-For language modeling, the world state is a prefix and the consequence is the next observed token. Let a frozen or slowly trained backbone produce hidden states
-\begin{align*}
-h_t=\phi_\theta(x_{\le t}).
-\end{align*}
-DGM is inserted as a runtime memory over hidden states. Each anchor-centroid pair $(a_j,c_j)$ represents a recurring context type: a citation pattern, a local syntax regime, a document-specific entity usage, or a repeated task format. Distinction edges separate contexts whose next-token consequences force a split. The DGM-Mean memory predicts a correction to the next-token distribution:
-\begin{align*}
-\ell_{\mathrm{DGM}}(y\mid h_t)=\sum_{j\in N(h_t)}\alpha_j(h_t)E[y]^\top r_j,
-\end{align*}
-where $\alpha_j$ is edge-gated. The final logits are
-\begin{align*}
-\ell(y\mid x_{\le t})=\ell_\theta(y\mid x_{\le t})+\lambda_t\ell_{\mathrm{DGM}}(y\mid h_t).
-\end{align*}
-Here $\lambda_t$ is a learned or fixed trust weight. If the LM head uses tied embeddings and $r_j$ lives in the hidden/output-embedding space, the same correction can be computed as $h_t\leftarrow h_t+\lambda_t\sum_j\alpha_j(h_t)r_j$ before the usual LM-head multiplication, avoiding a second full-vocabulary projection. After the next token $x_{t+1}$ is observed, the machine updates by \textsc{Observe} with consequence $y=x_{t+1}$.
-
-This gives a direct test-time learning protocol for language modeling. During streaming prediction, document continuation, user correction, tool feedback, or supervised next-token evaluation, the next observed token is genuine evidence and can refine or repair the runtime memory. During unconstrained generation, the model should not update from its own sampled token by default, because self-generated samples are actions, not external consequences.
-
-This differs from a cache language model in what is updated. A cache appends or retrieves recent context-token pairs. DGM updates a graph of runtime concepts: redundant observations repair a local next-token memory, while surprising consequences can create a new anchored concept and edges that gate future retrieval.
-
-\begin{algorithm}[H]
-\caption{\textsc{ObserveNextToken} for DGM language modeling}
-\label{alg:dgm-lm}
-\begin{algorithmic}[1]
-\State \textbf{Input:} prefix $x_{\le t}$, observed token $x_{t+1}$, DGM state $\calS_t$
-\State $h_t\gets\phi_\theta(x_{\le t})$
-\State retrieve $N(h_t)$ and compute edge-gated logits $\ell_\theta+\lambda_t\ell_{\mathrm{DGM}}$
-\State $j^\star\gets$ highest-weight prototype
-\State $\rho\gets-\log p(x_{t+1}\mid x_{\le t})$
-\If{$\rho\le\tau_{\mathrm{repair}}$}
-\State update the local token memory at $j^\star$
-\Else
-\State accept a new anchored concept only if the penalized refinement gain test holds
-\EndIf
-\State \Return updated state
-\end{algorithmic}
-\end{algorithm}
+The generic DGM object above can be attached to many local memories. For sequence models, the canonical instantiation is DGM-Embedding: hidden-state concepts store next-token embedding memories, the read path produces a sparse logit correction, and the observe rule runs after the true next token is revealed. Section~\ref{sec:large-model-training} gives this layer directly, including the read-before-observe protocol and the forward-only detached write path.
 
 \subsection{Complexity}
 

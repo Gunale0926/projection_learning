@@ -1,12 +1,6 @@
 \newcommand{\etalchar}[1]{$^{#1}$}
 \begin{thebibliography}{GWR{\etalchar{+}}16}
 
-\bibitem[AW01]{azoury2001relative}
-Katy~S. Azoury and Manfred~K. Warmuth.
-\newblock Relative loss bounds for on-line density estimation with the
-  exponential family of distributions.
-\newblock {\em Machine Learning}, 43:211--246, 2001.
-
 \bibitem[Ber85]{berger1985statistical}
 James~O. Berger.
 \newblock {\em Statistical Decision Theory and Bayesian Analysis}.
@@ -139,11 +133,6 @@ Alex Graves, Greg Wayne, Malcolm Reynolds, Tim Harley, Ivo Danihelka, Agnieszka
   Summerfield, Phil Blunsom, Koray Kavukcuoglu, and Demis Hassabis.
 \newblock Hybrid computing using a neural network with dynamic external memory.
 \newblock {\em Nature}, 538(7626):471--476, 2016.
-
-\bibitem[Haz16]{hazan2016introduction}
-Elad Hazan.
-\newblock {\em Introduction to Online Convex Optimization}.
-\newblock Foundations and Trends in Optimization, 2016.
 
 \bibitem[HK70]{hoerl1970ridge}
 Arthur~E. Hoerl and Robert~W. Kennard.
@@ -310,12 +299,6 @@ Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le,
   mixture-of-experts layer.
 \newblock In {\em International Conference on Learning Representations}, 2017.
 
-\bibitem[SS12]{shalev2012online}
-Shai Shalev-Shwartz.
-\newblock Online learning and online convex optimization.
-\newblock {\em Foundations and Trends in Machine Learning}, 4(2):107--194,
-  2012.
-
 \bibitem[SSZ17]{snell2017prototypical}
 Jake Snell, Kevin Swersky, and Richard~S. Zemel.
 \newblock Prototypical networks for few-shot learning.
@@ -367,13 +350,6 @@ Dequan Wang, Evan Shelhamer, Shaoteng Liu, Bruno Olshausen, and Trevor Darrell.
 Jaehong Yoon, Eunho Yang, Jeongtae Lee, and Sung~Ju Hwang.
 \newblock Lifelong learning with dynamically expandable networks.
 \newblock In {\em International Conference on Learning Representations}, 2018.
-
-\bibitem[Zin03]{zinkevich2003online}
-Martin Zinkevich.
-\newblock Online convex programming and generalized infinitesimal gradient
-  ascent.
-\newblock In {\em Proceedings of the 20th International Conference on Machine
-  Learning}, pages 928--936, 2003.
 
 \bibitem[ZLF22]{zhang2022memo}
 Marvin Zhang, Sergey Levine, and Chelsea Finn.

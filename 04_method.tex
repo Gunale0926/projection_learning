@@ -1,7 +1,7 @@
 \section{The Value of a Distinction}
 \label{sec:value}
 
-Refinement increases what the learner can condition on. This does not mean that every distinction is useful for every task. The value of a distinction is measured by the decrease in optimal risk after the information structure is refined, in the same decision-theoretic sense used in classical comparisons of statistical experiments and value of information \citep{blackwell1953equivalent,berger1985statistical}.
+Minimal refinement says how to add a distinction. It does not say that every possible distinction is worth adding. The value question is task-dependent: when does the new distinction actually change the best achievable prediction? We measure this by the decrease in optimal risk after the information structure is refined, in the same decision-theoretic sense used in classical comparisons of statistical experiments and value of information \citep{blackwell1953equivalent,berger1985statistical}.
 
 \subsection{Risk monotonicity}
 
@@ -15,7 +15,7 @@ R_L(\calG)\le R_L(\calF).
 \end{align*}
 \end{theorem}
 
-This is a population statement. It says that information cannot hurt the best possible decision rule. Statistical estimation, finite samples, and model selection can still overfit; those are algorithmic questions, not failures of the information order.
+This is a population statement. It says that information cannot hurt the best possible decision rule. It does not say that a finite implementation should refine without restraint. Statistical estimation, finite samples, and model selection can overfit; those are algorithmic questions, not failures of the information order. This is why the DGM algorithm later uses penalties, thresholds, and sample-split scoring before committing a new concept.
 
 \subsection{Log loss}
 
@@ -29,7 +29,7 @@ R_{\log}(\calF)-R_{\log}(\calG)=I(Y;\calG\mid\calF).
 \end{align*}
 \end{theorem}
 
-Thus, for classification and language modeling, a refinement is useful exactly to the extent that it carries conditional mutual information about the consequence beyond what the learner already knows.
+Thus, for classification and language modeling, a refinement is useful exactly to the extent that it carries conditional mutual information about the consequence beyond what the learner already knows. If the new bit does not tell us anything about the next consequence beyond the old information, it is a gratuitous distinction.
 
 \subsection{Squared loss}
 
@@ -43,7 +43,7 @@ R_2(\calF)-R_2(\calG)=\E\left[\norm{\E[Y\mid\calG]-\E[Y\mid\calF]}_2^2\right].
 \end{align*}
 \end{theorem}
 
-The identity is the Hilbert-space analogue of the log-loss result. A distinction has squared-loss value when the cells it creates have different conditional means.
+The identity is the Hilbert-space analogue of the log-loss result. A distinction has squared-loss value when the cells it creates have different conditional means. In regression language, refinement is worth paying for when it separates consequences, not merely when it separates inputs.
 
 \subsection{Finite empirical scores}
 
