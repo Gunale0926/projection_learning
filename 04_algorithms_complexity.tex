@@ -1,0 +1,73 @@
+\section{Algorithms and Complexity}
+\label{sec:algorithms}
+
+Projection memory separates slow trainable parameters from fast runtime state. The slow parameters are the backbone and the maps $K,V,B$. They are trained by ordinary backpropagation. The fast state is updated by projection both during training and inference.
+
+\subsection{Streaming Conservative Projection Memory}
+
+The exact conservative algorithm maintains $W_t\in\R^{m\times r}$ and an orthonormal basis $Q_t\in\R^{r\times q_t}$ for protected key directions.
+
+\begin{itemize}
+\item {\bf Part 1. Read.} Given $h_t\in\R^d$, compute
+\begin{align*}
+k_t=Kh_t,\qquad v_t=Vh_t,\qquad r_t=W_tk_t,\qquad \tilde h_t=h_t+Br_t.
+\end{align*}
+\item {\bf Part 2. Diagnose.} Compute
+\begin{align*}
+z_t=k_t-Q_tQ_t^\top k_t,\qquad e_t=v_t-W_tk_t.
+\end{align*}
+\item {\bf Part 3. Write.} If $\norm{z_t}^2>\varepsilon$, update
+\begin{align*}
+W_{t+1}=W_t+\frac{\eta_t}{1+\eta_t\norm{z_t}^2}e_tz_t^\top
+\end{align*}
+and optionally append $z_t/\norm{z_t}$ to $Q_t$. If $\norm{z_t}^2\le\varepsilon$ and $\norm{e_t}$ is small, the evidence is redundant. If $\norm{z_t}^2\le\varepsilon$ and $\norm{e_t}$ is large, the evidence is conflicting relative to protected memory.
+\end{itemize}
+
+The per-step overhead is
+\begin{align*}
+O(d(r+m)+dm+mr+rq_t).
+\end{align*}
+If $m=r$ and $q_t\le r$, this is
+\begin{align*}
+O(dr+mr+r^2).
+\end{align*}
+The runtime state cost is
+\begin{align*}
+O(mr+rq_t).
+\end{align*}
+
+\subsection{Ridge Projection Memory}
+
+The ridge algorithm maintains $W_t\in\R^{m\times r}$ and $P_t\in\R^{r\times r}$, initialized by
+\begin{align*}
+W_1=W_0,\qquad P_1=\lambda^{-1}I.
+\end{align*}
+At step $t$, after computing $k_t,v_t,r_t,\tilde h_t$, choose $\rho_t\ge0$ and update
+\begin{align*}
+g_t&=\frac{\rho_tP_tk_t}{1+\rho_tk_t^\top P_tk_t},\\
+W_{t+1}&=W_t+(v_t-W_tk_t)g_t^\top,\\
+P_{t+1}&=P_t-\frac{\rho_tP_tk_tk_t^\top P_t}{1+\rho_tk_t^\top P_tk_t}.
+\end{align*}
+The per-step overhead is
+\begin{align*}
+O(d(r+m)+dm+mr+r^2),
+\end{align*}
+and the runtime state cost is
+\begin{align*}
+O(mr+r^2).
+\end{align*}
+
+\subsection{Training and inference}
+
+The same state update is used in training and inference.
+\begin{itemize}
+\item {\bf Part 1. Fully unrolled training.} Projection updates are unrolled and differentiated through. This trains $K,V,B$ for long-horizon memory effects but stores runtime states across the sequence.
+\item {\bf Part 2. Truncated state-gradient training.} Gradients are propagated through only the most recent $H$ state updates, giving state memory $O(HM_s)$ for runtime-state size $M_s$.
+\item {\bf Part 3. Detached-state training.} Projection updates are executed with stop-gradient. This has inference-like memory cost, but long-horizon credit to $V$ may require auxiliary consistency losses or periodic unrolling.
+\end{itemize}
+
+At inference, there is no backward pass. The cost per token is
+\begin{align*}
+O(C_{\mathrm{bb}}+C_{\mathrm{pm}}),
+\end{align*}
+where $C_{\mathrm{bb}}$ is the backbone forward cost and $C_{\mathrm{pm}}$ is the projection-memory overhead above. In contrast, TTT-style adaptation typically requires an inner backward pass through the test-time module. Projection memory is forward computation plus closed-form rank-one state repair.

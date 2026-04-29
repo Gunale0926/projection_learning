@@ -13,6 +13,34 @@ D_\psi(u,p)+D_\psi(p,s_0)\le D_\psi(u,s_0).
 
 This says that minimal repair and global stability with respect to all feasible ideal states are the same condition.
 
+\subsection{Relation to gradient learning}
+
+\begin{theorem}[Soft projection as implicit mirror descent, informal version of Theorem~\ref{thm:implicit-md:formal}]
+\label{thm:implicit-md:informal}
+Let $\ell_t$ be differentiable and suppose the soft projection optimum is interior:
+\begin{align*}
+s_{t+1}=\argmin_s\{D_\psi(s,s_t)+\eta\ell_t(s)\}.
+\end{align*}
+Then
+\begin{align*}
+\nabla\psi(s_{t+1})=\nabla\psi(s_t)-\eta\nabla\ell_t(s_{t+1}).
+\end{align*}
+For $\psi(s)=\norm{s}_2^2/2$, this becomes implicit gradient descent. Replacing $\nabla\ell_t(s_{t+1})$ by $\nabla\ell_t(s_t)$ gives ordinary explicit gradient descent.
+\end{theorem}
+
+\begin{theorem}[Quadratic projection memory as exact implicit gradient descent, informal version of Theorem~\ref{thm:pml-implicit:formal}]
+\label{thm:pml-implicit:informal}
+Let $\ell(W)=\norm{Wk-v}^2/2$. The Euclidean soft projection update
+\begin{align*}
+W_{t+1}=\argmin_W\left\{\frac{1}{2}\norm{W-W_t}_F^2+\eta\ell(W)\right\}
+\end{align*}
+is the implicit gradient step $W_{t+1}=W_t-\eta\nabla\ell(W_{t+1})$ and has the closed form
+\begin{align*}
+W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{k}^2}(v-W_tk)k^\top.
+\end{align*}
+Its residual contracts by $(1+\eta\norm{k}^2)^{-1}$ for all $\eta>0$.
+\end{theorem}
+
 \subsection{Exact binding and capacity}
 
 \begin{theorem}[Exact associative binding, informal version of Theorem~\ref{thm:exact-binding:formal}]
@@ -55,6 +83,37 @@ W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{z}^2}(v-W_tk)z^\top.
 It preserves old constraints and contracts the new residual by the factor $(1+\eta\norm{z}^2)^{-1}$.
 \end{theorem}
 
+\begin{theorem}[No-free-repair lower bound, informal version of Theorem~\ref{thm:no-free-repair:formal}]
+\label{thm:no-free-repair:informal}
+Assume $W_tK=V$, $z=(I-\Pi)k$, and $e=v-W_tk$. Let an update $W_t+\Delta$ preserve old constraints, so $\Delta K=0$. If the post-update residual obeys
+\begin{align*}
+\norm{v-(W_t+\Delta)k}\le\gamma\norm{e}
+\end{align*}
+for $0\le\gamma<1$ and $z\ne0$, then
+\begin{align*}
+\norm{\Delta}_F\ge\frac{(1-\gamma)\norm{e}}{\norm{z}}.
+\end{align*}
+If $z=0$ and $e\ne0$, no such contraction is possible while preserving old constraints.
+\end{theorem}
+
+\begin{theorem}[Optimal contraction, informal version of Theorem~\ref{thm:optimal-contraction:formal}]
+\label{thm:optimal-contraction:informal}
+Fix $0\le\gamma\le1$ and $z\ne0$. Among all updates preserving $\Delta K=0$ and achieving exact residual $v-(W_t+\Delta)k=\gamma e$, the minimum-Frobenius-norm update is
+\begin{align*}
+\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}^2}.
+\end{align*}
+It attains the lower bound in Theorem~\ref{thm:no-free-repair:informal}. Soft CPM is the special case $\gamma=(1+\eta\norm{z}^2)^{-1}$.
+\end{theorem}
+
+\begin{theorem}[Sequential hard CPM equals batch projection, informal version of Theorem~\ref{thm:sequential-batch:formal}]
+\label{thm:sequential-batch:informal}
+For compatible evidence $(k_t,v_t)_{t=1}^T$, sequential hard CPM with redundant steps skipped returns
+\begin{align*}
+W_{T+1}=\argmin_{W:WK_T=V_T}\frac{1}{2}\norm{W-W_0}_F^2=W_0+(V_T-W_0K_T)K_T^+.
+\end{align*}
+Thus the online hard update exactly tracks the batch Euclidean projection solution.
+\end{theorem}
+
 \subsection{Ridge and Bayesian memory}
 
 \begin{theorem}[Ridge and Bayesian projection memory, informal version of Theorem~\ref{thm:bayesian-ridge:formal}]
@@ -68,4 +127,24 @@ has minimizer $W_{t+1}=B_tA_t^{-1}$, where
 A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top,\qquad B_t=\lambda W_0+\sum_{\tau=1}^t\rho_\tau v_\tau k_\tau^\top.
 \end{align*}
 The same matrix is the posterior mean and MAP estimate under a Gaussian linear observation model.
+\end{theorem}
+
+\begin{theorem}[Ridge bound, informal version of Theorem~\ref{thm:ridge-competitive:formal}]
+\label{thm:ridge-competitive:informal}
+Let the pre-update ridge state and covariance be
+\begin{align*}
+W_t=\argmin_W J_{t-1}(W),\qquad P_t=\left(\lambda I+\sum_{\tau<t}\rho_\tau k_\tau k_\tau^\top\right)^{-1}.
+\end{align*}
+Define $a_t=k_t^\top P_tk_t$. For every comparator $U$,
+\begin{align*}
+\sum_{t=1}^T\frac{\rho_t}{1+\rho_ta_t}\norm{v_t-W_tk_t}^2\le\lambda\norm{U-W_0}_F^2+\sum_{t=1}^T\rho_t\norm{v_t-Uk_t}^2.
+\end{align*}
+\end{theorem}
+
+\begin{theorem}[Log-determinant information identity, informal version of Theorem~\ref{thm:logdet-info:formal}]
+\label{thm:logdet-info:informal}
+Let $A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top$ and $a_t=k_t^\top A_{t-1}^{-1}k_t$. Then
+\begin{align*}
+\sum_{t=1}^T\log(1+\rho_ta_t)=\log\frac{\det A_T}{\det A_0}.
+\end{align*}
 \end{theorem}

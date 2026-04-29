@@ -62,6 +62,70 @@ W_{t+1}&=B_tP_{t+1}\\
 \end{align*}
 \end{proof}
 
+\begin{theorem}[Ridge bound, formal version of Theorem~\ref{thm:ridge-competitive:informal}]
+\label{thm:ridge-competitive:formal}
+Let
+\begin{align*}
+W_t=\argmin_WJ_{t-1}(W),\qquad P_t=A_{t-1}^{-1},\qquad a_t=k_t^\top P_tk_t,\qquad e_t=v_t-W_tk_t.
+\end{align*}
+For every $U\in\R^{m\times r}$,
+\begin{align*}
+\sum_{t=1}^T\frac{\rho_t}{1+\rho_ta_t}\norm{e_t}^2\le\lambda\norm{U-W_0}_F^2+\sum_{t=1}^T\rho_t\norm{v_t-Uk_t}^2.
+\end{align*}
+\end{theorem}
+\begin{proof}
+Since $W_t$ minimizes $J_{t-1}$, for any $\Delta$,
+\begin{align*}
+J_{t-1}(W_t+\Delta)=J_{t-1}(W_t)+\frac{1}{2}\tr(\Delta A_{t-1}\Delta^\top).
+\end{align*}
+Also
+\begin{align*}
+J_t(W_t+\Delta)=J_{t-1}(W_t+\Delta)+\frac{\rho_t}{2}\norm{(W_t+\Delta)k_t-v_t}^2.
+\end{align*}
+With $e_t=v_t-W_tk_t$, the increment minimization is
+\begin{align*}
+\min_\Delta\left\{\frac{1}{2}\tr(\Delta A_{t-1}\Delta^\top)+\frac{\rho_t}{2}\norm{\Delta k_t-e_t}^2\right\}.
+\end{align*}
+Solving row-wise gives minimum value
+\begin{align*}
+\frac{\rho_t}{2(1+\rho_ta_t)}\norm{e_t}^2.
+\end{align*}
+Hence
+\begin{align*}
+J_t(W_{t+1})-J_{t-1}(W_t)=\frac{\rho_t}{2(1+\rho_ta_t)}\norm{e_t}^2.
+\end{align*}
+Summing over $t$ and using $W_1=W_0$ gives
+\begin{align*}
+\sum_{t=1}^T\frac{\rho_t}{2(1+\rho_ta_t)}\norm{e_t}^2=J_T(W_{T+1}).
+\end{align*}
+Since $W_{T+1}$ minimizes $J_T$,
+\begin{align*}
+J_T(W_{T+1})\le J_T(U)=\frac{\lambda}{2}\norm{U-W_0}_F^2+\frac{1}{2}\sum_{t=1}^T\rho_t\norm{Uk_t-v_t}^2.
+\end{align*}
+Multiplying by $2$ proves the claim.
+\end{proof}
+
+\begin{theorem}[Log-determinant information identity, formal version of Theorem~\ref{thm:logdet-info:informal}]
+\label{thm:logdet-info:formal}
+Let $A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top$ and $a_t=k_t^\top A_{t-1}^{-1}k_t$. Then
+\begin{align*}
+\sum_{t=1}^T\log(1+\rho_ta_t)=\log\frac{\det A_T}{\det A_0}.
+\end{align*}
+\end{theorem}
+\begin{proof}
+The matrix determinant lemma gives
+\begin{align*}
+\det A_t&=\det(A_{t-1}+\rho_tk_tk_t^\top)\\
+&=\det A_{t-1}(1+\rho_tk_t^\top A_{t-1}^{-1}k_t)\\
+&=\det A_{t-1}(1+\rho_ta_t).
+\end{align*}
+Taking logarithms,
+\begin{align*}
+\log\det A_t-\log\det A_{t-1}=\log(1+\rho_ta_t).
+\end{align*}
+Summing over $t$ gives the identity.
+\end{proof}
+
 \begin{theorem}[Bayesian ridge projection memory, formal version of Theorem~\ref{thm:bayesian-ridge:informal}]
 \label{thm:bayesian-ridge:formal}
 Assume each row $w_j$ of $W$ has prior $w_j\sim\mathcal N(w_{0,j},\lambda^{-1}I)$ and observations satisfy $v_t=Wk_t+\varepsilon_t$ with $\varepsilon_t\sim\mathcal N(0,\rho_t^{-1}I_m)$ independently over time. Then the posterior mean and MAP estimate are $B_tA_t^{-1}$.

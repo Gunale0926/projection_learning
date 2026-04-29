@@ -19,6 +19,48 @@ D_\psi(u,s_0)-D_\psi(u,p)-D_\psi(p,s_0)=\ip{\nabla\psi(s_0)-\nabla\psi(p)}{p-u}.
 The two displays are equivalent. This proves both directions.
 \end{proof}
 
+\begin{theorem}[Implicit mirror descent, proof sketch for Theorem~\ref{thm:implicit-md:formal}]
+\label{thm:implicit-md:sketch}
+The informal statement is Theorem~\ref{thm:implicit-md:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Differentiate the soft projection objective at the interior optimum:
+\begin{align*}
+0=\nabla_sD_\psi(s_{t+1},s_t)+\eta\nabla\ell_t(s_{t+1}).
+\end{align*}
+Since
+\begin{align*}
+\nabla_sD_\psi(s,s_t)=\nabla\psi(s)-\nabla\psi(s_t),
+\end{align*}
+we obtain
+\begin{align*}
+\nabla\psi(s_{t+1})=\nabla\psi(s_t)-\eta\nabla\ell_t(s_{t+1}).
+\end{align*}
+\end{proof}
+
+\begin{theorem}[Quadratic memory and implicit gradient descent, proof sketch for Theorem~\ref{thm:pml-implicit:formal}]
+\label{thm:pml-implicit:sketch}
+The informal statement is Theorem~\ref{thm:pml-implicit:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+For $\ell(W)=\norm{Wk-v}^2/2$,
+\begin{align*}
+\nabla\ell(W)=(Wk-v)k^\top.
+\end{align*}
+The implicit step is
+\begin{align*}
+W_{t+1}=W_t+\eta(v-W_{t+1}k)k^\top.
+\end{align*}
+With $e=v-W_tk$ and $W_{t+1}=W_t+\alpha ek^\top$,
+\begin{align*}
+v-W_{t+1}k=(1-\alpha\norm{k}^2)e.
+\end{align*}
+Comparing coefficients gives
+\begin{align*}
+\alpha=\eta(1-\alpha\norm{k}^2)=\frac{\eta}{1+\eta\norm{k}^2}.
+\end{align*}
+\end{proof}
+
 \begin{theorem}[Exact binding, proof sketch for Theorem~\ref{thm:exact-binding:formal}]
 \label{thm:exact-binding:sketch}
 The informal statement is Theorem~\ref{thm:exact-binding:informal}.
@@ -82,6 +124,45 @@ v-W_{t+1}k=e-\Delta z=\frac{1}{1+\eta\norm{z}^2}e.
 \end{align*}
 \end{proof}
 
+\begin{theorem}[No-free repair and optimal contraction, proof sketch for Theorems~\ref{thm:no-free-repair:formal} and \ref{thm:optimal-contraction:formal}]
+\label{thm:repair-optimality:sketch}
+The informal statements are Theorems~\ref{thm:no-free-repair:informal} and \ref{thm:optimal-contraction:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Every old-preserving update satisfies
+\begin{align*}
+\Delta k=\Delta(I-\Pi)k=\Delta z.
+\end{align*}
+The post-update residual is
+\begin{align*}
+e^+=e-\Delta z.
+\end{align*}
+If $\norm{e^+}\le\gamma\norm{e}$, then
+\begin{align*}
+\norm{\Delta z}=\norm{e-e^+}\ge(1-\gamma)\norm{e}.
+\end{align*}
+Since $\norm{\Delta z}\le\norm{\Delta}_F\norm{z}$, the lower bound follows. If one demands $e^+=\gamma e$, then $\Delta z=(1-\gamma)e$, and the minimum-norm solution is
+\begin{align*}
+\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}^2}.
+\end{align*}
+\end{proof}
+
+\begin{theorem}[Sequential hard CPM, proof sketch for Theorem~\ref{thm:sequential-batch:formal}]
+\label{thm:sequential-batch:sketch}
+The informal statement is Theorem~\ref{thm:sequential-batch:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Let $\calC_t=\{W:WK_t=V_t\}$ and $\calT_t=\{H:HK_t=0\}$. By induction, $W_t\in\calC_{t-1}$ and
+\begin{align*}
+\ip{H}{W_t-W_0}_F=0\qquad \forall H\in\calT_{t-1}.
+\end{align*}
+The hard CPM update lies in $\calC_t$. If $H\in\calT_t$, then $Hz_t=0$, so
+\begin{align*}
+\ip{H}{e_tz_t^\top}_F=e_t^\top Hz_t=0.
+\end{align*}
+Thus $W_{t+1}-W_0$ is orthogonal to $\calT_t$, which is the Euclidean projection condition for $\calC_t$.
+\end{proof}
+
 \begin{theorem}[Ridge and Bayesian memory, proof sketch for Theorem~\ref{thm:bayesian-ridge:formal}]
 \label{thm:bayesian-ridge:sketch}
 The informal statement is Theorem~\ref{thm:bayesian-ridge:informal}.
@@ -96,4 +177,23 @@ Rearranging,
 W\left(\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top\right)=\lambda W_0+\sum_{\tau=1}^t\rho_\tau v_\tau k_\tau^\top.
 \end{align*}
 Thus $W=B_tA_t^{-1}$. Under the Gaussian prior and observation model, the negative log posterior equals $J_t(W)$ up to constants, so the posterior mean and MAP coincide with this minimizer.
+\end{proof}
+
+\begin{theorem}[Ridge competitive bound and log determinant, proof sketch for Theorems~\ref{thm:ridge-competitive:formal} and \ref{thm:logdet-info:formal}]
+\label{thm:ridge-competitive-logdet:sketch}
+The informal statements are Theorems~\ref{thm:ridge-competitive:informal} and \ref{thm:logdet-info:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Around the minimizer $W_t$ of $J_{t-1}$, the increment minimization is
+\begin{align*}
+\min_\Delta\frac{1}{2}\tr(\Delta A_{t-1}\Delta^\top)+\frac{\rho_t}{2}\norm{\Delta k_t-e_t}^2.
+\end{align*}
+Its minimum value is
+\begin{align*}
+\frac{\rho_t}{2(1+\rho_ta_t)}\norm{e_t}^2.
+\end{align*}
+Summing and comparing $J_T(W_{T+1})$ with $J_T(U)$ gives the competitive bound. The log-determinant identity follows from
+\begin{align*}
+\det(A_{t-1}+\rho_tk_tk_t^\top)=\det(A_{t-1})(1+\rho_ta_t).
+\end{align*}
 \end{proof}

@@ -115,6 +115,80 @@ Lemma~\ref{lem:three-point:formal} gives
 Combining proves the claim.
 \end{proof}
 
+\begin{theorem}[Soft projection as implicit mirror descent, formal version of Theorem~\ref{thm:implicit-md:informal}]
+\label{thm:implicit-md:formal}
+Let $\ell_t$ be differentiable and let
+\begin{align*}
+s_{t+1}=\argmin_s\{D_\psi(s,s_t)+\eta\ell_t(s)\}.
+\end{align*}
+If $s_{t+1}$ is an interior optimum, then
+\begin{align*}
+\nabla\psi(s_{t+1})=\nabla\psi(s_t)-\eta\nabla\ell_t(s_{t+1}).
+\end{align*}
+If $\psi(s)=\norm{s}_2^2/2$, then
+\begin{align*}
+s_{t+1}=s_t-\eta\nabla\ell_t(s_{t+1}).
+\end{align*}
+\end{theorem}
+\begin{proof}
+At an interior optimum,
+\begin{align*}
+0=\nabla_sD_\psi(s_{t+1},s_t)+\eta\nabla\ell_t(s_{t+1}).
+\end{align*}
+Since
+\begin{align*}
+\nabla_sD_\psi(s,s_t)=\nabla\psi(s)-\nabla\psi(s_t),
+\end{align*}
+we obtain
+\begin{align*}
+\nabla\psi(s_{t+1})-\nabla\psi(s_t)+\eta\nabla\ell_t(s_{t+1})=0.
+\end{align*}
+Rearranging proves the mirror form. If $\psi(s)=\norm{s}_2^2/2$, then $\nabla\psi(s)=s$.
+\end{proof}
+
+\begin{theorem}[Quadratic projection memory as implicit gradient descent, formal version of Theorem~\ref{thm:pml-implicit:informal}]
+\label{thm:pml-implicit:formal}
+Let $\ell(W)=\norm{Wk-v}^2/2$. The update
+\begin{align*}
+W_{t+1}=\argmin_W\left\{\frac{1}{2}\norm{W-W_t}_F^2+\eta\ell(W)\right\}
+\end{align*}
+is equivalent to
+\begin{align*}
+W_{t+1}=W_t-\eta\nabla\ell(W_{t+1})
+\end{align*}
+and has closed form
+\begin{align*}
+W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{k}^2}(v-W_tk)k^\top.
+\end{align*}
+Moreover, if $e=v-W_tk$, then
+\begin{align*}
+v-W_{t+1}k=\frac{1}{1+\eta\norm{k}^2}e.
+\end{align*}
+\end{theorem}
+\begin{proof}
+The gradient is
+\begin{align*}
+\nabla\ell(W)=(Wk-v)k^\top.
+\end{align*}
+The optimality condition for the proximal objective is
+\begin{align*}
+0=W_{t+1}-W_t+\eta(W_{t+1}k-v)k^\top,
+\end{align*}
+which is the implicit gradient step. Let $e=v-W_tk$ and set $W_{t+1}=W_t+\alpha ek^\top$. Then
+\begin{align*}
+v-W_{t+1}k=e-\alpha e\norm{k}^2=(1-\alpha\norm{k}^2)e.
+\end{align*}
+The implicit step gives
+\begin{align*}
+\alpha ek^\top=\eta(1-\alpha\norm{k}^2)ek^\top.
+\end{align*}
+Thus
+\begin{align*}
+\alpha=\frac{\eta}{1+\eta\norm{k}^2}.
+\end{align*}
+Substituting $\alpha$ gives the update and residual contraction.
+\end{proof}
+
 \begin{theorem}[KL consistency projection]
 \label{thm:kl-projection:formal}
 Let $p_t$ be strictly positive on a finite space $\calX$. The solution of
