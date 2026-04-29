@@ -38,15 +38,15 @@ The distinction matters at runtime. A gradient step asks how the loss changes at
 
 \begin{theorem}[Quadratic projection memory as exact implicit gradient descent, informal version of Theorem~\ref{thm:pml-implicit:formal}]
 \label{thm:pml-implicit:informal}
-Let $k\in\R^r$, $v\in\R^m$, $W_t\in\R^{m\times r}$, and $\ell(W)=\norm{Wk-v}^2/2$. The Euclidean soft projection update
+Let $k\in\R^r$, $v\in\R^m$, $W_t\in\R^{m\times r}$, and $\ell(W)=\norm{Wk-v}_2^2/2$. The Frobenius soft projection update
 \begin{align*}
 W_{t+1}=\argmin_{W\in\R^{m\times r}}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\eta\ell(W)\right\}
 \end{align*}
 is the implicit gradient step $W_{t+1}=W_t-\eta\nabla\ell(W_{t+1})$ and has the closed form
 \begin{align*}
-W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{k}^2}(v-W_tk)k^\top.
+W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{k}_2^2}(v-W_tk)k^\top.
 \end{align*}
-Its residual contracts by $(1+\eta\norm{k}^2)^{-1}$ for all $\eta>0$.
+Its residual contracts by $(1+\eta\norm{k}_2^2)^{-1}$ for all $\eta>0$.
 \end{theorem}
 
 This theorem separates Projection Memory from naive fast-weight accumulation. The update is residual-correcting, normalized, and unconditionally contractive for the current evidence. The next question is what happens when there is more than one piece of evidence.
@@ -57,7 +57,7 @@ Associative memory begins with a set of desired bindings $Wk_i=v_i$. Stacking th
 
 \begin{theorem}[Exact associative binding, informal version of Theorem~\ref{thm:exact-binding:formal}]
 \label{thm:exact-binding:informal}
-For key-value matrices $K\in\R^{r\times T}$ and $V\in\R^{m\times T}$, the constraint set $\{W:WK=V\}$ is nonempty if and only if $\ker K\subseteq\ker V$. When it is nonempty, the Euclidean projection of $W_0$ onto this set is
+For key-value matrices $K\in\R^{r\times T}$ and $V\in\R^{m\times T}$, the constraint set $\{W:WK=V\}$ is nonempty if and only if $\ker K\subseteq\ker V$. When it is nonempty, the Frobenius projection of $W_0$ onto this set is
 \begin{align*}
 W^\star=W_0+(V-W_0K)K^\dagger.
 \end{align*}
@@ -100,13 +100,13 @@ When $z\ne0$, the new evidence can be repaired while preserving old constraints.
 \label{thm:soft-cpm:informal}
 Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, and $v\in\R^m$. Assume $W_tK=V$, define $z=(I-KK^\dagger)k$, and suppose $z\ne0$. The constrained soft repair problem
 \begin{align*}
-W_{t+1}=\argmin_{W:WK=V}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\frac{\eta}{2}\norm{Wk-v}^2\right\}
+W_{t+1}=\argmin_{W:WK=V}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\frac{\eta}{2}\norm{Wk-v}_2^2\right\}
 \end{align*}
 has the closed form
 \begin{align*}
-W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{z}^2}(v-W_tk)z^\top.
+W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{z}_2^2}(v-W_tk)z^\top.
 \end{align*}
-It preserves old constraints and contracts the new residual by the factor $(1+\eta\norm{z}^2)^{-1}$.
+It preserves old constraints and contracts the new residual by the factor $(1+\eta\norm{z}_2^2)^{-1}$.
 \end{theorem}
 
 The denominator is not an implementation trick. It is the price of implicit repair in the innovation direction. Large innovation permits a strong contraction with modest movement. Small innovation means the key is almost already explained by previous evidence, so a large residual is difficult to repair safely.
@@ -115,24 +115,24 @@ The denominator is not an implementation trick. It is the price of implicit repa
 \label{thm:no-free-repair:informal}
 Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, and $v\in\R^m$. Assume $W_tK=V$, $\Pi=KK^\dagger$, $z=(I-\Pi)k$, and $e=v-W_tk$. Let an update $W_t+\Delta$ preserve old constraints, so $\Delta K=0$. If the post-update residual obeys
 \begin{align*}
-\norm{v-(W_t+\Delta)k}\le\gamma\norm{e}
+\norm{v-(W_t+\Delta)k}_2\le\gamma\norm{e}_2
 \end{align*}
 for $0\le\gamma<1$ and $z\ne0$, then
 \begin{align*}
-\norm{\Delta}_F\ge\frac{(1-\gamma)\norm{e}}{\norm{z}}.
+\norm{\Delta}_F\ge\frac{(1-\gamma)\norm{e}_2}{\norm{z}_2}.
 \end{align*}
 If $z=0$ and $e\ne0$, no such contraction is possible while preserving old constraints.
 \end{theorem}
 
-This lower bound explains the novelty-conflict diagnostic. Small $\norm{z}$ and large $\norm{e}$ are not merely bad for Conservative Projection Memory; they are intrinsically expensive for any update that preserves old evidence.
+This lower bound explains the novelty-conflict diagnostic. Small $\norm{z}_2$ and large $\norm{e}_2$ are not merely bad for Conservative Projection Memory; they are intrinsically expensive for any update that preserves old evidence.
 
 \begin{theorem}[Optimal contraction, informal version of Theorem~\ref{thm:optimal-contraction:formal}]
 \label{thm:optimal-contraction:informal}
 Under the notation of Theorem~\ref{thm:no-free-repair:informal}, fix $0\le\gamma\le1$ and suppose $z\ne0$. Among all updates preserving $\Delta K=0$ and achieving exact residual $v-(W_t+\Delta)k=\gamma e$, the minimum-Frobenius-norm update is
 \begin{align*}
-\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}^2}.
+\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}_2^2}.
 \end{align*}
-It attains the lower bound in Theorem~\ref{thm:no-free-repair:informal}. Soft CPM is the special case $\gamma=(1+\eta\norm{z}^2)^{-1}$.
+It attains the lower bound in Theorem~\ref{thm:no-free-repair:informal}. Soft CPM is the special case $\gamma=(1+\eta\norm{z}_2^2)^{-1}$.
 \end{theorem}
 
 Together, the lower bound and the optimality theorem say that Conservative Projection Memory is not merely conservative; it is as conservative as possible for its chosen amount of residual repair.
@@ -147,7 +147,7 @@ For compatible evidence $(k_t,v_t)_{t=1}^T$, sequential hard CPM with redundant 
 \begin{align*}
 W_{T+1}=\argmin_{W:WK_T=V_T}\frac{1}{2}\norm{W-W_0}_F^2=W_0+(V_T-W_0K_T)K_T^\dagger.
 \end{align*}
-Thus the online hard update exactly tracks the batch Euclidean projection solution.
+Thus the online hard update exactly tracks the batch Frobenius projection solution.
 \end{theorem}
 
 This result completes the exact story. Projection gives the closest memory satisfying all compatible evidence; innovation tells the online learner where the next constraint has new degrees of freedom; hard CPM follows those degrees of freedom and arrives at the same point as the batch solution.
@@ -160,7 +160,7 @@ Exact preservation is appropriate when evidence is trusted and the protected con
 \label{thm:bayesian-ridge:informal}
 Let $W_0\in\R^{m\times r}$, $\lambda>0$, $\rho_\tau\ge0$, $k_\tau\in\R^r$, and $v_\tau\in\R^m$. The ridge objective
 \begin{align*}
-J_t(W)=\frac{\lambda}{2}\norm{W-W_0}_F^2+\frac{1}{2}\sum_{\tau=1}^t\rho_\tau\norm{Wk_\tau-v_\tau}^2
+J_t(W)=\frac{\lambda}{2}\norm{W-W_0}_F^2+\frac{1}{2}\sum_{\tau=1}^t\rho_\tau\norm{Wk_\tau-v_\tau}_2^2
 \end{align*}
 has minimizer $W_{t+1}=B_tA_t^{-1}$, where
 \begin{align*}
@@ -179,7 +179,7 @@ W_t=\argmin_{W\in\R^{m\times r}}J_{t-1}(W),\qquad P_t=\left(\lambda I+\sum_{\tau
 \end{align*}
 Define $a_t=k_t^\top P_tk_t$. For every comparator $U$,
 \begin{align*}
-\sum_{t=1}^T\frac{\rho_t}{1+\rho_ta_t}\norm{v_t-W_tk_t}^2\le\lambda\norm{U-W_0}_F^2+\sum_{t=1}^T\rho_t\norm{v_t-Uk_t}^2.
+\sum_{t=1}^T\frac{\rho_t}{1+\rho_ta_t}\norm{v_t-W_tk_t}_2^2\le\lambda\norm{U-W_0}_F^2+\sum_{t=1}^T\rho_t\norm{v_t-Uk_t}_2^2.
 \end{align*}
 \end{theorem}
 

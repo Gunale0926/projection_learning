@@ -3,7 +3,7 @@
 
 \subsection{Notation}
 
-All vector spaces are finite-dimensional over $\R$. Inner products are written $\ip{x}{y}$, and Euclidean norms are written $\norm{x}_2$ or simply $\norm{x}$ when the norm is clear. For matrices, $\norm{A}_F$ denotes the Frobenius norm, $\ker A$ denotes the nullspace, and $\Span(A)$ denotes the span of the columns of $A$.
+All vector spaces are finite-dimensional over $\R$. Inner products are written $\ip{x}{y}$. Vector lengths are written with explicit subscripts; in this paper they use the $\ell_2$ norm $\norm{x}_2$. For matrices, $\norm{A}_F$ denotes the Frobenius norm, $\ker A$ denotes the nullspace, and $\Span(A)$ denotes the span of the columns of $A$.
 
 For a matrix $K$, the Moore-Penrose pseudoinverse is denoted by $K^\dagger$. The matrix $KK^\dagger$ is the orthogonal projector onto $\Span(K)$. If $K=[k_1,\ldots,k_T]\in\R^{r\times T}$ and $V=[v_1,\ldots,v_T]\in\R^{m\times T}$, the equation $WK=V$ means that the memory $W\in\R^{m\times r}$ binds each key $k_t$ to the corresponding value $v_t$.
 
@@ -13,7 +13,7 @@ Let $S$ be a closed convex subset of a finite-dimensional real vector space. Let
 \begin{align*}
 D_\psi(u,v)=\psi(u)-\psi(v)-\ip{\nabla\psi(v)}{u-v}.
 \end{align*}
-When $\psi(s)=\norm{s}_2^2/2$, this is Euclidean squared distance. All projection statements below are finite-dimensional and use the standard variational characterization of convex minimizers.
+When $\psi(s)=\norm{s}_2^2/2$, this is squared $\ell_2$ distance. All projection statements below are finite-dimensional and use the standard variational characterization of convex minimizers.
 
 \subsection{Associative evidence}
 

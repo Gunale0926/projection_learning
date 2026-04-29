@@ -25,7 +25,7 @@ Let $R=V-W_0K$ and $W=W_0+\Delta$. The projection problem is
 \begin{align*}
 \min_\Delta\frac{1}{2}\norm{\Delta}_F^2\quad \text{subject to}\quad \Delta K=R.
 \end{align*}
-The minimum-norm solution is
+The minimum-Frobenius-norm solution is
 \begin{align*}
 \Delta^\star=RK^\dagger.
 \end{align*}
@@ -85,12 +85,12 @@ Therefore
 \label{thm:hard-cpm:formal}
 Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, and $v\in\R^m$. Assume $W_tK=V$, let $\Pi=KK^\dagger$, $z=(I-\Pi)k\ne0$, and $e=v-W_tk$. Then
 \begin{align*}
-W_{t+1}=W_t+\frac{ez^\top}{\norm{z}^2}
+W_{t+1}=W_t+\frac{ez^\top}{\norm{z}_2^2}
 \end{align*}
 preserves $WK=V$, satisfies $Wk=v$, and minimizes $\norm{W-W_t}_F^2/2$ among all memories satisfying both constraints.
 \end{theorem}
 \begin{proof}
-Let $\Delta^\star=ez^\top/\norm{z}^2$. Since $z\perp\Span(K)$,
+Let $\Delta^\star=ez^\top/\norm{z}_2^2$. Since $z\perp\Span(K)$,
 \begin{align*}
 \Delta^\star K=0.
 \end{align*}
@@ -98,7 +98,7 @@ Thus
 \begin{align*}
 W_{t+1}K=W_tK=V.
 \end{align*}
-Also $z^\top k=\norm{z}^2$, so
+Also $z^\top k=\norm{z}_2^2$, so
 \begin{align*}
 \Delta^\star k=e.
 \end{align*}
@@ -118,18 +118,18 @@ Thus the problem reduces to
 \begin{align*}
 \min_\Delta\frac{1}{2}\norm{\Delta}_F^2\quad \text{subject to}\quad \Delta z=e.
 \end{align*}
-The minimum-norm solution is $\Delta^\star=ez^\top/\norm{z}^2$.
+The minimum-Frobenius-norm solution is $\Delta^\star=ez^\top/\norm{z}_2^2$.
 \end{proof}
 
 \begin{theorem}[No-free-repair lower bound, formal version of Theorem~\ref{thm:no-free-repair:informal}]
 \label{thm:no-free-repair:formal}
 Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, $v\in\R^m$, and $0\le\gamma<1$. Assume $W_tK=V$, let $\Pi=KK^\dagger$, $z=(I-\Pi)k$, and $e=v-W_tk$. Let $W_t+\Delta$ preserve old constraints, so $\Delta K=0$. If $z\ne0$ and
 \begin{align*}
-\norm{v-(W_t+\Delta)k}\le\gamma\norm{e}
+\norm{v-(W_t+\Delta)k}_2\le\gamma\norm{e}_2
 \end{align*}
 then
 \begin{align*}
-\norm{\Delta}_F\ge\frac{(1-\gamma)\norm{e}}{\norm{z}}.
+\norm{\Delta}_F\ge\frac{(1-\gamma)\norm{e}_2}{\norm{z}_2}.
 \end{align*}
 If $z=0$ and $e\ne0$, no update preserving old constraints can achieve such a contraction.
 \end{theorem}
@@ -148,11 +148,11 @@ e^+=e-\Delta z.
 \end{align*}
 Thus
 \begin{align*}
-\norm{\Delta z}=\norm{e-e^+}\ge\norm{e}-\norm{e^+}\ge(1-\gamma)\norm{e}.
+\norm{\Delta z}_2=\norm{e-e^+}_2\ge\norm{e}_2-\norm{e^+}_2\ge(1-\gamma)\norm{e}_2.
 \end{align*}
 Also
 \begin{align*}
-\norm{\Delta z}\le\norm{\Delta}_F\norm{z}.
+\norm{\Delta z}_2\le\norm{\Delta}_F\norm{z}_2.
 \end{align*}
 If $z\ne0$, division gives the result. If $z=0$, then $\Delta z=0$ and $e^+=e$, so no contraction with $\gamma<1$ is possible when $e\ne0$.
 \end{proof}
@@ -165,11 +165,11 @@ Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^
 \end{align*}
 the unique minimum-Frobenius-norm update is
 \begin{align*}
-\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}^2}.
+\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}_2^2}.
 \end{align*}
-Its norm is
+Its Frobenius norm is
 \begin{align*}
-\norm{\Delta^\star}_F=\frac{(1-\gamma)\norm{e}}{\norm{z}}.
+\norm{\Delta^\star}_F=\frac{(1-\gamma)\norm{e}_2}{\norm{z}_2}.
 \end{align*}
 \end{theorem}
 \begin{proof}
@@ -181,9 +181,9 @@ Since $\Delta K=0$, $\Delta k=\Delta z$. Thus
 \begin{align*}
 \Delta z=(1-\gamma)e.
 \end{align*}
-The minimum-norm solution of this linear constraint is
+The minimum-Frobenius-norm solution of this linear constraint is
 \begin{align*}
-\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}^2}.
+\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}_2^2}.
 \end{align*}
 It preserves old constraints because $z^\top K=0$:
 \begin{align*}
@@ -193,9 +193,9 @@ It achieves the target because
 \begin{align*}
 \Delta^\star z=(1-\gamma)e.
 \end{align*}
-The norm is
+The Frobenius norm is
 \begin{align*}
-\norm{\Delta^\star}_F=(1-\gamma)\frac{\norm{e}\norm{z}}{\norm{z}^2}=\frac{(1-\gamma)\norm{e}}{\norm{z}}.
+\norm{\Delta^\star}_F=(1-\gamma)\frac{\norm{e}_2\norm{z}_2}{\norm{z}_2^2}=\frac{(1-\gamma)\norm{e}_2}{\norm{z}_2}.
 \end{align*}
 \end{proof}
 
@@ -203,7 +203,7 @@ The norm is
 \label{thm:sequential-batch:formal}
 Let $(k_t,v_t)_{t=1}^T$ be compatible evidence, and let $K_t=[k_1,\ldots,k_t]$ and $V_t=[v_1,\ldots,v_t]$. Initialize $W_1=W_0$. At step $t$, let $\Pi_{t-1}=K_{t-1}K_{t-1}^\dagger$ and $z_t=(I-\Pi_{t-1})k_t$. If $z_t=0$, make no update. If $z_t\ne0$, apply hard CPM:
 \begin{align*}
-W_{t+1}=W_t+\frac{(v_t-W_tk_t)z_t^\top}{\norm{z_t}^2}.
+W_{t+1}=W_t+\frac{(v_t-W_tk_t)z_t^\top}{\norm{z_t}_2^2}.
 \end{align*}
 Then
 \begin{align*}
@@ -215,7 +215,7 @@ Let
 \begin{align*}
 \calC_t=\{W:WK_t=V_t\},\qquad \calT_t=\{H:HK_t=0\}.
 \end{align*}
-We prove by induction that $W_{t+1}$ is the Euclidean projection of $W_0$ onto $\calC_t$. For $t=0$, this is $W_1=W_0$.
+We prove by induction that $W_{t+1}$ is the Frobenius projection of $W_0$ onto $\calC_t$. For $t=0$, this is $W_1=W_0$.
 
 Assume $W_t=\operatorname{Proj}_{\calC_{t-1}}(W_0)$. Thus $W_t\in\calC_{t-1}$ and
 \begin{align*}
@@ -229,28 +229,28 @@ Hz_t=Hk_t-H\Pi_{t-1}k_t=0.
 \end{align*}
 Let $\Delta_t=W_{t+1}-W_t$. Then
 \begin{align*}
-\ip{H}{\Delta_t}_F=\ip{H}{(v_t-W_tk_t)z_t^\top}_F\frac{1}{\norm{z_t}^2}=\frac{(v_t-W_tk_t)^\top Hz_t}{\norm{z_t}^2}=0.
+\ip{H}{\Delta_t}_F=\ip{H}{(v_t-W_tk_t)z_t^\top}_F\frac{1}{\norm{z_t}_2^2}=\frac{(v_t-W_tk_t)^\top Hz_t}{\norm{z_t}_2^2}=0.
 \end{align*}
 Therefore
 \begin{align*}
 \ip{H}{W_{t+1}-W_0}_F=\ip{H}{W_t-W_0}_F+\ip{H}{\Delta_t}_F=0.
 \end{align*}
-The Euclidean projection characterization onto the affine set $\calC_t$ gives $W_{t+1}=\operatorname{Proj}_{\calC_t}(W_0)$.
+The Frobenius projection characterization onto the affine set $\calC_t$ gives $W_{t+1}=\operatorname{Proj}_{\calC_t}(W_0)$.
 \end{proof}
 
 \begin{theorem}[Soft Conservative Projection Memory, formal version of Theorem~\ref{thm:soft-cpm:informal}]
 \label{thm:soft-cpm:formal}
 Let $K\in\R^{r\times T}$, $V\in\R^{m\times T}$, $W_t\in\R^{m\times r}$, $k\in\R^r$, $v\in\R^m$, and $\eta>0$. Assume $W_tK=V$, let $\Pi=KK^\dagger$, $z=(I-\Pi)k\ne0$, and $e=v-W_tk$. The unique solution of
 \begin{align*}
-\argmin_{W:WK=V}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\frac{\eta}{2}\norm{Wk-v}^2\right\}
+\argmin_{W:WK=V}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\frac{\eta}{2}\norm{Wk-v}_2^2\right\}
 \end{align*}
 is
 \begin{align*}
-W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{z}^2}ez^\top.
+W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{z}_2^2}ez^\top.
 \end{align*}
 Moreover,
 \begin{align*}
-W_{t+1}K=V,\qquad v-W_{t+1}k=\frac{1}{1+\eta\norm{z}^2}e.
+W_{t+1}K=V,\qquad v-W_{t+1}k=\frac{1}{1+\eta\norm{z}_2^2}e.
 \end{align*}
 \end{theorem}
 \begin{proof}
@@ -264,7 +264,7 @@ Since $\Delta K=0$,
 \end{align*}
 The objective becomes
 \begin{align*}
-\min_{\Delta:\Delta K=0}\frac{1}{2}\norm{\Delta}_F^2+\frac{\eta}{2}\norm{\Delta z-e}^2.
+\min_{\Delta:\Delta K=0}\frac{1}{2}\norm{\Delta}_F^2+\frac{\eta}{2}\norm{\Delta z-e}_2^2.
 \end{align*}
 The stationarity equation in the feasible subspace is
 \begin{align*}
@@ -272,21 +272,21 @@ The stationarity equation in the feasible subspace is
 \end{align*}
 Let $\Delta=\alpha ez^\top$. Substitution gives
 \begin{align*}
-\alpha ez^\top+\eta(\alpha e\norm{z}^2-e)z^\top=0.
+\alpha ez^\top+\eta(\alpha e\norm{z}_2^2-e)z^\top=0.
 \end{align*}
 Thus
 \begin{align*}
-\alpha(1+\eta\norm{z}^2)=\eta.
+\alpha(1+\eta\norm{z}_2^2)=\eta.
 \end{align*}
 Therefore
 \begin{align*}
-\Delta=\frac{\eta}{1+\eta\norm{z}^2}ez^\top.
+\Delta=\frac{\eta}{1+\eta\norm{z}_2^2}ez^\top.
 \end{align*}
 Since $z^\top K=0$, $W_{t+1}K=V$. The residual is
 \begin{align*}
 v-W_{t+1}k&=e-\Delta k\\
 &=e-\Delta z\\
-&=e-\frac{\eta\norm{z}^2}{1+\eta\norm{z}^2}e\\
-&=\frac{1}{1+\eta\norm{z}^2}e.
+&=e-\frac{\eta\norm{z}_2^2}{1+\eta\norm{z}_2^2}e\\
+&=\frac{1}{1+\eta\norm{z}_2^2}e.
 \end{align*}
 \end{proof}

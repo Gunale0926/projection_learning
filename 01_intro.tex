@@ -25,7 +25,7 @@ z_t=(I-\Pi_{t-1})k_t,\qquad \Pi_{t-1}=K_{t-1}K_{t-1}^\dagger,
 \end{align*}
 where $K_{t-1}^\dagger$ is the Moore-Penrose pseudoinverse. The soft conservative repair is
 \begin{align*}
-W_{t+1}=W_t+\frac{\eta_t}{1+\eta_t\norm{z_t}^2}(v_t-W_tk_t)z_t^\top.
+W_{t+1}=W_t+\frac{\eta_t}{1+\eta_t\norm{z_t}_2^2}(v_t-W_tk_t)z_t^\top.
 \end{align*}
 Thus the memory does not write along the raw key. It writes only along the part of the key not already explained by protected evidence.
 

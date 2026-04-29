@@ -43,7 +43,7 @@ we obtain
 The informal statement is Theorem~\ref{thm:pml-implicit:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-For $\ell(W)=\norm{Wk-v}^2/2$,
+For $\ell(W)=\norm{Wk-v}_2^2/2$,
 \begin{align*}
 \nabla\ell(W)=(Wk-v)k^\top.
 \end{align*}
@@ -53,11 +53,11 @@ W_{t+1}=W_t+\eta(v-W_{t+1}k)k^\top.
 \end{align*}
 With $e=v-W_tk$ and $W_{t+1}=W_t+\alpha ek^\top$,
 \begin{align*}
-v-W_{t+1}k=(1-\alpha\norm{k}^2)e.
+v-W_{t+1}k=(1-\alpha\norm{k}_2^2)e.
 \end{align*}
 Comparing coefficients gives
 \begin{align*}
-\alpha=\eta(1-\alpha\norm{k}^2)=\frac{\eta}{1+\eta\norm{k}^2}.
+\alpha=\eta(1-\alpha\norm{k}_2^2)=\frac{\eta}{1+\eta\norm{k}_2^2}.
 \end{align*}
 \end{proof}
 
@@ -78,7 +78,7 @@ so $W=VK^\dagger$ is feasible. For projection, write $W=W_0+\Delta$ and $R=V-W_0
 \begin{align*}
 \min_\Delta\frac{1}{2}\norm{\Delta}_F^2\quad \text{subject to}\quad \Delta K=R.
 \end{align*}
-The minimum-norm feasible solution is $\Delta=RK^\dagger$.
+The minimum-Frobenius-norm feasible solution is $\Delta=RK^\dagger$.
 \end{proof}
 
 \begin{theorem}[Innovation and conflict, proof sketch for Theorems~\ref{thm:innovation-decomposition:formal} and \ref{thm:conflict-impossibility:formal}]
@@ -108,7 +108,7 @@ Set $W=W_t+\Delta$ and $e=v-W_tk$. Since $W_tK=V$, preserving old evidence is $\
 \end{align*}
 The objective becomes
 \begin{align*}
-\min_{\Delta:\Delta K=0}\frac{1}{2}\norm{\Delta}_F^2+\frac{\eta}{2}\norm{\Delta z-e}^2.
+\min_{\Delta:\Delta K=0}\frac{1}{2}\norm{\Delta}_F^2+\frac{\eta}{2}\norm{\Delta z-e}_2^2.
 \end{align*}
 The stationarity equation inside this subspace is
 \begin{align*}
@@ -116,11 +116,11 @@ The stationarity equation inside this subspace is
 \end{align*}
 Solving with $\Delta=\alpha ez^\top$ yields
 \begin{align*}
-\alpha=\frac{\eta}{1+\eta\norm{z}^2}.
+\alpha=\frac{\eta}{1+\eta\norm{z}_2^2}.
 \end{align*}
 The residual satisfies
 \begin{align*}
-v-W_{t+1}k=e-\Delta z=\frac{1}{1+\eta\norm{z}^2}e.
+v-W_{t+1}k=e-\Delta z=\frac{1}{1+\eta\norm{z}_2^2}e.
 \end{align*}
 \end{proof}
 
@@ -137,13 +137,13 @@ The post-update residual is
 \begin{align*}
 e^+=e-\Delta z.
 \end{align*}
-If $\norm{e^+}\le\gamma\norm{e}$, then
+If $\norm{e^+}_2\le\gamma\norm{e}_2$, then
 \begin{align*}
-\norm{\Delta z}=\norm{e-e^+}\ge(1-\gamma)\norm{e}.
+\norm{\Delta z}_2=\norm{e-e^+}_2\ge(1-\gamma)\norm{e}_2.
 \end{align*}
-Since $\norm{\Delta z}\le\norm{\Delta}_F\norm{z}$, the lower bound follows. If one demands $e^+=\gamma e$, then $\Delta z=(1-\gamma)e$, and the minimum-norm solution is
+Since $\norm{\Delta z}_2\le\norm{\Delta}_F\norm{z}_2$, the lower bound follows. If one demands $e^+=\gamma e$, then $\Delta z=(1-\gamma)e$, and the minimum-Frobenius-norm solution is
 \begin{align*}
-\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}^2}.
+\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}_2^2}.
 \end{align*}
 \end{proof}
 
@@ -160,7 +160,7 @@ The hard CPM update lies in $\calC_t$. If $H\in\calT_t$, then $Hz_t=0$, so
 \begin{align*}
 \ip{H}{e_tz_t^\top}_F=e_t^\top Hz_t=0.
 \end{align*}
-Thus $W_{t+1}-W_0$ is orthogonal to $\calT_t$, which is the Euclidean projection condition for $\calC_t$.
+Thus $W_{t+1}-W_0$ is orthogonal to $\calT_t$, which is the Frobenius projection condition for $\calC_t$.
 \end{proof}
 
 \begin{theorem}[Ridge and Bayesian memory, proof sketch for Theorem~\ref{thm:bayesian-ridge:formal}]
@@ -186,11 +186,11 @@ The informal statements are Theorems~\ref{thm:ridge-competitive:informal} and \r
 \begin{proof}[Proof sketch]
 Around the minimizer $W_t$ of $J_{t-1}$, the increment minimization is
 \begin{align*}
-\min_\Delta\frac{1}{2}\tr(\Delta A_{t-1}\Delta^\top)+\frac{\rho_t}{2}\norm{\Delta k_t-e_t}^2.
+\min_\Delta\frac{1}{2}\tr(\Delta A_{t-1}\Delta^\top)+\frac{\rho_t}{2}\norm{\Delta k_t-e_t}_2^2.
 \end{align*}
 Its minimum value is
 \begin{align*}
-\frac{\rho_t}{2(1+\rho_ta_t)}\norm{e_t}^2.
+\frac{\rho_t}{2(1+\rho_ta_t)}\norm{e_t}_2^2.
 \end{align*}
 Summing and comparing $J_T(W_{T+1})$ with $J_T(U)$ gives the competitive bound. The log-determinant identity follows from
 \begin{align*}

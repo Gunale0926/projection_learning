@@ -3,7 +3,7 @@
 
 The theory becomes an algorithm once the learner keeps two kinds of objects separate. The slow parameters are the backbone and the maps $K,V,B$ that decide which features become keys, values, and memory readouts. These parameters are trained by ordinary backpropagation. The fast state is the runtime memory. It is updated by the same projection rule during training and inference.
 
-At each step the algorithm asks two questions. The innovation norm asks whether the current key contains a direction not protected by old evidence. The residual norm asks whether the current memory already predicts the value associated with that key. Together they distinguish novelty, redundancy, and conflict.
+At each step the algorithm asks two questions. The innovation $\ell_2$ norm asks whether the current key contains a direction not protected by old evidence. The residual $\ell_2$ norm asks whether the current memory already predicts the value associated with that key. Together they distinguish novelty, redundancy, and conflict.
 
 \subsection{Streaming Conservative Projection Memory}
 
@@ -19,12 +19,12 @@ The model first reads from the old state. This read-before-write convention prev
 \begin{align*}
 z_t=k_t-Q_tQ_t^\top k_t,\qquad e_t=v_t-W_tk_t.
 \end{align*}
-Here $\norm{z_t}$ measures novelty of the key direction, while $\norm{e_t}$ measures surprise of the value under the current memory.
-\item {\bf Part 3. Repair.} If $\norm{z_t}^2>\varepsilon$, update
+Here $\norm{z_t}_2$ measures novelty of the key direction, while $\norm{e_t}_2$ measures surprise of the value under the current memory.
+\item {\bf Part 3. Repair.} If $\norm{z_t}_2^2>\varepsilon$, update
 \begin{align*}
-W_{t+1}=W_t+\frac{\eta_t}{1+\eta_t\norm{z_t}^2}e_tz_t^\top
+W_{t+1}=W_t+\frac{\eta_t}{1+\eta_t\norm{z_t}_2^2}e_tz_t^\top
 \end{align*}
-and optionally append $z_t/\norm{z_t}$ to $Q_t$. If $\norm{z_t}^2\le\varepsilon$ and $\norm{e_t}$ is small, the evidence is redundant. If $\norm{z_t}^2\le\varepsilon$ and $\norm{e_t}$ is large, the evidence is conflicting relative to protected memory and cannot be safely repaired without relaxing old commitments.
+and optionally append $z_t/\norm{z_t}_2$ to $Q_t$. If $\norm{z_t}_2^2\le\varepsilon$ and $\norm{e_t}_2$ is small, the evidence is redundant. If $\norm{z_t}_2^2\le\varepsilon$ and $\norm{e_t}_2$ is large, the evidence is conflicting relative to protected memory and cannot be safely repaired without relaxing old commitments.
 \end{itemize}
 
 The exact algorithm is useful when the system should protect a finite set of remembered directions. Its per-step overhead is
