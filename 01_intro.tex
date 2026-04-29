@@ -11,7 +11,7 @@ The guiding rule is
 \end{align*}
 Refinement creates a new concept when existing concepts are too coarse. Repair updates a local model inside the existing graph. For a simple classifier, repair can be an exemplar or sufficient-statistic update. For a richer local memory, repair can be Projection Memory or CPM.
 
-This is not only a prototype method. Nearest-neighbor and nearest-centroid methods retrieve similar examples, but they do not refine an explicit information structure after consequence conflicts. Decision trees refine information, but force distinctions into a rooted hierarchy and do not attach repairable local memories to graph concepts. Sparse MoE layers route to trained experts, whereas DGM creates runtime concepts from observed conflicts. Cache and $k$NN language models retrieve recent contexts, whereas DGM separates redundant evidence, novel evidence, and contradictory evidence through graph-generated distinctions before repairing next-token memories. The distinction from nearby methods is summarized as follows.
+This is not only a prototype method, a tree, a cache, or a test-time optimizer. ART creates stable categories under mismatch, but does not define graph-generated hidden-state memories. Nearest-neighbor and nearest-centroid methods retrieve similar examples, but they do not refine an explicit information structure after consequence conflicts. Decision trees refine information, but force distinctions into a rooted hierarchy and do not attach repairable local memories to graph concepts. Sparse MoE layers route to trained experts, whereas DGM creates runtime concepts from observed conflicts. Cache and $k$NN language models retrieve recent contexts, whereas DGM separates redundant evidence, novel evidence, and contradictory evidence through graph-generated distinctions before repairing next-token memories. The distinction from nearby methods is summarized as follows.
 
 \begin{center}
 \small
@@ -19,11 +19,13 @@ This is not only a prototype method. Nearest-neighbor and nearest-centroid metho
 \toprule
 Method family & What it has & What it lacks relative to DGM \\
 \midrule
+ART & stable category creation & no graph-generated hidden-state memory layer \\
+Prototype methods & anchors and centroids & no consequence-forced distinction edges \\
+Online trees & refinement & rooted hierarchy, no graph concepts or local repair memory \\
 $k$NN/cache & retrieval & no refine-or-repair rule and no edge-generated distinctions \\
-Decision tree & refinement & no graph concepts and no local repair memory \\
+Fast weights & dynamic memory & residual writes without missing-distinction detection \\
+TTT/TTA & runtime adaptation & gradient or surrogate-loss updates, not a distinction graph \\
 MoE & routing & trained experts rather than runtime concept creation \\
-TTT & runtime adaptation & gradient/self-supervised updates, not a distinction graph \\
-Fast weights & dynamic memory & residual writes without concept refinement \\
 \bottomrule
 \end{tabular}
 \end{center}

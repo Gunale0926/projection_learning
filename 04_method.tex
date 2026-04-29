@@ -1,11 +1,11 @@
 \section{The Value of a Distinction}
 \label{sec:value}
 
-Refinement increases what the learner can condition on. This does not mean that every distinction is useful for every task. The value of a distinction is measured by the decrease in optimal risk after the information structure is refined.
+Refinement increases what the learner can condition on. This does not mean that every distinction is useful for every task. The value of a distinction is measured by the decrease in optimal risk after the information structure is refined, in the same decision-theoretic sense used in classical comparisons of statistical experiments and value of information \citep{blackwell1953equivalent,berger1985statistical}.
 
 \subsection{Risk monotonicity}
 
-The first fact is purely order-theoretic. If $\calG$ contains all events in $\calF$, then every $\calF$-measurable predictor is also $\calG$-measurable. The decision class has only grown.
+The first fact is purely order-theoretic. If $\calG$ contains all events in $\calF$, then every $\calF$-measurable predictor is also $\calG$-measurable. The decision class has only grown; this is the Bayes-risk analogue of Blackwell's monotonicity of decision value under more informative experiments \citep{blackwell1953equivalent}.
 
 \begin{theorem}[Bayes-risk monotonicity]
 \label{thm:risk-monotonicity:informal}
@@ -19,7 +19,7 @@ This is a population statement. It says that information cannot hurt the best po
 
 \subsection{Log loss}
 
-For a finite target variable $Y$, log loss asks the learner to output a conditional distribution. The optimal prediction under $\calF$ is the conditional law of $Y$ given $\calF$, and the optimal risk is conditional entropy.
+For a finite target variable $Y$, log loss asks the learner to output a conditional distribution. The optimal prediction under $\calF$ is the conditional law of $Y$ given $\calF$, and the optimal risk is conditional entropy, a standard identity for logarithmic scoring rules and information theory \citep{cover2006elements,gneiting2007strictly}.
 
 \begin{theorem}[Log-loss value]
 \label{thm:log-value:informal}
@@ -33,7 +33,7 @@ Thus, for classification and language modeling, a refinement is useful exactly t
 
 \subsection{Squared loss}
 
-For $Y\in L^2(\Omega;\R^d)$ and squared loss, the optimal predictor under $\calF$ is $\E[Y\mid\calF]$. Refinement helps precisely when it changes the conditional mean.
+For $Y\in L^2(\Omega;\R^d)$ and squared loss, the optimal predictor under $\calF$ is $\E[Y\mid\calF]$, the $L^2$ projection onto the closed subspace of $\calF$-measurable random variables \citep{billingsley1995probability,kallenberg2002foundations}. Refinement helps precisely when it changes the conditional mean.
 
 \begin{theorem}[Squared-loss value]
 \label{thm:squared-value:informal}
@@ -47,7 +47,7 @@ The identity is the Hilbert-space analogue of the log-loss result. A distinction
 
 \subsection{Finite empirical scores}
 
-The population identities lead directly to split scores. Suppose an atom $B$ contains samples $(x_j,y_j)$ and a candidate distinction $g:B\to\{0,1\}$ splits it into $B_0$ and $B_1$.
+The population identities lead directly to standard empirical split scores: information gain for classification and variance reduction for regression trees \citep{breiman1984classification,domingos2000mining}. Suppose an atom $B$ contains samples $(x_j,y_j)$ and a candidate distinction $g:B\to\{0,1\}$ splits it into $B_0$ and $B_1$.
 
 For classification, let $\hat p_B$, $\hat p_{B_0}$, and $\hat p_{B_1}$ be empirical label distributions. The empirical log-loss improvement is
 \begin{align*}

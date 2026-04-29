@@ -5,7 +5,7 @@ The tree model is a useful finite special case, but it is not the most natural r
 \begin{align*}
 \text{DGM}=\text{graph-generated information structure}+\text{local memory repair}.
 \end{align*}
-This section defines that object. The graph is not metadata: its edges generate the finite information structure and gate the read path. The main-text statements below give the operational theorem forms; full proofs are collected in Appendix~\ref{app:algorithm-bridge-proofs}.
+This section defines that object. The graph is not metadata: its edges generate the finite information structure and gate the read path. The partition and generated-sigma-algebra language follows standard finite measurable-space constructions \citep{billingsley1995probability,kallenberg2002foundations}. The main-text statements below give the operational theorem forms; full proofs are collected in Appendix~\ref{app:algorithm-bridge-proofs}.
 
 \subsection{State and graph-generated information}
 
@@ -300,7 +300,7 @@ r_j^+=\frac{n_jr_j+\alpha_j(h)E[y]}{n_j+\alpha_j(h)},
 n_j^+=n_j+\alpha_j(h).
 \end{align*}
 
-\paragraph{DGM-Ridge.} For few-shot adaptation or local readout repair, a memory stores a small support set $Z\in\R^{n\times d}$ and labels $Y\in\R^{n\times C}$. The closed-form adapter is
+\paragraph{DGM-Ridge.} For few-shot adaptation or local readout repair, a memory stores a small support set $Z\in\R^{n\times d}$ and labels $Y\in\R^{n\times C}$. The closed-form adapter is the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}:
 \begin{align*}
 \Gamma=(ZZ^\top+\lambda I)^{-1}Y,
 \qquad
@@ -357,7 +357,7 @@ be the number of incident edge gates evaluated for the selected candidates. With
 \begin{align*}
 O(N_td+Q_k(h)+kd+C_{\mathrm{local}}),
 \end{align*}
-where $C_{\mathrm{local}}$ is the cost of evaluating the selected local memories. With approximate nearest-neighbor indexing, the $N_td$ term can be replaced by the query cost of the index. Creating an anchor-centroid pair costs $O(d)$ plus the cost of initializing its memory. Adding $q$ distinction edges costs $O(qd)$. If each prototype stores an embedding mean in $\R^{d_e}$, runtime memory is
+where $C_{\mathrm{local}}$ is the cost of evaluating the selected local memories. With approximate nearest-neighbor indexing, the $N_td$ term can be replaced by the query cost of the index \citep{indyk1998approximate,johnson2019billion}. Creating an anchor-centroid pair costs $O(d)$ plus the cost of initializing its memory. Adding $q$ distinction edges costs $O(qd)$. If each prototype stores an embedding mean in $\R^{d_e}$, runtime memory is
 \begin{align*}
 O(N_t(2d+d_e)+|E_t|d).
 \end{align*}

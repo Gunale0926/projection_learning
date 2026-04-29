@@ -1,7 +1,7 @@
 ﻿\section{Technical Overview}
 \label{sec:technical-overview}
 
-This section gives the proof ideas in the same order as the main text. Full formal versions appear in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
+This section gives the proof ideas in the same order as the main text. The measure-theoretic notation, conditional-expectation facts, and decision-theoretic Bayes-risk framing are standard \citep{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}. Full formal versions appear in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
 
 \begin{theorem}[Minimal finite refinement, proof sketch for Theorem~\ref{thm:minimal-refinement:formal}]
 \label{thm:minimal-refinement:sketch}
@@ -77,7 +77,7 @@ R_L(\calG)\le R_L(\calF).
 The main-text statement is Theorem~\ref{thm:log-value:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-For any $\calF$-measurable conditional distribution $q$,
+For any $\calF$-measurable conditional distribution $q$, the standard log-loss decomposition gives
 \begin{align*}
 \E[-\log q(Y)]=H(Y\mid\calF)+\E\left[D_{\mathrm{KL}}(\mathbb P(Y\in\cdot\mid\calF)\|q(\cdot))\right].
 \end{align*}
@@ -92,7 +92,7 @@ R_{\log}(\calF)-R_{\log}(\calG)=H(Y\mid\calF)-H(Y\mid\calG)=I(Y;\calG\mid\calF).
 The main-text statement is Theorem~\ref{thm:squared-value:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-The optimal $\calF$-predictor is $\E[Y\mid\calF]$. Since $\calF\subseteq\calG$,
+The optimal $\calF$-predictor is $\E[Y\mid\calF]$, the standard $L^2$ projection. Since $\calF\subseteq\calG$,
 \begin{align*}
 Y-\E[Y\mid\calF]=\left(Y-\E[Y\mid\calG]\right)+\left(\E[Y\mid\calG]-\E[Y\mid\calF]\right).
 \end{align*}
@@ -148,7 +148,7 @@ Monotone repair changes only local memories and retrieval centroids while keepin
 The main-text statement is Theorem~\ref{thm:safe-refinement:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Conditioning on a finite candidate class fixed before scoring, or generated from a proposal buffer independent of the scoring buffer, Hoeffding's inequality bounds the deviation between empirical and population risk for the old state and for each candidate-refined state. A union bound over this finite collection makes the risk bound simultaneous. Each gain is a difference of two risks, so its empirical-population deviation is at most twice the risk deviation. If the empirical gain exceeds cost plus $\tau+2\epsilon_m$, the population gain exceeds cost plus $\tau$ on this high-probability event.
+Conditioning on a finite candidate class fixed before scoring, or generated from a proposal buffer independent of the scoring buffer, Hoeffding's inequality bounds the deviation between empirical and population risk for the old state and for each candidate-refined state \citep{hoeffding1963probability}. A union bound over this finite collection gives the usual finite-class validation guarantee \citep{devroye1996probabilistic}. Each gain is a difference of two risks, so its empirical-population deviation is at most twice the risk deviation. If the empirical gain exceeds cost plus $\tau+2\epsilon_m$, the population gain exceeds cost plus $\tau$ on this high-probability event.
 \end{proof}
 
 \begin{theorem}[Anchor-stable DGM information structure, proof sketch for Theorem~\ref{thm:anchor-stable:formal}]

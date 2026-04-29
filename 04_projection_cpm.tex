@@ -1,7 +1,7 @@
 \section{From Distinctions to Projection Memory}
 \label{sec:projection-bridge}
 
-DGM uses refinement and repair in the same runtime object. Distinction Learning asks what the learner can tell apart. Projection Learning assumes such a representation and asks how a state inside it should be minimally repaired. This section makes the relation formal in the finite one-hot case.
+DGM uses refinement and repair in the same runtime object. Distinction Learning asks what the learner can tell apart. Projection Learning assumes such a representation and asks how a state inside it should be minimally repaired. The repair side is related to Bregman projection, passive-aggressive learning, online regression, and fast-weight memory updates \citep{bregman1967relaxation,crammer2006online,vovk1997competitive,ba2016using,schlag2021linear}. This section makes the relation formal in the finite one-hot case.
 
 \subsection{One-hot partition memory}
 
@@ -35,6 +35,6 @@ The resulting hierarchy is
 \begin{align*}
 \text{distinction refinement}\supset \text{projection repair}\supset \text{implicit gradient}\supset \text{explicit gradient descent}.
 \end{align*}
-Distinction refinement changes the sigma-algebra $\calF_t$. Projection repair changes a state $s_t$ inside a fixed information geometry. Gradient descent is the linearized $\ell_2$ special case of soft projection. Backpropagation is the mechanism that computes such gradients in differentiable static graphs.
+Distinction refinement changes the sigma-algebra $\calF_t$. Projection repair changes a state $s_t$ inside a fixed information geometry. Gradient descent is the linearized $\ell_2$ special case of soft projection, and backpropagation is the mechanism that computes such gradients in differentiable static graphs \citep{rumelhart1986learning}.
 
 This is not a rejection of gradient learning or projection memory. It is a separation of roles. When the representation is adequate, repair and optimization are the right tools. When the representation identifies states that consequences require it to separate, the first learning act is to create the missing distinction.

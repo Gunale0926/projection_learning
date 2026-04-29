@@ -1,7 +1,7 @@
 \section{Minimal Information Refinement}
 \label{sec:minimal-refinement}
 
-The primitive operation in this paper is refinement. The learner has an information structure and receives evidence that a new event or variable must become observable. The correct update should add that observability and nothing else. This section states the finite theorem first because it is the clearest form of the idea: split only the atoms cut by the evidence.
+The primitive operation in this paper is refinement. The learner has an information structure and receives evidence that a new event or variable must become observable. The correct update should add that observability and nothing else. The sigma-algebra language is standard measure-theoretic probability, while the finite partition language is the corresponding finite special case \citep{billingsley1995probability,kallenberg2002foundations}. This section states the finite theorem first because it is the clearest form of the idea: split only the atoms cut by the evidence.
 
 \subsection{The finite refinement rule}
 
@@ -23,7 +23,7 @@ The theorem gives a canonical update. We do not search over all refined represen
 
 \subsection{The sigma-algebra form}
 
-For general spaces, the same operation is the join. If the current information is $\calF_t$ and the evidence is a variable $Z_t$, the minimal updated information is
+For general spaces, the same operation is the join of sigma-algebras. If the current information is $\calF_t$ and the evidence is a variable $Z_t$, the minimal updated information is
 \begin{align}
 \calF_{t+1}=\calF_t\vee\sigma(Z_t).
 \label{eq:join-update}
