@@ -1,142 +1,148 @@
-\section{Ridge and Bayesian Projection Memory Proofs}
-\label{app:ridge-proofs}
+\section{DGM Algorithm and Projection-Bridge Proofs}
+\label{app:algorithm-bridge-proofs}
 
-\begin{theorem}[Ridge solution]
-\label{thm:ridge-solution:formal}
-Let $W_0\in\R^{m\times r}$, $\lambda>0$, $\rho_\tau\ge0$, $k_\tau\in\R^r$, and $v_\tau\in\R^m$. Let
+\begin{theorem}[Prototype edge separation, formal version of Theorem~\ref{thm:prototype-edge:informal}]
+\label{thm:prototype-edge:formal}
+Let $c_i,c_j\in\R^d$ with $c_i\ne c_j$. Define
 \begin{align*}
-J_t(W)=\frac{\lambda}{2}\norm{W-W_0}_F^2+\frac{1}{2}\sum_{\tau=1}^t\rho_\tau\norm{Wk_\tau-v_\tau}_2^2.
-\end{align*}
-Define
-\begin{align*}
-A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top,\qquad B_t=\lambda W_0+\sum_{\tau=1}^t\rho_\tau v_\tau k_\tau^\top.
-\end{align*}
-Then the unique minimizer is $W_{t+1}=B_tA_t^{-1}$.
-\end{theorem}
-\begin{proof}
-Differentiate:
-\begin{align*}
-\nabla J_t(W)=\lambda(W-W_0)+\sum_{\tau=1}^t\rho_\tau(Wk_\tau-v_\tau)k_\tau^\top.
-\end{align*}
-At optimum,
-\begin{align*}
-0=\lambda(W-W_0)+\sum_{\tau=1}^t\rho_\tau(Wk_\tau-v_\tau)k_\tau^\top.
-\end{align*}
-Thus
-\begin{align*}
-W\left(\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top\right)=\lambda W_0+\sum_{\tau=1}^t\rho_\tau v_\tau k_\tau^\top.
-\end{align*}
-Since $\lambda>0$, $A_t$ is invertible. Hence
-\begin{align*}
-W_{t+1}=B_tA_t^{-1}.
-\end{align*}
-\end{proof}
-
-\begin{theorem}[Recursive ridge update]
-\label{thm:ridge-recursive:formal}
-Under the notation of Theorem~\ref{thm:ridge-solution:formal}, let $P_t=A_{t-1}^{-1}$ and $W_t=B_{t-1}P_t$. Define
-\begin{align*}
-g_t=\frac{\rho_tP_tk_t}{1+\rho_t k_t^\top P_tk_t}.
+u=\frac{c_i-c_j}{\norm{c_i-c_j}_2},\qquad b=\frac{1}{2}u^\top(c_i+c_j).
 \end{align*}
 Then
 \begin{align*}
-W_{t+1}=W_t+(v_t-W_tk_t)g_t^\top,\qquad P_{t+1}=P_t-\frac{\rho_tP_tk_tk_t^\top P_t}{1+\rho_t k_t^\top P_tk_t}.
+u^\top c_i-b=\frac{1}{2}\norm{c_i-c_j}_2,\qquad u^\top c_j-b=-\frac{1}{2}\norm{c_i-c_j}_2.
 \end{align*}
 \end{theorem}
 \begin{proof}
-The Sherman-Morrison identity gives
+Compute
 \begin{align*}
-P_{t+1}=A_t^{-1}=P_t-\frac{\rho_tP_tk_tk_t^\top P_t}{1+\rho_t k_t^\top P_tk_t}.
+u^\top c_i-b&=u^\top c_i-\frac{1}{2}u^\top c_i-\frac{1}{2}u^\top c_j\\
+&=\frac{1}{2}u^\top(c_i-c_j)\\
+&=\frac{1}{2}\norm{c_i-c_j}_2.
 \end{align*}
-Let $a_t=k_t^\top P_tk_t$. Then
+Similarly,
 \begin{align*}
-k_t^\top P_{t+1}=k_t^\top P_t-\frac{\rho_ta_t k_t^\top P_t}{1+\rho_ta_t}=\frac{k_t^\top P_t}{1+\rho_ta_t}.
-\end{align*}
-Using $B_t=B_{t-1}+\rho_tv_tk_t^\top$,
-\begin{align*}
-W_{t+1}&=B_tP_{t+1}\\
-&=B_{t-1}P_{t+1}+\rho_tv_tk_t^\top P_{t+1}\\
-&=W_t-\frac{\rho_tW_tk_tk_t^\top P_t}{1+\rho_ta_t}+\frac{\rho_tv_tk_t^\top P_t}{1+\rho_ta_t}\\
-&=W_t+(v_t-W_tk_t)\frac{\rho_tk_t^\top P_t}{1+\rho_ta_t}\\
-&=W_t+(v_t-W_tk_t)g_t^\top.
+u^\top c_j-b&=u^\top c_j-\frac{1}{2}u^\top c_i-\frac{1}{2}u^\top c_j\\
+&=-\frac{1}{2}u^\top(c_i-c_j)\\
+&=-\frac{1}{2}\norm{c_i-c_j}_2.
 \end{align*}
 \end{proof}
 
-\begin{theorem}[Ridge bound, formal version of Theorem~\ref{thm:ridge-competitive:informal}]
-\label{thm:ridge-competitive:formal}
-Let $W_0\in\R^{m\times r}$, $\lambda>0$, $\rho_t\ge0$, $k_t\in\R^r$, and $v_t\in\R^m$. With $J_t$ and $A_t$ as in Theorem~\ref{thm:ridge-solution:formal}, let
-\begin{align*}
-W_t=\argmin_{W\in\R^{m\times r}}J_{t-1}(W),\qquad P_t=A_{t-1}^{-1},\qquad a_t=k_t^\top P_tk_t,\qquad e_t=v_t-W_tk_t.
-\end{align*}
-For every $U\in\R^{m\times r}$,
-\begin{align*}
-\sum_{t=1}^T\frac{\rho_t}{1+\rho_ta_t}\norm{e_t}_2^2\le\lambda\norm{U-W_0}_F^2+\sum_{t=1}^T\rho_t\norm{v_t-Uk_t}_2^2.
-\end{align*}
+\begin{theorem}[DGM data-structure bound, formal version of Theorem~\ref{thm:dpm-complexity:informal}]
+\label{thm:dpm-complexity:formal}
+Assume DGM has $N_t$ prototypes in $\R^d$, exact nearest-prototype search, sparse neighborhood size $k$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+kd+C_{\mathrm{local}})$. One observation that repairs a selected prototype costs this plus the local repair cost. One observation that creates a new prototype and $q$ distinction edges costs an additional $O(d+qd)$. If each prototype stores an embedding mean in $\R^{d_e}$ and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(d+d_e)+|E_t|d)$ memory.
 \end{theorem}
 \begin{proof}
-Since $W_t$ minimizes $J_{t-1}$, for any $\Delta$,
+A distance computation between $h\in\R^d$ and one prototype costs $O(d)$. Exact search over $N_t$ prototypes therefore costs
 \begin{align*}
-J_{t-1}(W_t+\Delta)=J_{t-1}(W_t)+\frac{1}{2}\tr(\Delta A_{t-1}\Delta^\top).
+O(N_td).
 \end{align*}
-Also
+After the $k$ nearest prototypes are selected, computing sparse routing weights and evaluating selected local memories costs
 \begin{align*}
-J_t(W_t+\Delta)=J_{t-1}(W_t+\Delta)+\frac{\rho_t}{2}\norm{(W_t+\Delta)k_t-v_t}_2^2.
+O(kd+C_{\mathrm{local}}).
 \end{align*}
-With $e_t=v_t-W_tk_t$, the increment minimization is
+Thus prediction costs
 \begin{align*}
-\min_\Delta\left\{\frac{1}{2}\tr(\Delta A_{t-1}\Delta^\top)+\frac{\rho_t}{2}\norm{\Delta k_t-e_t}_2^2\right\}.
+O(N_td+kd+C_{\mathrm{local}}).
 \end{align*}
-Solving row-wise gives minimum value
+Observation begins with the same retrieval computation. If it repairs a selected prototype, it adds the local repair cost. If it creates a new prototype, storing the new center costs $O(d)$. For each new edge, computing and storing the linear distinction vector costs $O(d)$, so $q$ edges cost
 \begin{align*}
-\frac{\rho_t}{2(1+\rho_ta_t)}\norm{e_t}_2^2.
+O(qd).
 \end{align*}
-Hence
+The total additional cost for refinement is therefore $O(d+qd)$.
+
+For memory, each prototype stores $c_j\in\R^d$ and $r_j\in\R^{d_e}$, giving
 \begin{align*}
-J_t(W_{t+1})-J_{t-1}(W_t)=\frac{\rho_t}{2(1+\rho_ta_t)}\norm{e_t}_2^2.
+O(N_t(d+d_e)).
 \end{align*}
-Summing over $t$ and using $W_1=W_0$ gives
+Each edge stores one distinction vector and threshold, giving
 \begin{align*}
-\sum_{t=1}^T\frac{\rho_t}{2(1+\rho_ta_t)}\norm{e_t}_2^2=J_T(W_{T+1}).
+O(|E_t|d).
 \end{align*}
-Since $W_{T+1}$ minimizes $J_T$,
-\begin{align*}
-J_T(W_{T+1})\le J_T(U)=\frac{\lambda}{2}\norm{U-W_0}_F^2+\frac{1}{2}\sum_{t=1}^T\rho_t\norm{Uk_t-v_t}_2^2.
-\end{align*}
-Multiplying by $2$ proves the claim.
+Adding the two terms proves the claimed bound.
 \end{proof}
 
-\begin{theorem}[Log-determinant information identity, formal version of Theorem~\ref{thm:logdet-info:informal}]
-\label{thm:logdet-info:formal}
-Let $\lambda>0$, $\rho_t\ge0$, $k_t\in\R^r$, $A_t=\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top$, and $a_t=k_t^\top A_{t-1}^{-1}k_t$. Then
+\begin{theorem}[DGM layer cost, formal version of Theorem~\ref{thm:dgm-layer-cost:informal}]
+\label{thm:dgm-layer-cost:formal}
+Consider a DGM layer with hidden dimension $d$, query dimension $d_q$, rank $r$, top-$k$ retrieval, and prototype-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
 \begin{align*}
-\sum_{t=1}^T\log(1+\rho_ta_t)=\log\frac{\det A_T}{\det A_0}.
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+kdr).
 \end{align*}
+If the write path is detached and uses rank-one local repair, the write overhead is
+\begin{align*}
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+k(d_q+dr)).
+\end{align*}
+For a block of length $L$, backpropagation through the slow parameters does not require storing the full DGM state history $\calS_1,\ldots,\calS_L$.
 \end{theorem}
 \begin{proof}
-The matrix determinant lemma gives
+For a token hidden state $h\in\R^d$, the query computation
 \begin{align*}
-\det A_t&=\det(A_{t-1}+\rho_tk_tk_t^\top)\\
-&=\det A_{t-1}(1+\rho_tk_t^\top A_{t-1}^{-1}k_t)\\
-&=\det A_{t-1}(1+\rho_ta_t).
+q=Qh
 \end{align*}
-Taking logarithms,
+costs $O(dd_q)$. The retrieval cost is $C_{\mathrm{ret}}(N_t,d_q)$ by definition.
+
+For a selected prototype $j$, the rank-$r$ adapter read is
 \begin{align*}
-\log\det A_t-\log\det A_{t-1}=\log(1+\rho_ta_t).
+B_jA_jh.
 \end{align*}
-Summing over $t$ gives the identity.
+The product $A_jh$ costs $O(rd)$, and the product $B_j(A_jh)$ costs $O(dr)$. Therefore one selected adapter costs $O(dr)$ and $k$ selected adapters cost
+\begin{align*}
+O(kdr).
+\end{align*}
+The routing weights add lower-order top-$k$ normalization cost, absorbed into the same bound. This proves the read overhead.
+
+The write path first computes the same query and retrieval. It then updates selected prototype statistics and selected local memories. Prototype bookkeeping costs $O(d_q)$ per selected prototype. A rank-one local repair of a rank-$r$ or low-rank sufficient-statistic memory costs $O(dr)$ per selected memory. Hence the write overhead is
+\begin{align*}
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+k(d_q+dr)).
+\end{align*}
+
+Finally, the update rule is applied as
+\begin{align*}
+\operatorname{stopgrad}(\calS_{t+1})=\operatorname{DGMObserve}(\operatorname{stopgrad}(\calS_t),h_t,x_{t+1}).
+\end{align*}
+Thus the computational graph for the loss contains the selected read computation, but not the chain of state-update maps from $\calS_1$ through $\calS_L$. Therefore full DGM state history is not required for backpropagation through the slow parameters.
 \end{proof}
 
-\begin{theorem}[Bayesian ridge projection memory, formal version of Theorem~\ref{thm:bayesian-ridge:informal}]
-\label{thm:bayesian-ridge:formal}
-Let $W\in\R^{m\times r}$ and $\rho_t>0$. Assume each row $w_j$ of $W$ has prior $w_j\sim\mathcal N(w_{0,j},\lambda^{-1}I)$ and observations satisfy $v_t=Wk_t+\varepsilon_t$ with $k_t\in\R^r$, $v_t\in\R^m$, and $\varepsilon_t\sim\mathcal N(0,\rho_t^{-1}I_m)$ independently over time. Then the posterior mean and MAP estimate are $B_tA_t^{-1}$.
+\begin{theorem}[One-hot memory is partition-measurable, formal version of Theorem~\ref{thm:one-hot-measurable:informal}]
+\label{thm:one-hot-measurable:formal}
+Let $\calP=\{B_1,\ldots,B_n\}$ be a finite partition and let $\phi_\calP(\omega)=e_i$ for $\omega\in B_i$. For every $W\in\R^{m\times n}$, the map $f_W(\omega)=W\phi_\calP(\omega)$ is $\calP$-measurable. Conversely, every $\calP$-measurable map $f:\Omega\to\R^m$ is equal to $f_W$ for some $W\in\R^{m\times n}$.
 \end{theorem}
 \begin{proof}
-The negative log posterior, up to constants independent of $W$, is
+If $\omega,\omega'\in B_i$, then
 \begin{align*}
-\frac{\lambda}{2}\norm{W-W_0}_F^2+\frac{1}{2}\sum_{\tau=1}^t\rho_\tau\norm{Wk_\tau-v_\tau}_2^2.
+\phi_\calP(\omega)=\phi_\calP(\omega')=e_i.
 \end{align*}
-This is $J_t(W)$. The posterior is Gaussian because the prior is Gaussian and the observation model is linear Gaussian. Hence the posterior mean equals the MAP. By Theorem~\ref{thm:ridge-solution:formal}, this value is
+Thus
 \begin{align*}
-B_tA_t^{-1}.
+f_W(\omega)=We_i=f_W(\omega'),
 \end{align*}
+so $f_W$ is constant on each atom and is $\calP$-measurable.
+
+Conversely, if $f$ is $\calP$-measurable, it is constant on each $B_i$. Let $w_i$ be this constant value on $B_i$, and define
+\begin{align*}
+W=[w_1,\ldots,w_n].
+\end{align*}
+Then for $\omega\in B_i$,
+\begin{align*}
+W\phi_\calP(\omega)=We_i=w_i=f(\omega).
+\end{align*}
+\end{proof}
+
+\begin{theorem}[CPM conflict equals missing distinction, formal version of Theorem~\ref{thm:cpm-conflict-distinction:informal}]
+\label{thm:cpm-conflict-distinction:formal}
+Let $\calP=\{B_1,\ldots,B_n\}$ and let $\omega,\omega'\in B_i$. Suppose $v(\omega)\ne v(\omega')$. Let $k=\phi_\calP(\omega)=\phi_\calP(\omega')=e_i$. If a memory $W$ has already committed $We_i=v(\omega)$, then the evidence $We_i=v(\omega')$ has innovation $z=0$ relative to the old key span and residual $e\ne0$.
+\end{theorem}
+\begin{proof}
+Since $\omega,\omega'\in B_i$,
+\begin{align*}
+\phi_\calP(\omega)=\phi_\calP(\omega')=e_i.
+\end{align*}
+The old key span contains $e_i$. Therefore the innovation of the new key $k=e_i$ relative to the old key matrix $K=e_i$ is
+\begin{align*}
+z=(I-KK^\dagger)k=(I-e_ie_i^\top)e_i=0.
+\end{align*}
+The new residual is
+\begin{align*}
+e=v(\omega')-We_i=v(\omega')-v(\omega).
+\end{align*}
+Since $v(\omega')\ne v(\omega)$, we have $e\ne0$.
 \end{proof}

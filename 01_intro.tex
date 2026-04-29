@@ -1,34 +1,18 @@
 \section{Introduction}
 \label{sec:intro}
 
-Backpropagation gives a clean mathematical primitive for train-time learning. A differentiable model produces an error, and the chain rule distributes that error through the computation graph. This is the right language when learning means changing static parameters to reduce a global objective.
+Runtime learning has two different failure modes. Sometimes the model is looking at the right kind of state, but the state is numerically wrong; then the right operation is repair. Sometimes the model is using an information structure that identifies situations whose consequences differ; then no local repair can solve the error. The right operation is refinement.
 
-Runtime learning has a different demand. A deployed system already has state: memories, estimates, cached structure, and commitments induced by previous observations. New evidence should change the state only where the evidence forces change. If the update is too weak, the system fails to adapt; if it is too broad, the system destroys information that was not contradicted. The basic problem is therefore not merely descent of a loss, but controlled repair of state under evidence.
+This paper builds a model around that distinction. A Distinction Graph Machine keeps a growing set of prototypes, local memories, and distinction edges. The prototypes define what the learner currently treats as concepts. The edges record which concepts had to be separated. The local memories store what the learner currently believes inside each concept. On an input $x$, an encoder produces $h=\phi_\theta(x)$, the machine retrieves nearby prototypes, and their local memories predict. When the consequence $y$ is observed, the machine decides whether to create a new prototype and distinction edges, or repair the memory of an existing prototype.
 
-Projection Learning formalizes this repair principle. Let $S$ be a closed convex state space, let $\psi:S\to\R$ be differentiable and strictly convex, and define
+The guiding rule is
 \begin{align*}
-D_\psi(u,v)=\psi(u)-\psi(v)-\ip{\nabla\psi(v)}{u-v}.
+\text{if the atom is wrong, refine; if the local state is wrong, repair.}
 \end{align*}
-If evidence at time $t$ gives a closed convex consistency set $\calC_t\subseteq S$, the hard update is
-\begin{align*}
-s_{t+1}=\argmin_{s\in\calC_t}D_\psi(s,s_t).
-\end{align*}
-If evidence is soft, represented by a convex loss $\ell_t:S\to\R$ and weight $\eta_t>0$, the update is
-\begin{align*}
-s_{t+1}=\argmin_{s\in S}\{D_\psi(s,s_t)+\eta_t\ell_t(s)\}.
-\end{align*}
-The guiding question is simple: among the states that satisfy, or best approximate, the new evidence, which one changes the old state the least?
+Refinement creates a new concept when existing concepts are too coarse. Repair updates a local model inside the existing graph. For a simple classifier, repair can be an exemplar or sufficient-statistic update. For a richer local memory, repair can be Projection Memory or CPM.
 
-The canonical neural instance studied here is Conservative Projection Memory. A runtime memory is a matrix $W_t\in\R^{m\times r}$, and a hidden state produces a key $k_t\in\R^r$ and value $v_t\in\R^m$. The evidence asks for $Wk_t=v_t$. If old keys form $K_{t-1}$, the safe write direction is the innovation
-\begin{align*}
-z_t=(I-\Pi_{t-1})k_t,\qquad \Pi_{t-1}=K_{t-1}K_{t-1}^\dagger,
-\end{align*}
-where $K_{t-1}^\dagger$ is the Moore-Penrose pseudoinverse. The soft conservative repair is
-\begin{align*}
-W_{t+1}=W_t+\frac{\eta_t}{1+\eta_t\norm{z_t}_2^2}(v_t-W_tk_t)z_t^\top.
-\end{align*}
-Thus the memory does not write along the raw key. It writes only along the part of the key not already explained by protected evidence.
+The theory explains why the two operations should not be collapsed. If two states lie in the same atom but require different outputs, no measurable predictor over the current partition can satisfy both. This is not an optimization failure; it is a missing distinction. Conversely, if the current concept is adequate and only its local state is stale, creating a new concept is unnecessary. The model should update the local memory.
 
-This innovation rule is the core intuition of the paper. Large innovation means the key contains a new direction. Small innovation with small residual means the evidence is redundant. Small innovation with large residual means the evidence conflicts with what the memory has committed to preserve. The theory below turns this intuition into exact feasibility laws, optimality statements, and online algorithms.
+We formalize both sides. Minimal information refinement is the smallest partition or sigma-algebra update that makes new evidence observable. Its value is exact under standard losses: conditional mutual information for log loss and conditional variance reduction for squared loss. The DGM data structure adds the engineering layer missing from the pure refinement principle: prototypes, local memories, distinction edges, repair rules, language-modeling integration, and train/test APIs. We also describe a DGM Transformer layer whose read path is differentiable and whose write path is detached, so that large models can learn to use DGM memory during training without backpropagating through the entire memory history.
 
-\paragraph{Organization.} Section~\ref{sec:preliminaries} fixes notation. Section~\ref{sec:main-results} develops the main results as a sequence from projection geometry to conservative memory. Section~\ref{sec:algorithms} gives algorithms and complexity. Section~\ref{sec:technical-overview} gives proof sketches. Section~\ref{sec:conclusion} concludes.
+\paragraph{Organization.} Section~\ref{sec:preliminaries} fixes notation and information structures. Section~\ref{sec:minimal-refinement} proves the refinement principle and the contradiction theorem. Section~\ref{sec:value} quantifies the value of distinctions. Section~\ref{sec:algorithms} defines DGM as a concrete model and algorithm, including a language-modeling instance. Section~\ref{sec:large-model-training} gives a scalable DGM layer for large-model training. Section~\ref{sec:projection-bridge} relates local repair to Projection Learning and CPM. Section~\ref{sec:technical-overview} gives proof sketches. Section~\ref{sec:experiments} gives executable checks. Section~\ref{sec:conclusion} concludes.

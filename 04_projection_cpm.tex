@@ -1,0 +1,40 @@
+\section{From Distinctions to Projection Memory}
+\label{sec:projection-bridge}
+
+DGM uses refinement and repair in the same runtime object. Distinction Learning asks what the learner can tell apart. Projection Learning assumes such a representation and asks how a state inside it should be minimally repaired. This section makes the relation formal in the finite one-hot case.
+
+\subsection{One-hot partition memory}
+
+Let $\calP=\{B_1,\ldots,B_n\}$ and let $\phi_\calP$ be the one-hot feature map from Section~\ref{sec:preliminaries}. A memory matrix $W\in\R^{m\times n}$ defines a value map
+\begin{align*}
+f_W(\omega)=W\phi_\calP(\omega).
+\end{align*}
+This is exactly a table over the atoms of $\calP$: every state inside the same atom receives the same value.
+
+\begin{theorem}[One-hot memory is partition-measurable, informal version of Theorem~\ref{thm:one-hot-measurable:formal}]
+\label{thm:one-hot-measurable:informal}
+For every $W\in\R^{m\times n}$, the map $f_W(\omega)=W\phi_\calP(\omega)$ is $\calP$-measurable. Conversely, every $\calP$-measurable map $f:\Omega\to\R^m$ is represented by some $W$ through $f=f_W$.
+\end{theorem}
+
+Thus a one-hot associative memory is not merely analogous to a partition. It is an exact finite representation of all vector-valued predictors measurable with respect to that partition.
+
+\subsection{CPM conflict as missing distinction}
+
+Conservative Projection Memory detects conflict when a new key has zero innovation but nonzero residual. In the one-hot finite representation, this diagnostic is exactly the statement that two world states have been placed in the same atom despite requiring different values.
+
+\begin{theorem}[CPM conflict equals missing distinction, informal version of Theorem~\ref{thm:cpm-conflict-distinction:formal}]
+\label{thm:cpm-conflict-distinction:informal}
+Let $\omega,\omega'\in B_i$ for an atom $B_i\in\calP$, and suppose required values satisfy $v(\omega)\ne v(\omega')$. Let $k=\phi_\calP(\omega)=\phi_\calP(\omega')=e_i$. If $We_i=v(\omega)$ has already been committed, then evidence requiring $We_i=v(\omega')$ has CPM innovation $z=0$ and residual $e\ne0$.
+\end{theorem}
+
+The theorem explains why a projection update should stop. The key is not new; the old information structure maps both states to the same coordinate. The residual is nonzero because the consequence differs. The missing update is a refinement of $\calP$ that separates $\omega$ from $\omega'$.
+
+\subsection{The hierarchy}
+
+The resulting hierarchy is
+\begin{align*}
+\text{distinction refinement}\supset \text{projection repair}\supset \text{implicit gradient}\supset \text{explicit gradient descent}.
+\end{align*}
+Distinction refinement changes the sigma-algebra $\calF_t$. Projection repair changes a state $s_t$ inside a fixed information geometry. Gradient descent is the linearized $\ell_2$ special case of soft projection. Backpropagation is the mechanism that computes such gradients in differentiable static graphs.
+
+This is not a rejection of gradient learning or projection memory. It is a separation of roles. When the representation is adequate, repair and optimization are the right tools. When the representation identifies states that consequences require it to separate, the first learning act is to create the missing distinction.

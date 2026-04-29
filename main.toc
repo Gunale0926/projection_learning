@@ -1,32 +1,49 @@
 \contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
 \contentsline {paragraph}{Organization.}{1}{section*.2}%
-\contentsline {section}{\numberline {2}Preliminaries}{2}{section.2}%
-\contentsline {subsection}{\numberline {2.1}Notation}{2}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}Projection geometry}{2}{subsection.2.2}%
-\contentsline {subsection}{\numberline {2.3}Associative evidence}{2}{subsection.2.3}%
-\contentsline {subsection}{\numberline {2.4}Statement convention}{2}{subsection.2.4}%
-\contentsline {section}{\numberline {3}Main Results}{2}{section.3}%
-\contentsline {subsection}{\numberline {3.1}Projection is forced by stability}{3}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}Gradient learning is a linearized case}{3}{subsection.3.2}%
-\contentsline {subsection}{\numberline {3.3}Binding has algebraic capacity}{4}{subsection.3.3}%
-\contentsline {subsection}{\numberline {3.4}Innovation is the safe write direction}{4}{subsection.3.4}%
-\contentsline {subsection}{\numberline {3.5}Conservative repair is optimal}{5}{subsection.3.5}%
-\contentsline {subsection}{\numberline {3.6}The online hard update is the batch projection}{6}{subsection.3.6}%
-\contentsline {subsection}{\numberline {3.7}Ridge memory turns exact repair into statistical repair}{6}{subsection.3.7}%
-\contentsline {section}{\numberline {4}Algorithms and Complexity}{7}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Streaming Conservative Projection Memory}{7}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Ridge Projection Memory}{8}{subsection.4.2}%
-\contentsline {subsection}{\numberline {4.3}Training and inference}{8}{subsection.4.3}%
-\contentsline {section}{\numberline {5}Technical Overview}{9}{section.5}%
-\contentsline {section}{\numberline {6}Conclusion}{13}{section.6}%
-\contentsline {section}{\numberline {A}Appendix Roadmap}{16}{appendix.A}%
-\contentsline {section}{\numberline {B}Limitations}{16}{appendix.B}%
-\contentsline {section}{\numberline {C}Related Work}{17}{appendix.C}%
-\contentsline {paragraph}{Backpropagation and runtime updates.}{17}{section*.4}%
-\contentsline {paragraph}{Bregman projection and online optimization.}{17}{section*.5}%
-\contentsline {paragraph}{Passive-aggressive learning and least squares.}{17}{section*.6}%
-\contentsline {paragraph}{Test-time training and expressive hidden states.}{17}{section*.7}%
-\contentsline {paragraph}{Fast weights and linear attention.}{17}{section*.8}%
-\contentsline {section}{\numberline {D}Projection Learning Proofs}{17}{appendix.D}%
-\contentsline {section}{\numberline {E}Conservative Memory Proofs}{21}{appendix.E}%
-\contentsline {section}{\numberline {F}Ridge and Bayesian Projection Memory Proofs}{27}{appendix.F}%
+\contentsline {section}{\numberline {2}Preliminaries}{1}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Notation}{1}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Partitions and measurable predictors}{2}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Bayes risk under information}{2}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Projection memory notation}{2}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Minimal Information Refinement}{2}{section.3}%
+\contentsline {subsection}{\numberline {3.1}The finite refinement rule}{3}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}The sigma-algebra form}{3}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Contradiction inside an atom}{3}{subsection.3.3}%
+\contentsline {section}{\numberline {4}The Value of a Distinction}{3}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Risk monotonicity}{4}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Log loss}{4}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Squared loss}{4}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Finite empirical scores}{4}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Distinction Graph Machines}{5}{section.5}%
+\contentsline {subsection}{\numberline {5.1}State and prediction}{5}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Refine or repair on a graph}{6}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Why graph memory is different from a tree}{7}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Local memories}{7}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Language modeling instance}{7}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}Complexity}{8}{subsection.5.6}%
+\contentsline {section}{\numberline {6}DGM Layers for Large-Model Training}{9}{section.6}%
+\contentsline {subsection}{\numberline {6.1}A trainable DGM layer}{9}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Detached write path}{9}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Why this can scale}{10}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Distributed training}{10}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Closed-form adapters}{11}{subsection.6.5}%
+\contentsline {section}{\numberline {7}From Distinctions to Projection Memory}{11}{section.7}%
+\contentsline {subsection}{\numberline {7.1}One-hot partition memory}{11}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}CPM conflict as missing distinction}{12}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}The hierarchy}{12}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Technical Overview}{12}{section.8}%
+\contentsline {section}{\numberline {9}Computational Checks}{15}{section.9}%
+\contentsline {section}{\numberline {10}Conclusion}{17}{section.10}%
+\contentsline {section}{\numberline {A}Appendix Roadmap}{20}{appendix.A}%
+\contentsline {section}{\numberline {B}Limitations}{20}{appendix.B}%
+\contentsline {section}{\numberline {C}Related Work}{20}{appendix.C}%
+\contentsline {paragraph}{Prototype and memory methods.}{20}{section*.8}%
+\contentsline {paragraph}{Decision trees and splitting criteria.}{21}{section*.9}%
+\contentsline {paragraph}{Sparse experts and retrieval layers.}{21}{section*.10}%
+\contentsline {paragraph}{Information theory and statistical decision theory.}{21}{section*.11}%
+\contentsline {paragraph}{Backpropagation and gradient learning.}{21}{section*.12}%
+\contentsline {paragraph}{Projection learning and online repair.}{21}{section*.13}%
+\contentsline {paragraph}{Test-time adaptation.}{21}{section*.14}%
+\contentsline {section}{\numberline {D}Minimal Refinement Proofs}{21}{appendix.D}%
+\contentsline {section}{\numberline {E}Value of Distinction Proofs}{23}{appendix.E}%
+\contentsline {section}{\numberline {F}DGM Algorithm and Projection-Bridge Proofs}{25}{appendix.F}%

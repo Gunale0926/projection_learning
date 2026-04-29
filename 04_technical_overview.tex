@@ -1,199 +1,187 @@
 \section{Technical Overview}
 \label{sec:technical-overview}
 
-This section sketches the proof ideas. Full formal statements and proofs appear in Appendices~\ref{app:projection-proofs}, \ref{app:memory-proofs}, and \ref{app:ridge-proofs}.
+This section gives the proof ideas in the same order as the main text. Full formal versions appear in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
 
-\begin{theorem}[Projection characterization, proof sketch for Theorem~\ref{thm:projection-characterization:formal}]
-\label{thm:projection-characterization:sketch}
-The informal statement is Theorem~\ref{thm:projection-characterization:informal}.
+\begin{theorem}[Minimal finite refinement, proof sketch for Theorem~\ref{thm:minimal-refinement:formal}]
+\label{thm:minimal-refinement:sketch}
+The informal statement is Theorem~\ref{thm:minimal-refinement:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-The optimality condition for $p=\argmin_{s\in\calC}D_\psi(s,s_0)$ is
+Every atom of $\calP_E$ lies inside an atom of $\calP$, so $\calP_E$ refines $\calP$. Also
 \begin{align*}
-\ip{\nabla\psi(p)-\nabla\psi(s_0)}{u-p}\ge0\qquad \forall u\in\calC.
+E=\bigcup_{B\in\calP}(B\cap E),
 \end{align*}
-The Bregman three-point identity gives
+so $E$ is $\calP_E$-measurable. If $\calQ$ refines $\calP$ and makes $E$ measurable, then every atom $Q\in\calQ$ satisfies
 \begin{align*}
-D_\psi(u,s_0)-D_\psi(u,p)-D_\psi(p,s_0)=\ip{\nabla\psi(s_0)-\nabla\psi(p)}{p-u}.
+Q\subseteq B
 \end{align*}
-The two displays are equivalent. This proves both directions.
+for some $B\in\calP$, and also either $Q\subseteq E$ or $Q\subseteq E^c$. Hence
+\begin{align*}
+Q\subseteq B\cap E\qquad \text{or}\qquad Q\subseteq B\cap E^c.
+\end{align*}
+Thus $\calQ$ refines $\calP_E$.
 \end{proof}
 
-\begin{theorem}[Implicit mirror descent, proof sketch for Theorem~\ref{thm:implicit-md:formal}]
-\label{thm:implicit-md:sketch}
-The informal statement is Theorem~\ref{thm:implicit-md:informal}.
+\begin{theorem}[Minimal sigma-algebra refinement, proof sketch for Theorem~\ref{thm:sigma-refinement:formal}]
+\label{thm:sigma-refinement:sketch}
+The informal statement is Theorem~\ref{thm:sigma-refinement:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Differentiate the soft projection objective at the interior optimum:
+By definition,
 \begin{align*}
-0=\nabla_sD_\psi(s_{t+1},s_t)+\eta\nabla\ell_t(s_{t+1}).
+\calF\vee\sigma(Z)=\sigma(\calF\cup\sigma(Z)).
 \end{align*}
-Since
+This sigma-algebra contains $\calF$ and makes $Z$ measurable. If $\calG$ also contains $\calF$ and makes $Z$ measurable, then
 \begin{align*}
-\nabla_sD_\psi(s,s_t)=\nabla\psi(s)-\nabla\psi(s_t),
+\calF\cup\sigma(Z)\subseteq\calG.
 \end{align*}
-we obtain
+Since $\calG$ is a sigma-algebra,
 \begin{align*}
-\nabla\psi(s_{t+1})=\nabla\psi(s_t)-\eta\nabla\ell_t(s_{t+1}).
-\end{align*}
-\end{proof}
-
-\begin{theorem}[Quadratic memory and implicit gradient descent, proof sketch for Theorem~\ref{thm:pml-implicit:formal}]
-\label{thm:pml-implicit:sketch}
-The informal statement is Theorem~\ref{thm:pml-implicit:informal}.
-\end{theorem}
-\begin{proof}[Proof sketch]
-For $\ell(W)=\norm{Wk-v}_2^2/2$,
-\begin{align*}
-\nabla\ell(W)=(Wk-v)k^\top.
-\end{align*}
-The implicit step is
-\begin{align*}
-W_{t+1}=W_t+\eta(v-W_{t+1}k)k^\top.
-\end{align*}
-With $e=v-W_tk$ and $W_{t+1}=W_t+\alpha ek^\top$,
-\begin{align*}
-v-W_{t+1}k=(1-\alpha\norm{k}_2^2)e.
-\end{align*}
-Comparing coefficients gives
-\begin{align*}
-\alpha=\eta(1-\alpha\norm{k}_2^2)=\frac{\eta}{1+\eta\norm{k}_2^2}.
+\sigma(\calF\cup\sigma(Z))\subseteq\calG.
 \end{align*}
 \end{proof}
 
-\begin{theorem}[Exact binding, proof sketch for Theorem~\ref{thm:exact-binding:formal}]
-\label{thm:exact-binding:sketch}
-The informal statement is Theorem~\ref{thm:exact-binding:informal}.
+\begin{theorem}[Contradiction, proof sketch for Theorem~\ref{thm:contradiction:formal}]
+\label{thm:contradiction:sketch}
+The informal statement is Theorem~\ref{thm:contradiction:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-If $WK=V$ and $Ka=0$, then
+If $f$ is $\calP$-measurable and $\omega,\omega'$ lie in the same atom, then
 \begin{align*}
-Va=WKa=0.
+f(\omega)=f(\omega').
 \end{align*}
-Thus $\ker K\subseteq\ker V$. Conversely this nullspace condition implies
+If $f(\omega)=y(\omega)$ and $f(\omega')=y(\omega')$, then
 \begin{align*}
-V=VK^\dagger K,
+y(\omega)=y(\omega'),
 \end{align*}
-so $W=VK^\dagger$ is feasible. For projection, write $W=W_0+\Delta$ and $R=V-W_0K$. The problem becomes
-\begin{align*}
-\min_\Delta\frac{1}{2}\norm{\Delta}_F^2\quad \text{subject to}\quad \Delta K=R.
-\end{align*}
-The minimum-Frobenius-norm feasible solution is $\Delta=RK^\dagger$.
+contradicting the hypothesis.
 \end{proof}
 
-\begin{theorem}[Innovation and conflict, proof sketch for Theorems~\ref{thm:innovation-decomposition:formal} and \ref{thm:conflict-impossibility:formal}]
-\label{thm:innovation-conflict:sketch}
-The informal statements are Theorems~\ref{thm:innovation-decomposition:informal} and \ref{thm:conflict-impossibility:informal}.
+\begin{theorem}[Risk monotonicity, proof sketch for Theorem~\ref{thm:risk-monotonicity:formal}]
+\label{thm:risk-monotonicity:sketch}
+The informal statement is Theorem~\ref{thm:risk-monotonicity:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Using \eqref{eq:innovation},
+If $\calF\subseteq\calG$, then every $\calF$-measurable action is $\calG$-measurable. Therefore
 \begin{align*}
-k=KK^\dagger k+(I-KK^\dagger)k=Ka+z.
+\{a:a\text{ is }\calF\text{-measurable}\}\subseteq\{a:a\text{ is }\calG\text{-measurable}\}.
 \end{align*}
-If $WK=V$, then
+Taking the infimum of the same expected loss over the larger set gives
 \begin{align*}
-Wk=WKa+Wz=Va+Wz.
-\end{align*}
-If $z=0$, then $Wk=Va$ for every old-feasible $W$. If an update $\Delta$ preserves old evidence, then $\Delta K=0$ and hence $\Delta k=0$ whenever $k\in\Span(K)$. Thus contradiction cannot be repaired without breaking old evidence.
-\end{proof}
-
-\begin{theorem}[Soft CPM, proof sketch for Theorem~\ref{thm:soft-cpm:formal}]
-\label{thm:soft-cpm:sketch}
-The informal statement is Theorem~\ref{thm:soft-cpm:informal}.
-\end{theorem}
-\begin{proof}[Proof sketch]
-Set $W=W_t+\Delta$ and $e=v-W_tk$. Since $W_tK=V$, preserving old evidence is $\Delta K=0$. Because $\Delta K=0$,
-\begin{align*}
-\Delta k=\Delta(I-\Pi)k=\Delta z.
-\end{align*}
-The objective becomes
-\begin{align*}
-\min_{\Delta:\Delta K=0}\frac{1}{2}\norm{\Delta}_F^2+\frac{\eta}{2}\norm{\Delta z-e}_2^2.
-\end{align*}
-The stationarity equation inside this subspace is
-\begin{align*}
-\Delta+\eta(\Delta z-e)z^\top=0.
-\end{align*}
-Solving with $\Delta=\alpha ez^\top$ yields
-\begin{align*}
-\alpha=\frac{\eta}{1+\eta\norm{z}_2^2}.
-\end{align*}
-The residual satisfies
-\begin{align*}
-v-W_{t+1}k=e-\Delta z=\frac{1}{1+\eta\norm{z}_2^2}e.
+R_L(\calG)\le R_L(\calF).
 \end{align*}
 \end{proof}
 
-\begin{theorem}[No-free repair and optimal contraction, proof sketch for Theorems~\ref{thm:no-free-repair:formal} and \ref{thm:optimal-contraction:formal}]
-\label{thm:repair-optimality:sketch}
-The informal statements are Theorems~\ref{thm:no-free-repair:informal} and \ref{thm:optimal-contraction:informal}.
+\begin{theorem}[Log-loss value, proof sketch for Theorem~\ref{thm:log-value:formal}]
+\label{thm:log-value:sketch}
+The informal statement is Theorem~\ref{thm:log-value:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Every old-preserving update satisfies
+For any $\calF$-measurable conditional distribution $q$,
 \begin{align*}
-\Delta k=\Delta(I-\Pi)k=\Delta z.
+\E[-\log q(Y)]=H(Y\mid\calF)+\E\left[D_{\mathrm{KL}}(\mathbb P(Y\in\cdot\mid\calF)\|q(\cdot))\right].
 \end{align*}
-The post-update residual is
+The minimizer is $q^\star=\mathbb P(Y\in\cdot\mid\calF)$, so $R_{\log}(\calF)=H(Y\mid\calF)$. Similarly $R_{\log}(\calG)=H(Y\mid\calG)$. Therefore
 \begin{align*}
-e^+=e-\Delta z.
-\end{align*}
-If $\norm{e^+}_2\le\gamma\norm{e}_2$, then
-\begin{align*}
-\norm{\Delta z}_2=\norm{e-e^+}_2\ge(1-\gamma)\norm{e}_2.
-\end{align*}
-Since $\norm{\Delta z}_2\le\norm{\Delta}_F\norm{z}_2$, the lower bound follows. If one demands $e^+=\gamma e$, then $\Delta z=(1-\gamma)e$, and the minimum-Frobenius-norm solution is
-\begin{align*}
-\Delta^\star=(1-\gamma)\frac{ez^\top}{\norm{z}_2^2}.
+R_{\log}(\calF)-R_{\log}(\calG)=H(Y\mid\calF)-H(Y\mid\calG)=I(Y;\calG\mid\calF).
 \end{align*}
 \end{proof}
 
-\begin{theorem}[Sequential hard CPM, proof sketch for Theorem~\ref{thm:sequential-batch:formal}]
-\label{thm:sequential-batch:sketch}
-The informal statement is Theorem~\ref{thm:sequential-batch:informal}.
+\begin{theorem}[Squared-loss value, proof sketch for Theorem~\ref{thm:squared-value:formal}]
+\label{thm:squared-value:sketch}
+The informal statement is Theorem~\ref{thm:squared-value:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Let $\calC_t=\{W:WK_t=V_t\}$ and $\calT_t=\{H:HK_t=0\}$. By induction, $W_t\in\calC_{t-1}$ and
+The optimal $\calF$-predictor is $\E[Y\mid\calF]$. Since $\calF\subseteq\calG$,
 \begin{align*}
-\ip{H}{W_t-W_0}_F=0\qquad \forall H\in\calT_{t-1}.
+Y-\E[Y\mid\calF]=\left(Y-\E[Y\mid\calG]\right)+\left(\E[Y\mid\calG]-\E[Y\mid\calF]\right).
 \end{align*}
-The hard CPM update lies in $\calC_t$. If $H\in\calT_t$, then $Hz_t=0$, so
-\begin{align*}
-\ip{H}{e_tz_t^\top}_F=e_t^\top Hz_t=0.
-\end{align*}
-Thus $W_{t+1}-W_0$ is orthogonal to $\calT_t$, which is the Frobenius projection condition for $\calC_t$.
+The two terms are orthogonal because the first has conditional mean zero given $\calG$ and the second is $\calG$-measurable. Taking squared $\ell_2$ norms and expectations gives the identity.
 \end{proof}
 
-\begin{theorem}[Ridge and Bayesian memory, proof sketch for Theorem~\ref{thm:bayesian-ridge:formal}]
-\label{thm:bayesian-ridge:sketch}
-The informal statement is Theorem~\ref{thm:bayesian-ridge:informal}.
+\begin{theorem}[Prototype edge separation, proof sketch for Theorem~\ref{thm:prototype-edge:formal}]
+\label{thm:prototype-edge:sketch}
+The informal statement is Theorem~\ref{thm:prototype-edge:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Differentiating $J_t$ gives
+With $u=(c_i-c_j)/\norm{c_i-c_j}_2$ and $b=u^\top(c_i+c_j)/2$,
 \begin{align*}
-0=\lambda(W-W_0)+\sum_{\tau=1}^t\rho_\tau(Wk_\tau-v_\tau)k_\tau^\top.
+u^\top c_i-b&=\frac{1}{2}u^\top(c_i-c_j)=\frac{1}{2}\norm{c_i-c_j}_2,\\
+u^\top c_j-b&=-\frac{1}{2}u^\top(c_i-c_j)=-\frac{1}{2}\norm{c_i-c_j}_2.
 \end{align*}
-Rearranging,
-\begin{align*}
-W\left(\lambda I+\sum_{\tau=1}^t\rho_\tau k_\tau k_\tau^\top\right)=\lambda W_0+\sum_{\tau=1}^t\rho_\tau v_\tau k_\tau^\top.
-\end{align*}
-Thus $W=B_tA_t^{-1}$. Under the Gaussian prior and observation model, the negative log posterior equals $J_t(W)$ up to constants, so the posterior mean and MAP coincide with this minimizer.
 \end{proof}
 
-\begin{theorem}[Ridge competitive bound and log determinant, proof sketch for Theorems~\ref{thm:ridge-competitive:formal} and \ref{thm:logdet-info:formal}]
-\label{thm:ridge-competitive-logdet:sketch}
-The informal statements are Theorems~\ref{thm:ridge-competitive:informal} and \ref{thm:logdet-info:informal}.
+\begin{theorem}[DGM data structure, proof sketch for Theorem~\ref{thm:dpm-complexity:formal}]
+\label{thm:dpm-complexity:sketch}
+The informal statement is Theorem~\ref{thm:dpm-complexity:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Around the minimizer $W_t$ of $J_{t-1}$, the increment minimization is
+A prediction computes distances from $h$ to $N_t$ prototypes in $\R^d$, costing
 \begin{align*}
-\min_\Delta\frac{1}{2}\tr(\Delta A_{t-1}\Delta^\top)+\frac{\rho_t}{2}\norm{\Delta k_t-e_t}_2^2.
+O(N_td).
 \end{align*}
-Its minimum value is
+It then evaluates $k$ selected local memories, costing $O(kd+C_{\mathrm{local}})$ including sparse routing weights. Repair adds the local repair cost. Creating one prototype stores a vector in $\R^d$. Adding $q$ distinction edges stores $q$ vectors and thresholds, costing
 \begin{align*}
-\frac{\rho_t}{2(1+\rho_ta_t)}\norm{e_t}_2^2.
+O(qd).
 \end{align*}
-Summing and comparing $J_T(W_{T+1})$ with $J_T(U)$ gives the competitive bound. The log-determinant identity follows from
+For embedding-mean memories, each prototype stores $c_j\in\R^d$ and $r_j\in\R^{d_e}$, while each edge stores one distinction vector in $\R^d$. Hence memory is
 \begin{align*}
-\det(A_{t-1}+\rho_tk_tk_t^\top)=\det(A_{t-1})(1+\rho_ta_t).
+O(N_t(d+d_e)+|E_t|d).
+\end{align*}
+\end{proof}
+
+\begin{theorem}[DGM layer cost, proof sketch for Theorem~\ref{thm:dgm-layer-cost:formal}]
+\label{thm:dgm-layer-cost:sketch}
+The informal statement is Theorem~\ref{thm:dgm-layer-cost:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Computing $q=Qh$ costs $O(dd_q)$. Retrieval costs $C_{\mathrm{ret}}(N_t,d_q)$ by definition. For each selected prototype, a rank-$r$ adapter computes
+\begin{align*}
+B_jA_jh.
+\end{align*}
+The two matrix-vector products cost $O(dr)$, so $k$ selected adapters cost
+\begin{align*}
+O(kdr).
+\end{align*}
+The detached write path repeats query and retrieval, then updates only selected local states. A rank-one local repair or low-rank sufficient-statistic update costs $O(dr)$ per selected memory, with $O(d_q)$ additional prototype bookkeeping. Hence write overhead is
+\begin{align*}
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+k(d_q+dr)).
+\end{align*}
+Because the write path is detached, backpropagation does not need intermediate copies of $\calS_t$ for all $t$. It stores the selected read computation used in the forward loss.
+\end{proof}
+
+\begin{theorem}[One-hot memory, proof sketch for Theorem~\ref{thm:one-hot-measurable:formal}]
+\label{thm:one-hot-measurable:sketch}
+The informal statement is Theorem~\ref{thm:one-hot-measurable:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+If $\omega,\omega'\in B_i$, then both one-hot features equal $e_i$, so
+\begin{align*}
+W\phi_\calP(\omega)=We_i=W\phi_\calP(\omega').
+\end{align*}
+Thus $W\phi_\calP$ is constant on atoms. Conversely, if $f$ is constant on each $B_i$, put that constant value in column $i$ of $W$. Then
+\begin{align*}
+f(\omega)=W\phi_\calP(\omega)
+\end{align*}
+for every $\omega$.
+\end{proof}
+
+\begin{theorem}[CPM conflict, proof sketch for Theorem~\ref{thm:cpm-conflict-distinction:formal}]
+\label{thm:cpm-conflict-distinction:sketch}
+The informal statement is Theorem~\ref{thm:cpm-conflict-distinction:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+If $\omega,\omega'\in B_i$, then
+\begin{align*}
+\phi_\calP(\omega)=\phi_\calP(\omega')=e_i.
+\end{align*}
+After committing $We_i=v(\omega)$, the later evidence $We_i=v(\omega')$ has the same key. Its innovation relative to the old key span is
+\begin{align*}
+z=(I-e_ie_i^\top)e_i=0.
+\end{align*}
+Its residual is
+\begin{align*}
+e=v(\omega')-We_i=v(\omega')-v(\omega)\ne0.
 \end{align*}
 \end{proof}

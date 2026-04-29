@@ -1,0 +1,74 @@
+\section{The Value of a Distinction}
+\label{sec:value}
+
+Refinement increases what the learner can condition on. This does not mean that every distinction is useful for every task. The value of a distinction is measured by the decrease in optimal risk after the information structure is refined.
+
+\subsection{Risk monotonicity}
+
+The first fact is purely order-theoretic. If $\calG$ contains all events in $\calF$, then every $\calF$-measurable predictor is also $\calG$-measurable. The decision class has only grown.
+
+\begin{theorem}[Bayes-risk monotonicity, informal version of Theorem~\ref{thm:risk-monotonicity:formal}]
+\label{thm:risk-monotonicity:informal}
+If $\calF\subseteq\calG$, then for every loss $L$,
+\begin{align*}
+R_L(\calG)\le R_L(\calF).
+\end{align*}
+\end{theorem}
+
+This is a population statement. It says that information cannot hurt the best possible decision rule. Statistical estimation, finite samples, and model selection can still overfit; those are algorithmic questions, not failures of the information order.
+
+\subsection{Log loss}
+
+For a finite target variable $Y$, log loss asks the learner to output a conditional distribution. The optimal prediction under $\calF$ is the conditional law of $Y$ given $\calF$, and the optimal risk is conditional entropy.
+
+\begin{theorem}[Log-loss value, informal version of Theorem~\ref{thm:log-value:formal}]
+\label{thm:log-value:informal}
+Let $Y$ be finite and let the loss be $-\log q(Y)$. If $\calF\subseteq\calG$, then
+\begin{align*}
+R_{\log}(\calF)-R_{\log}(\calG)=I(Y;\calG\mid\calF).
+\end{align*}
+\end{theorem}
+
+Thus, for classification and language modeling, a refinement is useful exactly to the extent that it carries conditional mutual information about the consequence beyond what the learner already knows.
+
+\subsection{Squared loss}
+
+For $Y\in L^2(\Omega;\R^d)$ and squared loss, the optimal predictor under $\calF$ is $\E[Y\mid\calF]$. Refinement helps precisely when it changes the conditional mean.
+
+\begin{theorem}[Squared-loss value, informal version of Theorem~\ref{thm:squared-value:formal}]
+\label{thm:squared-value:informal}
+Let $Y\in L^2(\Omega;\R^d)$ and let $L(Y,a)=\norm{Y-a}_2^2$. If $\calF\subseteq\calG$, then
+\begin{align*}
+R_2(\calF)-R_2(\calG)=\E\left[\norm{\E[Y\mid\calG]-\E[Y\mid\calF]}_2^2\right].
+\end{align*}
+\end{theorem}
+
+The identity is the Hilbert-space analogue of the log-loss result. A distinction has squared-loss value when the cells it creates have different conditional means.
+
+\subsection{Finite empirical scores}
+
+The population identities lead directly to split scores. Suppose an atom $B$ contains samples $(x_j,y_j)$ and a candidate distinction $g:B\to\{0,1\}$ splits it into $B_0$ and $B_1$.
+
+For classification, let $\hat p_B$, $\hat p_{B_0}$, and $\hat p_{B_1}$ be empirical label distributions. The empirical log-loss improvement is
+\begin{align*}
+\Delta_{\log}(B,g)=|B|H(\hat p_B)-|B_0|H(\hat p_{B_0})-|B_1|H(\hat p_{B_1}).
+\end{align*}
+Equivalently,
+\begin{align*}
+\Delta_{\log}(B,g)=|B|\widehat I(Y;g\mid B).
+\end{align*}
+
+For regression, define
+\begin{align*}
+\hat\mu_B=\frac{1}{|B|}\sum_{j\in B}y_j,\qquad \operatorname{SSE}(B)=\sum_{j\in B}\norm{y_j-\hat\mu_B}_2^2.
+\end{align*}
+The empirical squared-loss improvement is
+\begin{align*}
+\Delta_2(B,g)=\operatorname{SSE}(B)-\operatorname{SSE}(B_0)-\operatorname{SSE}(B_1).
+\end{align*}
+It also has the between-cell form
+\begin{align*}
+\Delta_2(B,g)=|B_0|\norm{\hat\mu_{B_0}-\hat\mu_B}_2^2+|B_1|\norm{\hat\mu_{B_1}-\hat\mu_B}_2^2.
+\end{align*}
+
+These scores implement the same principle as the population theory: split only when the proposed distinction has measurable consequence value.

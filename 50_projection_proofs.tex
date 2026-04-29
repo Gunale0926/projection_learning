@@ -1,235 +1,80 @@
-\section{Projection Learning Proofs}
-\label{app:projection-proofs}
+\section{Minimal Refinement Proofs}
+\label{app:refinement-proofs}
 
-\begin{lemma}[Bregman three-point identity]
-\label{lem:three-point:formal}
-For all $a,b,u\in S$,
+\begin{theorem}[Minimal finite refinement, formal version of Theorem~\ref{thm:minimal-refinement:informal}]
+\label{thm:minimal-refinement:formal}
+Let $\Omega$ be finite, let $\calP$ be a partition of $\Omega$, and let $E\subseteq\Omega$. Define
 \begin{align*}
-D_\psi(u,a)-D_\psi(u,b)-D_\psi(b,a)=\ip{\nabla\psi(a)-\nabla\psi(b)}{b-u}.
+\calP_E=\{B\cap E:B\in\calP, B\cap E\ne\varnothing\}\cup\{B\cap E^c:B\in\calP, B\cap E^c\ne\varnothing\}.
 \end{align*}
-\end{lemma}
-\begin{proof}
-Expand each term:
-\begin{align*}
-D_\psi(u,a)&=\psi(u)-\psi(a)-\ip{\nabla\psi(a)}{u-a},\\
-D_\psi(u,b)&=\psi(u)-\psi(b)-\ip{\nabla\psi(b)}{u-b},\\
-D_\psi(b,a)&=\psi(b)-\psi(a)-\ip{\nabla\psi(a)}{b-a}.
-\end{align*}
-Then
-\begin{align*}
-D_\psi(u,a)-D_\psi(u,b)-D_\psi(b,a)&=-\ip{\nabla\psi(a)}{u-a}+\ip{\nabla\psi(b)}{u-b}+\ip{\nabla\psi(a)}{b-a}\\
-&=\ip{\nabla\psi(a)}{b-u}-\ip{\nabla\psi(b)}{b-u}\\
-&=\ip{\nabla\psi(a)-\nabla\psi(b)}{b-u}.
-\end{align*}
-\end{proof}
-
-\begin{theorem}[Projection characterization, formal version of Theorem~\ref{thm:projection-characterization:informal}]
-\label{thm:projection-characterization:formal}
-Let $S$ be closed and convex, let $\psi$ be differentiable and strictly convex, let $\calC\subseteq S$ be closed and convex, and let $s_0\in S$. For $p\in\calC$, the following are equivalent:
+Then:
 \begin{itemize}
-\item {\bf Part 1.} $p=\argmin_{s\in\calC}D_\psi(s,s_0)$.
-\item {\bf Part 2.} For all $u\in\calC$,
-\begin{align*}
-D_\psi(u,p)+D_\psi(p,s_0)\le D_\psi(u,s_0).
-\end{align*}
+\item {\bf Part 1.} $\calP_E$ is a partition of $\Omega$.
+\item {\bf Part 2.} $\calP_E$ refines $\calP$.
+\item {\bf Part 3.} $E$ is $\calP_E$-measurable.
+\item {\bf Part 4.} If $\calQ$ refines $\calP$ and $E$ is $\calQ$-measurable, then $\calQ$ refines $\calP_E$.
 \end{itemize}
+Consequently, $\calP_E$ is the unique minimal refinement of $\calP$ making $E$ measurable.
 \end{theorem}
 \begin{proof}
-Assume Part 1. The first-order optimality condition is
-\begin{align*}
-\ip{\nabla\psi(p)-\nabla\psi(s_0)}{u-p}\ge0\qquad \forall u\in\calC.
-\end{align*}
-Equivalently,
-\begin{align*}
-\ip{\nabla\psi(s_0)-\nabla\psi(p)}{p-u}\ge0\qquad \forall u\in\calC.
-\end{align*}
-By Lemma~\ref{lem:three-point:formal},
-\begin{align*}
-D_\psi(u,s_0)-D_\psi(u,p)-D_\psi(p,s_0)=\ip{\nabla\psi(s_0)-\nabla\psi(p)}{p-u}.
-\end{align*}
-Thus Part 2 follows.
+For each $B\in\calP$, the nonempty sets among $B\cap E$ and $B\cap E^c$ are disjoint and have union $B$. Since the atoms of $\calP$ are disjoint and cover $\Omega$, the atoms of $\calP_E$ are disjoint and cover $\Omega$. Thus Part 1 holds.
 
-Assume Part 2. The same identity implies
+Every atom of $\calP_E$ is contained in some $B\in\calP$, so Part 2 holds. Also
 \begin{align*}
-\ip{\nabla\psi(s_0)-\nabla\psi(p)}{p-u}\ge0\qquad \forall u\in\calC.
+E=\bigcup_{B\in\calP}(B\cap E),
 \end{align*}
-Hence
+where empty intersections are ignored. Hence $E$ is a union of atoms of $\calP_E$, proving Part 3.
+
+Let $\calQ$ refine $\calP$ and make $E$ measurable. For any atom $Q\in\calQ$, there exists $B\in\calP$ with
 \begin{align*}
-\ip{\nabla\psi(p)-\nabla\psi(s_0)}{u-p}\ge0\qquad \forall u\in\calC.
+Q\subseteq B.
 \end{align*}
-This is the variational inequality for minimizing $D_\psi(s,s_0)$ over $\calC$. Strict convexity gives uniqueness, so Part 1 follows.
+Since $E$ is $\calQ$-measurable, each atom of $\calQ$ is either contained in $E$ or disjoint from $E$. Hence
+\begin{align*}
+Q\subseteq B\cap E\qquad \text{or}\qquad Q\subseteq B\cap E^c.
+\end{align*}
+Thus each atom of $\calQ$ is contained in an atom of $\calP_E$, so $\calQ$ refines $\calP_E$. This proves Part 4.
+
+If another partition has the same minimal property, it refines $\calP_E$ and is refined by $\calP_E$, so the two partitions have the same atoms.
 \end{proof}
 
-\begin{corollary}[Fejer monotonicity and bounded drift]
-\label{cor:fejer:formal}
-Let $s_{t+1}=\argmin_{s\in\calC_t}D_\psi(s,s_t)$. If $u^\star\in\cap_{t=1}^T\calC_t$, then
-\begin{align*}
-D_\psi(u^\star,s_{t+1})\le D_\psi(u^\star,s_t)
-\end{align*}
-and
-\begin{align*}
-\sum_{t=1}^T D_\psi(s_{t+1},s_t)\le D_\psi(u^\star,s_1).
-\end{align*}
-\end{corollary}
+\begin{theorem}[Minimal sigma-algebra refinement, formal version of Theorem~\ref{thm:sigma-refinement:informal}]
+\label{thm:sigma-refinement:formal}
+Let $(\Omega,\calA)$ be a measurable space, let $\calF\subseteq\calA$ be a sigma-algebra, and let $Z:\Omega\to\calZ$ be a measurable map into a measurable space $(\calZ,\calB)$. The join $\calF\vee\sigma(Z)$ is the smallest sigma-algebra $\calG\subseteq\calA$ such that $\calF\subseteq\calG$ and $Z$ is $\calG$-measurable.
+\end{theorem}
 \begin{proof}
-By Theorem~\ref{thm:projection-characterization:formal},
+By definition,
 \begin{align*}
-D_\psi(u^\star,s_{t+1})+D_\psi(s_{t+1},s_t)\le D_\psi(u^\star,s_t).
+\calF\vee\sigma(Z)=\sigma(\calF\cup\sigma(Z)).
 \end{align*}
-Dropping the second term gives the first claim. Summing gives
+Therefore $\calF\subseteq\calF\vee\sigma(Z)$ and $\sigma(Z)\subseteq\calF\vee\sigma(Z)$, so $Z$ is measurable with respect to $\calF\vee\sigma(Z)$.
+
+Let $\calG$ be any sigma-algebra such that $\calF\subseteq\calG$ and $Z$ is $\calG$-measurable. The latter condition means $\sigma(Z)\subseteq\calG$. Hence
 \begin{align*}
-\sum_{t=1}^T D_\psi(s_{t+1},s_t)&\le \sum_{t=1}^T\left(D_\psi(u^\star,s_t)-D_\psi(u^\star,s_{t+1})\right)\\
-&=D_\psi(u^\star,s_1)-D_\psi(u^\star,s_{T+1})\\
-&\le D_\psi(u^\star,s_1).
+\calF\cup\sigma(Z)\subseteq\calG.
 \end{align*}
+Since $\calG$ is a sigma-algebra,
+\begin{align*}
+\sigma(\calF\cup\sigma(Z))\subseteq\calG.
+\end{align*}
+Thus $\calF\vee\sigma(Z)\subseteq\calG$.
 \end{proof}
 
-\begin{theorem}[Soft projection inequality]
-\label{thm:soft-projection:formal}
-Let $\ell_t:S\to\R$ be convex and let
+\begin{theorem}[Contradiction requires distinction, formal version of Theorem~\ref{thm:contradiction:informal}]
+\label{thm:contradiction:formal}
+Let $\calP$ be a partition of $\Omega$ and let $y:\Omega\to A$ be a required output. Suppose there exist $\omega,\omega'\in B$ for some atom $B\in\calP$ such that $y(\omega)\ne y(\omega')$. Then no $\calP$-measurable $f:\Omega\to A$ satisfies both
 \begin{align*}
-s_{t+1}=\argmin_{s\in S}\{D_\psi(s,s_t)+\eta_t\ell_t(s)\}.
-\end{align*}
-Then for all $u\in S$,
-\begin{align*}
-\eta_t(\ell_t(s_{t+1})-\ell_t(u))\le D_\psi(u,s_t)-D_\psi(u,s_{t+1})-D_\psi(s_{t+1},s_t).
+f(\omega)=y(\omega),\qquad f(\omega')=y(\omega').
 \end{align*}
 \end{theorem}
 \begin{proof}
-For some $g_{t+1}\in\partial\ell_t(s_{t+1})$, optimality gives
+Since $f$ is $\calP$-measurable and $\omega,\omega'\in B$,
 \begin{align*}
-\ip{\nabla\psi(s_{t+1})-\nabla\psi(s_t)+\eta_t g_{t+1}}{u-s_{t+1}}\ge0.
+f(\omega)=f(\omega').
 \end{align*}
-Thus
+If both requirements held, then
 \begin{align*}
-\eta_t\ip{g_{t+1}}{s_{t+1}-u}\le \ip{\nabla\psi(s_t)-\nabla\psi(s_{t+1})}{s_{t+1}-u}.
+y(\omega)=f(\omega)=f(\omega')=y(\omega'),
 \end{align*}
-Convexity gives
-\begin{align*}
-\ell_t(s_{t+1})-\ell_t(u)\le \ip{g_{t+1}}{s_{t+1}-u}.
-\end{align*}
-Lemma~\ref{lem:three-point:formal} gives
-\begin{align*}
-\ip{\nabla\psi(s_t)-\nabla\psi(s_{t+1})}{s_{t+1}-u}=D_\psi(u,s_t)-D_\psi(u,s_{t+1})-D_\psi(s_{t+1},s_t).
-\end{align*}
-Combining proves the claim.
-\end{proof}
-
-\begin{theorem}[Soft projection as implicit mirror descent, formal version of Theorem~\ref{thm:implicit-md:informal}]
-\label{thm:implicit-md:formal}
-Let $\ell_t$ be differentiable and let
-\begin{align*}
-s_{t+1}=\argmin_{s\in S}\{D_\psi(s,s_t)+\eta\ell_t(s)\}.
-\end{align*}
-If $s_{t+1}$ is an interior optimum, then
-\begin{align*}
-\nabla\psi(s_{t+1})=\nabla\psi(s_t)-\eta\nabla\ell_t(s_{t+1}).
-\end{align*}
-If $\psi(s)=\norm{s}_2^2/2$, then
-\begin{align*}
-s_{t+1}=s_t-\eta\nabla\ell_t(s_{t+1}).
-\end{align*}
-\end{theorem}
-\begin{proof}
-At an interior optimum,
-\begin{align*}
-0=\nabla_sD_\psi(s_{t+1},s_t)+\eta\nabla\ell_t(s_{t+1}).
-\end{align*}
-Since
-\begin{align*}
-\nabla_sD_\psi(s,s_t)=\nabla\psi(s)-\nabla\psi(s_t),
-\end{align*}
-we obtain
-\begin{align*}
-\nabla\psi(s_{t+1})-\nabla\psi(s_t)+\eta\nabla\ell_t(s_{t+1})=0.
-\end{align*}
-Rearranging proves the mirror form. If $\psi(s)=\norm{s}_2^2/2$, then $\nabla\psi(s)=s$.
-\end{proof}
-
-\begin{theorem}[Quadratic projection memory as implicit gradient descent, formal version of Theorem~\ref{thm:pml-implicit:informal}]
-\label{thm:pml-implicit:formal}
-Let $k\in\R^r$, $v\in\R^m$, $W_t\in\R^{m\times r}$, $\eta>0$, and $\ell(W)=\norm{Wk-v}_2^2/2$. The update
-\begin{align*}
-W_{t+1}=\argmin_{W\in\R^{m\times r}}\left\{\frac{1}{2}\norm{W-W_t}_F^2+\eta\ell(W)\right\}
-\end{align*}
-is equivalent to
-\begin{align*}
-W_{t+1}=W_t-\eta\nabla\ell(W_{t+1})
-\end{align*}
-and has closed form
-\begin{align*}
-W_{t+1}=W_t+\frac{\eta}{1+\eta\norm{k}_2^2}(v-W_tk)k^\top.
-\end{align*}
-Moreover, if $e=v-W_tk$, then
-\begin{align*}
-v-W_{t+1}k=\frac{1}{1+\eta\norm{k}_2^2}e.
-\end{align*}
-\end{theorem}
-\begin{proof}
-The gradient is
-\begin{align*}
-\nabla\ell(W)=(Wk-v)k^\top.
-\end{align*}
-The optimality condition for the proximal objective is
-\begin{align*}
-0=W_{t+1}-W_t+\eta(W_{t+1}k-v)k^\top,
-\end{align*}
-which is the implicit gradient step. Let $e=v-W_tk$ and set $W_{t+1}=W_t+\alpha ek^\top$. Then
-\begin{align*}
-v-W_{t+1}k=e-\alpha e\norm{k}_2^2=(1-\alpha\norm{k}_2^2)e.
-\end{align*}
-The implicit step gives
-\begin{align*}
-\alpha ek^\top=\eta(1-\alpha\norm{k}_2^2)ek^\top.
-\end{align*}
-Thus
-\begin{align*}
-\alpha=\frac{\eta}{1+\eta\norm{k}_2^2}.
-\end{align*}
-Substituting $\alpha$ gives the update and residual contraction.
-\end{proof}
-
-\begin{theorem}[KL consistency projection]
-\label{thm:kl-projection:formal}
-Let $p_t$ be strictly positive on a finite space $\calX$. The solution of
-\begin{align*}
-\argmin_{p:\mathbb E_p[\phi]=c}D_{\mathrm{KL}}(p\|p_t)
-\end{align*}
-has the form
-\begin{align*}
-p_{t+1}(x)=\frac{p_t(x)\exp(\lambda^\top\phi(x))}{Z(\lambda)}.
-\end{align*}
-\end{theorem}
-\begin{proof}
-The Lagrangian is
-\begin{align*}
-\calL(p,\lambda,\nu)=\sum_x p(x)\log\frac{p(x)}{p_t(x)}+\lambda^\top\left(\sum_x p(x)\phi(x)-c\right)+\nu\left(\sum_xp(x)-1\right).
-\end{align*}
-Stationarity gives
-\begin{align*}
-\log\frac{p(x)}{p_t(x)}+1+\lambda^\top\phi(x)+\nu=0.
-\end{align*}
-Hence, after absorbing signs into $\lambda$ and normalizing,
-\begin{align*}
-p_{t+1}(x)=\frac{p_t(x)\exp(\lambda^\top\phi(x))}{Z(\lambda)}.
-\end{align*}
-\end{proof}
-
-\begin{proposition}[Gradient descent as linearized projection]
-\label{prop:gd-linearized:formal}
-For $D_\psi(s,s_t)=\norm{s-s_t}_2^2/2$, replacing $\ell_t(s)$ in the soft projection objective by its first-order approximation at $s_t$ gives $s_{t+1}=s_t-\eta\nabla\ell_t(s_t)$.
-\end{proposition}
-\begin{proof}
-The linearized objective is
-\begin{align*}
-\frac{1}{2}\norm{s-s_t}_2^2+\eta\ip{\nabla\ell_t(s_t)}{s-s_t}+\eta\ell_t(s_t).
-\end{align*}
-The stationarity condition is
-\begin{align*}
-s-s_t+\eta\nabla\ell_t(s_t)=0.
-\end{align*}
-Thus
-\begin{align*}
-s_{t+1}=s_t-\eta\nabla\ell_t(s_t).
-\end{align*}
+contradicting $y(\omega)\ne y(\omega')$.
 \end{proof}

@@ -1,0 +1,506 @@
+{
+  "backprop_comparison": {
+    "backprop_mlp_offline": {
+      "test_accuracy_mean": 0.9929,
+      "test_accuracy_std": 0.0024372115213908124,
+      "train_accuracy_mean": 1.0,
+      "train_accuracy_std": 0.0
+    },
+    "backprop_mlp_online": {
+      "prequential_accuracy_mean": 0.5690000000000001,
+      "prequential_accuracy_std": 0.06476109943476871,
+      "prequential_log_loss_mean": 0.6886755153346257,
+      "prequential_log_loss_std": 0.018624774066319894,
+      "test_accuracy_mean": 0.6541,
+      "test_accuracy_std": 0.03845438856619617
+    },
+    "dataset": "contextual_xor_switch",
+    "description": "Two-context XOR stream with 100 examples per context. The second context flips labels; the context coordinate is observable.",
+    "dpm_monotone_all_runs": true,
+    "dpm_online": {
+      "leaves_mean": 10.8,
+      "leaves_std": 1.32664991614216,
+      "objective_mean": 16.680872566530933,
+      "objective_std": 5.238960095898586,
+      "prequential_accuracy_mean": 0.8039999999999999,
+      "prequential_accuracy_std": 0.02537715508089901,
+      "prequential_log_loss_mean": 0.45751140106986077,
+      "prequential_log_loss_std": 0.03804142573333962,
+      "splits_mean": 9.8,
+      "splits_std": 1.32664991614216,
+      "test_accuracy_mean": 0.9442999999999999,
+      "test_accuracy_std": 0.02559218630754315,
+      "train_accuracy_mean": 0.954,
+      "train_accuracy_std": 0.013564659966250548
+    },
+    "runs": [
+      {
+        "backprop_mlp_offline": {
+          "test_accuracy": 0.989,
+          "train_accuracy": 1.0
+        },
+        "backprop_mlp_online": {
+          "prequential_accuracy": 0.565,
+          "prequential_log_loss": 0.6893530201892608,
+          "test_accuracy": 0.6435
+        },
+        "dpm_online": {
+          "leaves": 11,
+          "objective": 19.985593627487447,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.775,
+          "prequential_log_loss": 0.4861223592236613,
+          "split_decrease_min": 1.2109667885840967,
+          "splits": 10,
+          "test_accuracy": 0.918,
+          "train_accuracy": 0.94
+        },
+        "n_per_context": 100,
+        "seed": 1000
+      },
+      {
+        "backprop_mlp_offline": {
+          "test_accuracy": 0.9925,
+          "train_accuracy": 1.0
+        },
+        "backprop_mlp_online": {
+          "prequential_accuracy": 0.58,
+          "prequential_log_loss": 0.7037550596933919,
+          "test_accuracy": 0.6005
+        },
+        "dpm_online": {
+          "leaves": 10,
+          "objective": 10.509861696782746,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.84,
+          "prequential_log_loss": 0.4068050910669734,
+          "split_decrease_min": 1.1571371684209915,
+          "splits": 9,
+          "test_accuracy": 0.971,
+          "train_accuracy": 0.975
+        },
+        "n_per_context": 100,
+        "seed": 1001
+      },
+      {
+        "backprop_mlp_offline": {
+          "test_accuracy": 0.9955,
+          "train_accuracy": 1.0
+        },
+        "backprop_mlp_online": {
+          "prequential_accuracy": 0.655,
+          "prequential_log_loss": 0.6603030437335627,
+          "test_accuracy": 0.718
+        },
+        "dpm_online": {
+          "leaves": 11,
+          "objective": 20.960600480710657,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.815,
+          "prequential_log_loss": 0.46656827595404154,
+          "split_decrease_min": 0.026027562971094653,
+          "splits": 10,
+          "test_accuracy": 0.936,
+          "train_accuracy": 0.945
+        },
+        "n_per_context": 100,
+        "seed": 1002
+      },
+      {
+        "backprop_mlp_offline": {
+          "test_accuracy": 0.992,
+          "train_accuracy": 1.0
+        },
+        "backprop_mlp_online": {
+          "prequential_accuracy": 0.59,
+          "prequential_log_loss": 0.6773482075541459,
+          "test_accuracy": 0.6415
+        },
+        "dpm_online": {
+          "leaves": 9,
+          "objective": 10.104060527839234,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.815,
+          "prequential_log_loss": 0.42114121407767824,
+          "split_decrease_min": 2.955910187284468,
+          "splits": 8,
+          "test_accuracy": 0.978,
+          "train_accuracy": 0.965
+        },
+        "n_per_context": 100,
+        "seed": 1003
+      },
+      {
+        "backprop_mlp_offline": {
+          "test_accuracy": 0.9955,
+          "train_accuracy": 1.0
+        },
+        "backprop_mlp_online": {
+          "prequential_accuracy": 0.455,
+          "prequential_log_loss": 0.7126182455027669,
+          "test_accuracy": 0.667
+        },
+        "dpm_online": {
+          "leaves": 13,
+          "objective": 21.84424649983458,
+          "objective_monotone_at_splits": true,
+          "prequential_accuracy": 0.775,
+          "prequential_log_loss": 0.5069200650269493,
+          "split_decrease_min": 0.5444860069506205,
+          "splits": 12,
+          "test_accuracy": 0.9185,
+          "train_accuracy": 0.945
+        },
+        "n_per_context": 100,
+        "seed": 1004
+      }
+    ]
+  },
+  "dpm_sanity": {
+    "dataset": "xor_gaussians",
+    "dpm": {
+      "leaves": 10,
+      "objective": 28.319050632962725,
+      "objective_monotone_at_splits": true,
+      "prequential_accuracy": 0.93875,
+      "prequential_log_loss": 0.14402822659724032,
+      "split_decrease_max": 15.827517715791572,
+      "split_decrease_min": 0.6648931653063208,
+      "splits": 9,
+      "test_accuracy": 0.9665,
+      "train_accuracy": 0.98375
+    },
+    "repair_only": {
+      "leaves": 1,
+      "objective": 554.5152444453521,
+      "prequential_accuracy": 0.49125,
+      "prequential_log_loss": 0.697604567703814,
+      "splits": 0,
+      "test_accuracy": 0.501
+    }
+  },
+  "image_backprop_comparison": {
+    "CIFAR10": {
+      "backprop_mlp_offline": {
+        "test_accuracy_mean": 0.27322222222222226,
+        "test_accuracy_std": 0.0027261875880856164,
+        "train_accuracy_mean": 0.7993333333333332,
+        "train_accuracy_std": 0.09471477650762258
+      },
+      "backprop_mlp_online": {
+        "prequential_accuracy_mean": 0.122,
+        "prequential_accuracy_std": 0.0117756811551038,
+        "prequential_log_loss_mean": 2.3084772976791768,
+        "prequential_log_loss_std": 0.006816583785566759,
+        "test_accuracy_mean": 0.137,
+        "test_accuracy_std": 0.010198039027185565
+      },
+      "dpm_monotone_all_runs": true,
+      "dpm_online": {
+        "leaves_mean": 1.0,
+        "leaves_std": 0.0,
+        "prequential_accuracy_mean": 0.226,
+        "prequential_accuracy_std": 0.0043204937989385775,
+        "prequential_log_loss_mean": 6.322508053445162,
+        "prequential_log_loss_std": 0.11738772381547735,
+        "splits_mean": 0.0,
+        "splits_std": 0.0,
+        "test_accuracy_mean": 0.24255555555555555,
+        "test_accuracy_std": 0.007504731018119239,
+        "train_accuracy_mean": 1.0,
+        "train_accuracy_std": 0.0
+      },
+      "k_neighbors": 5,
+      "n_components": null,
+      "n_per_class": 100,
+      "runs": [
+        {
+          "backprop_mlp_offline": {
+            "test_accuracy": 0.27,
+            "train_accuracy": 0.725
+          },
+          "backprop_mlp_online": {
+            "prequential_accuracy": 0.134,
+            "prequential_log_loss": 2.3054381670098922,
+            "test_accuracy": 0.141
+          },
+          "dataset": "CIFAR10",
+          "dpm_online": {
+            "leaves": 1,
+            "objective": 2302.5850929940457,
+            "objective_monotone_at_splits": true,
+            "prequential_accuracy": 0.228,
+            "prequential_log_loss": 6.432730370283911,
+            "splits": 0,
+            "test_accuracy": 0.233,
+            "train_accuracy": 1.0
+          },
+          "n_components": null,
+          "n_test": 3000,
+          "n_train": 1000,
+          "seed": 3000
+        },
+        {
+          "backprop_mlp_offline": {
+            "test_accuracy": 0.273,
+            "train_accuracy": 0.74
+          },
+          "backprop_mlp_online": {
+            "prequential_accuracy": 0.126,
+            "prequential_log_loss": 2.3020740172283864,
+            "test_accuracy": 0.123
+          },
+          "dataset": "CIFAR10",
+          "dpm_online": {
+            "leaves": 1,
+            "objective": 2302.5850929940457,
+            "objective_monotone_at_splits": true,
+            "prequential_accuracy": 0.23,
+            "prequential_log_loss": 6.374905486342444,
+            "splits": 0,
+            "test_accuracy": 0.24333333333333335,
+            "train_accuracy": 1.0
+          },
+          "n_components": null,
+          "n_test": 3000,
+          "n_train": 1000,
+          "seed": 3100
+        },
+        {
+          "backprop_mlp_offline": {
+            "test_accuracy": 0.27666666666666667,
+            "train_accuracy": 0.933
+          },
+          "backprop_mlp_online": {
+            "prequential_accuracy": 0.106,
+            "prequential_log_loss": 2.3179197087992507,
+            "test_accuracy": 0.147
+          },
+          "dataset": "CIFAR10",
+          "dpm_online": {
+            "leaves": 1,
+            "objective": 2302.5850929940457,
+            "objective_monotone_at_splits": true,
+            "prequential_accuracy": 0.22,
+            "prequential_log_loss": 6.15988830370913,
+            "splits": 0,
+            "test_accuracy": 0.25133333333333335,
+            "train_accuracy": 1.0
+          },
+          "n_components": null,
+          "n_test": 3000,
+          "n_train": 1000,
+          "seed": 3200
+        }
+      ]
+    },
+    "MNIST": {
+      "backprop_mlp_offline": {
+        "test_accuracy_mean": 0.8426666666666667,
+        "test_accuracy_std": 0.009104333522498398,
+        "train_accuracy_mean": 1.0,
+        "train_accuracy_std": 0.0
+      },
+      "backprop_mlp_online": {
+        "prequential_accuracy_mean": 0.5073333333333333,
+        "prequential_accuracy_std": 0.031930480039541465,
+        "prequential_log_loss_mean": 1.4925399460061748,
+        "prequential_log_loss_std": 0.05535594004901701,
+        "test_accuracy_mean": 0.6818888888888889,
+        "test_accuracy_std": 0.03763010352574149
+      },
+      "dpm_monotone_all_runs": true,
+      "dpm_online": {
+        "leaves_mean": 1.0,
+        "leaves_std": 0.0,
+        "prequential_accuracy_mean": 0.7533333333333333,
+        "prequential_accuracy_std": 0.010873004286866737,
+        "prequential_log_loss_mean": 1.9607758432269897,
+        "prequential_log_loss_std": 0.11670831392621743,
+        "splits_mean": 0.0,
+        "splits_std": 0.0,
+        "test_accuracy_mean": 0.8507777777777777,
+        "test_accuracy_std": 0.0028588178511707585,
+        "train_accuracy_mean": 1.0,
+        "train_accuracy_std": 0.0
+      },
+      "k_neighbors": 3,
+      "n_components": null,
+      "n_per_class": 50,
+      "runs": [
+        {
+          "backprop_mlp_offline": {
+            "test_accuracy": 0.8383333333333334,
+            "train_accuracy": 1.0
+          },
+          "backprop_mlp_online": {
+            "prequential_accuracy": 0.518,
+            "prequential_log_loss": 1.4397451672319213,
+            "test_accuracy": 0.695
+          },
+          "dataset": "MNIST",
+          "dpm_online": {
+            "leaves": 1,
+            "objective": 1151.2925464970228,
+            "objective_monotone_at_splits": true,
+            "prequential_accuracy": 0.738,
+            "prequential_log_loss": 2.022292360165496,
+            "splits": 0,
+            "test_accuracy": 0.8473333333333334,
+            "train_accuracy": 1.0
+          },
+          "n_components": null,
+          "n_test": 3000,
+          "n_train": 500,
+          "seed": 2000
+        },
+        {
+          "backprop_mlp_offline": {
+            "test_accuracy": 0.8553333333333333,
+            "train_accuracy": 1.0
+          },
+          "backprop_mlp_online": {
+            "prequential_accuracy": 0.464,
+            "prequential_log_loss": 1.5689968364765003,
+            "test_accuracy": 0.6306666666666667
+          },
+          "dataset": "MNIST",
+          "dpm_online": {
+            "leaves": 1,
+            "objective": 1151.2925464970228,
+            "objective_monotone_at_splits": true,
+            "prequential_accuracy": 0.76,
+            "prequential_log_loss": 1.7973788482699873,
+            "splits": 0,
+            "test_accuracy": 0.8543333333333333,
+            "train_accuracy": 1.0
+          },
+          "n_components": null,
+          "n_test": 3000,
+          "n_train": 500,
+          "seed": 2100
+        },
+        {
+          "backprop_mlp_offline": {
+            "test_accuracy": 0.8343333333333334,
+            "train_accuracy": 1.0
+          },
+          "backprop_mlp_online": {
+            "prequential_accuracy": 0.54,
+            "prequential_log_loss": 1.4688778343101032,
+            "test_accuracy": 0.72
+          },
+          "dataset": "MNIST",
+          "dpm_online": {
+            "leaves": 1,
+            "objective": 1151.2925464970228,
+            "objective_monotone_at_splits": true,
+            "prequential_accuracy": 0.762,
+            "prequential_log_loss": 2.0626563212454863,
+            "splits": 0,
+            "test_accuracy": 0.8506666666666667,
+            "train_accuracy": 1.0
+          },
+          "n_components": null,
+          "n_test": 3000,
+          "n_train": 500,
+          "seed": 2200
+        }
+      ]
+    }
+  },
+  "projection_memory": {
+    "max_residual_after": 10.035859383628381,
+    "max_residual_before": 12.56045289230693,
+    "max_residual_ratio_error": 3.3306690738754696e-16,
+    "trials": 200
+  },
+  "synthetic_lm_comparison": {
+    "backprop_mlp_offline": {
+      "test_accuracy_mean": 0.9305555555555557,
+      "test_accuracy_std": 0.07081971546656644,
+      "train_accuracy_mean": 0.9835069444444445,
+      "train_accuracy_std": 0.0013377634555053921
+    },
+    "backprop_mlp_online": {
+      "prequential_accuracy_mean": 0.1134982638888889,
+      "prequential_accuracy_std": 0.028745945118808226,
+      "prequential_log_loss_mean": 3.0653715442222187,
+      "prequential_log_loss_std": 0.06084713414061927,
+      "test_accuracy_mean": 0.125,
+      "test_accuracy_std": 0.021236336497786584
+    },
+    "dgm_online": {
+      "prequential_accuracy_mean": 0.8617621527777778,
+      "prequential_accuracy_std": 0.00524437759270597,
+      "prequential_log_loss_mean": 2.0669284292405017,
+      "prequential_log_loss_std": 0.0821260128881055,
+      "test_accuracy_mean": 0.9118923611111112,
+      "test_accuracy_std": 0.0770347342731142,
+      "train_accuracy_mean": 0.9743923611111112,
+      "train_accuracy_std": 0.0013377634555054342
+    },
+    "runs": [
+      {
+        "backprop_mlp_offline": {
+          "test_accuracy": 1.0,
+          "train_accuracy": 0.9817708333333334
+        },
+        "backprop_mlp_online": {
+          "prequential_accuracy": 0.111328125,
+          "prequential_log_loss": 3.060031179765673,
+          "test_accuracy": 0.10286458333333333
+        },
+        "dgm_online": {
+          "prequential_accuracy": 0.8587239583333334,
+          "prequential_log_loss": 2.1017335829392416,
+          "test_accuracy": 0.9869791666666666,
+          "train_accuracy": 0.974609375
+        },
+        "n_test": 768,
+        "n_train": 1536,
+        "seed": 3000
+      },
+      {
+        "backprop_mlp_offline": {
+          "test_accuracy": 0.8333333333333334,
+          "train_accuracy": 0.9837239583333334
+        },
+        "backprop_mlp_online": {
+          "prequential_accuracy": 0.14973958333333334,
+          "prequential_log_loss": 2.9936631611222118,
+          "test_accuracy": 0.15364583333333334
+        },
+        "dgm_online": {
+          "prequential_accuracy": 0.869140625,
+          "prequential_log_loss": 1.9535650585930853,
+          "test_accuracy": 0.8059895833333334,
+          "train_accuracy": 0.9759114583333334
+        },
+        "n_test": 768,
+        "n_train": 1536,
+        "seed": 3050
+      },
+      {
+        "backprop_mlp_offline": {
+          "test_accuracy": 0.9583333333333334,
+          "train_accuracy": 0.9850260416666666
+        },
+        "backprop_mlp_online": {
+          "prequential_accuracy": 0.07942708333333333,
+          "prequential_log_loss": 3.142420291778772,
+          "test_accuracy": 0.11848958333333333
+        },
+        "dgm_online": {
+          "prequential_accuracy": 0.857421875,
+          "prequential_log_loss": 2.1454866461891786,
+          "test_accuracy": 0.9427083333333334,
+          "train_accuracy": 0.97265625
+        },
+        "n_test": 768,
+        "n_train": 1536,
+        "seed": 3100
+      }
+    ]
+  }
+}
