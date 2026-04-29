@@ -18,43 +18,51 @@
 \contentsline {subsection}{\numberline {5.1}State and graph-generated information}{6}{subsection.5.1}%
 \contentsline {subsection}{\numberline {5.2}Edge-gated prediction}{7}{subsection.5.2}%
 \contentsline {subsection}{\numberline {5.3}Refine or repair on a graph}{9}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Why graph memory is different from a tree}{11}{subsection.5.4}%
-\contentsline {subsection}{\numberline {5.5}Canonical local memories}{11}{subsection.5.5}%
-\contentsline {paragraph}{DGM-Mean.}{12}{section*.3}%
-\contentsline {paragraph}{DGM-Ridge.}{12}{section*.4}%
-\contentsline {subsection}{\numberline {5.6}Language modeling instance}{12}{subsection.5.6}%
-\contentsline {subsection}{\numberline {5.7}Complexity}{13}{subsection.5.7}%
-\contentsline {section}{\numberline {6}DGM Layers for Large-Model Training}{14}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Common layer interface}{14}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}DGM-Embedding layer}{14}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Optional DGM-Adapter layer}{15}{subsection.6.3}%
-\contentsline {subsection}{\numberline {6.4}Detached write path}{15}{subsection.6.4}%
-\contentsline {paragraph}{Block-lagged approximation.}{16}{section*.5}%
-\contentsline {subsection}{\numberline {6.5}Why this can scale}{16}{subsection.6.5}%
-\contentsline {subsection}{\numberline {6.6}Distributed training}{17}{subsection.6.6}%
-\contentsline {subsection}{\numberline {6.7}Closed-form adapters}{17}{subsection.6.7}%
-\contentsline {section}{\numberline {7}From Distinctions to Projection Memory}{18}{section.7}%
-\contentsline {subsection}{\numberline {7.1}One-hot partition memory}{18}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}CPM conflict as missing distinction}{18}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}The hierarchy}{18}{subsection.7.3}%
-\contentsline {section}{\numberline {8}Technical Overview}{19}{section.8}%
-\contentsline {section}{\numberline {9}Computational Checks}{23}{section.9}%
-\contentsline {section}{\numberline {10}Conclusion}{25}{section.10}%
-\contentsline {section}{\numberline {A}Appendix Roadmap}{32}{appendix.A}%
-\contentsline {section}{\numberline {B}Limitations}{32}{appendix.B}%
-\contentsline {section}{\numberline {C}Related Work}{33}{appendix.C}%
-\contentsline {paragraph}{Adaptive resonance and stability-plasticity.}{33}{section*.13}%
-\contentsline {paragraph}{Online trees and refinement.}{34}{section*.14}%
-\contentsline {paragraph}{Prototype systems and concept growth.}{34}{section*.15}%
-\contentsline {paragraph}{Concept structures.}{34}{section*.16}%
-\contentsline {paragraph}{Projection learning and online repair.}{34}{section*.17}%
-\contentsline {paragraph}{Fast weights and linear attention.}{34}{section*.18}%
-\contentsline {paragraph}{Cache, $k$NN, and retrieval language models.}{35}{section*.19}%
-\contentsline {paragraph}{Memory-augmented neural networks.}{35}{section*.20}%
-\contentsline {paragraph}{Sparse experts, product-key memories, and routing.}{35}{section*.21}%
-\contentsline {paragraph}{Test-time adaptation and TTT.}{35}{section*.22}%
-\contentsline {paragraph}{Continual learning and dynamic expansion.}{35}{section*.23}%
-\contentsline {paragraph}{Information theory, statistical decision theory, and backpropagation.}{36}{section*.24}%
-\contentsline {section}{\numberline {D}Minimal Refinement Proofs}{36}{appendix.D}%
-\contentsline {section}{\numberline {E}Value of Distinction Proofs}{37}{appendix.E}%
-\contentsline {section}{\numberline {F}DGM Algorithm and Projection-Bridge Proofs}{39}{appendix.F}%
+\contentsline {subsection}{\numberline {5.4}Why graph memory is different from a tree}{12}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Canonical local memories}{12}{subsection.5.5}%
+\contentsline {paragraph}{DGM-Mean.}{13}{section*.3}%
+\contentsline {paragraph}{DGM-Ridge.}{13}{section*.4}%
+\contentsline {subsection}{\numberline {5.6}Language modeling instance}{13}{subsection.5.6}%
+\contentsline {subsection}{\numberline {5.7}Complexity}{14}{subsection.5.7}%
+\contentsline {section}{\numberline {6}DGM Layers for Large-Model Training}{15}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Common layer interface}{15}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Training modes for representation drift}{15}{subsection.6.2}%
+\contentsline {paragraph}{Mode A: frozen encoder.}{15}{section*.5}%
+\contentsline {paragraph}{Mode B: EMA query encoder.}{15}{section*.6}%
+\contentsline {paragraph}{Mode C: periodic state rebuild.}{15}{section*.7}%
+\contentsline {subsection}{\numberline {6.3}DGM-Embedding layer}{16}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Adapter extension}{16}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Detached write path}{17}{subsection.6.5}%
+\contentsline {paragraph}{Block-lagged approximation.}{18}{section*.8}%
+\contentsline {subsection}{\numberline {6.6}Why this can scale}{18}{subsection.6.6}%
+\contentsline {subsection}{\numberline {6.7}Distributed training}{18}{subsection.6.7}%
+\contentsline {subsection}{\numberline {6.8}Closed-form adapters}{19}{subsection.6.8}%
+\contentsline {section}{\numberline {7}From Distinctions to Projection Memory}{19}{section.7}%
+\contentsline {subsection}{\numberline {7.1}One-hot partition memory}{19}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}CPM conflict as missing distinction}{20}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}The hierarchy}{20}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Technical Overview}{20}{section.8}%
+\contentsline {section}{\numberline {9}Computational Checks}{25}{section.9}%
+\contentsline {section}{\numberline {10}Conclusion}{27}{section.10}%
+\contentsline {section}{\numberline {A}Appendix Roadmap}{34}{appendix.A}%
+\contentsline {section}{\numberline {B}Limitations}{34}{appendix.B}%
+\contentsline {section}{\numberline {C}Related Work}{35}{appendix.C}%
+\contentsline {paragraph}{Closest ancestors and non-novel components.}{35}{section*.16}%
+\contentsline {paragraph}{Refine: concept and category growth.}{36}{section*.17}%
+\contentsline {paragraph}{Repair: local runtime state update.}{36}{section*.18}%
+\contentsline {paragraph}{Retrieve and adapt: memory and runtime adaptation.}{36}{section*.19}%
+\contentsline {paragraph}{Adaptive resonance and stability-plasticity.}{36}{section*.20}%
+\contentsline {paragraph}{Online trees and refinement.}{37}{section*.21}%
+\contentsline {paragraph}{Prototype systems and concept growth.}{37}{section*.22}%
+\contentsline {paragraph}{Concept structures.}{37}{section*.23}%
+\contentsline {paragraph}{Projection learning and online repair.}{37}{section*.24}%
+\contentsline {paragraph}{Fast weights and linear attention.}{38}{section*.25}%
+\contentsline {paragraph}{Cache, $k$NN, and retrieval language models.}{38}{section*.26}%
+\contentsline {paragraph}{Memory-augmented neural networks.}{38}{section*.27}%
+\contentsline {paragraph}{Sparse experts, product-key memories, and routing.}{38}{section*.28}%
+\contentsline {paragraph}{Test-time adaptation and TTT.}{38}{section*.29}%
+\contentsline {paragraph}{Continual learning and dynamic expansion.}{39}{section*.30}%
+\contentsline {paragraph}{Information theory, statistical decision theory, and backpropagation.}{39}{section*.31}%
+\contentsline {section}{\numberline {D}Minimal Refinement Proofs}{39}{appendix.D}%
+\contentsline {section}{\numberline {E}Value of Distinction Proofs}{41}{appendix.E}%
+\contentsline {section}{\numberline {F}DGM Algorithm and Projection-Bridge Proofs}{42}{appendix.F}%

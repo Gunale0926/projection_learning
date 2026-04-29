@@ -3,7 +3,7 @@
 
 Runtime learning has two different failure modes. Sometimes the model is looking at the right kind of state, but the state is numerically wrong; then the right operation is repair. Sometimes the model is using an information structure that identifies situations whose consequences differ; then no local repair can solve the error. The right operation is refinement.
 
-This paper builds a model around that distinction. A Distinction Graph Machine keeps a growing set of anchored concepts, movable retrieval centroids, local memories, and distinction edges. The anchors define stable graph distinctions, the centroids support adaptive retrieval, and the local memories store what the learner currently believes inside each concept. The edges are binary generators: together they induce a partition of hidden-state space and gate which local memories are compatible with a query. On an input $x$, an encoder produces $h=\phi_\theta(x)$, the machine retrieves nearby centroids, edge-gates their routing weights, and their local memories predict. When the consequence $y$ is observed, the machine decides whether to create a new anchored concept and distinction edges, or repair the memory and centroid of an existing concept.
+This paper builds a model around that distinction. A Distinction Graph Machine separates runtime learning into representation refinement and local state repair, then implements the separation as a graph-generated information structure with edge-gated local memories. It keeps a growing set of anchored concepts, movable retrieval centroids, local memories, and distinction edges. The anchors define stable graph distinctions, the centroids support adaptive retrieval, and the local memories store what the learner currently believes inside each concept. The edges are binary generators: together they induce a partition of hidden-state space and gate which local memories are compatible with a query. On an input $x$, an encoder produces $h=\phi_\theta(x)$, the machine retrieves a recall-oriented candidate set, edge-gates its routing weights, and the selected local memories predict. When the consequence $y$ is observed, the machine decides whether to create a new anchored concept and distinction edges, or commit a guarded repair of an existing concept.
 
 The guiding rule is
 \begin{align*}
@@ -19,20 +19,20 @@ This is not only a prototype method, a tree, a cache, or a test-time optimizer. 
 \toprule
 Method family & What it has & What it lacks relative to DGM \\
 \midrule
-ART & stable category creation & no graph-generated hidden-state memory layer \\
+ART & stable category creation & vigilance/resonance is not a graph-generated routing structure \\
 Prototype methods & anchors and centroids & no consequence-forced distinction edges \\
-Online trees & refinement & rooted hierarchy, no graph concepts or local repair memory \\
-$k$NN/cache & retrieval & no refine-or-repair rule and no edge-generated distinctions \\
-Fast weights & dynamic memory & residual writes without missing-distinction detection \\
-TTT/TTA & runtime adaptation & gradient or surrogate-loss updates, not a distinction graph \\
-MoE & routing & trained experts rather than runtime concept creation \\
+Online trees & refinement & rooted hierarchy, no local pairwise concept graph with repair memory \\
+$k$NN/cache & retrieval & no runtime concept and edge creation after consequence conflict \\
+Fast weights & dynamic memory & residual writes without missing-distinction diagnosis \\
+TTT/TTA & runtime adaptation & optimizes a surrogate loss rather than choosing refine versus repair \\
+MoE & routing & trained experts rather than runtime concept creation from contradiction \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 The theory explains why the two operations should not be collapsed. If two states lie in the same atom but require different outputs, no measurable predictor over the current partition can satisfy both. This is not an optimization failure; it is a missing distinction. Conversely, if the current concept is adequate and only its local state is stale, creating a new concept is unnecessary. The model should update the local memory.
 
-We formalize both sides. Minimal information refinement is the smallest partition or sigma-algebra update that makes new evidence observable. Its value is exact under standard losses: conditional mutual information for log loss and conditional variance reduction for squared loss. The DGM data structure adds the engineering layer missing from the pure refinement principle: graph-induced partitions, edge-gated routing, canonical local memories, statistically guarded penalized refine-or-repair rules, language-modeling integration, and train/test APIs. The exact information-structure object is anchor-DGM: frozen anchors and distinction edges define the formal sigma-algebra, while movable centroids are retrieval statistics for the soft read path. The canonical large-model layer is DGM-Embedding. We treat DGM-Adapter as an optional residual extension because it requires an explicit modeling choice for the hidden residual target. In both cases the read path is differentiable and the write path is detached, so that large models can learn to use DGM memory during training without backpropagating through the entire memory history.
+We formalize both sides. Minimal information refinement is the smallest partition or sigma-algebra update that makes new evidence observable. Its value is exact under standard losses: conditional mutual information for log loss and conditional variance reduction for squared loss. The DGM data structure adds the engineering layer missing from the pure refinement principle: graph-induced partitions, edge-gated routing, canonical local memories, statistically guarded penalized refine-or-repair rules, language-modeling integration, and train/test APIs. The exact information-structure object is anchor-DGM: frozen anchors and distinction edges define the formal sigma-algebra, while movable centroids are retrieval statistics for the soft read path. The canonical large-model layer is DGM-Embedding. Adapter-style residuals are treated as non-canonical extensions because they require an explicit modeling choice for the hidden residual target. In both cases the read path is differentiable and the write path is detached, so that large models can learn to use DGM memory during training without backpropagating through the entire memory history.
 
 \begin{center}
 \small
@@ -45,7 +45,8 @@ Contradiction & No current measurable predictor resolves conflict inside an atom
 Edge generator & Adds a binary distinction between confused anchors \\
 Edge-gated routing & Soft relaxation of hard edge compatibility \\
 Sample-split refinement & Accepted refinement has positive guarded gain \\
-Local repair & Updates statistics without changing the anchor-generated information structure \\
+Candidate recall & Soft sparse routing is guaranteed only when the hard-selected prototype is retrieved \\
+Guarded repair & Commits local repair only when scoring-buffer loss does not increase \\
 DGM-Embedding & Forward-only next-token memory correction with detached writes \\
 \bottomrule
 \end{tabular}

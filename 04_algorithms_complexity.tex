@@ -56,10 +56,16 @@ For any finite edge set $E_t$, equality of signatures $\sigma_t^G(h)$ is an equi
 
 \subsection{Edge-gated prediction}
 
-Given $h$, the soft implementation first computes retrieval distances $d_j(h)=\norm{h-c_j}_2^2$ to movable centroids and a sparse neighborhood
+Given $h$, the soft implementation first computes retrieval distances $d_j(h)=\norm{h-c_j}_2^2$ to movable centroids. A centroid-only top-$k$ set is not enough for the theory: if the hard eligible anchor never enters the candidate set, edge gates cannot recover it. We therefore use a recall-oriented candidate set
 \begin{align*}
-N_k(h)\subseteq\{1,\ldots,N_t\}.
+N(h)=
+N_{k_c}^{\mathrm{centroid}}(h)
+\cup
+N_{k_a}^{\mathrm{anchor}}(h)
+\cup
+\operatorname{GraphNeighbors}\!\left(N_{k_c}^{\mathrm{centroid}}(h)\right),
 \end{align*}
+with duplicates removed and with an optional budget cap after the union. The first term gives adaptive locality, the second protects the anchor-defined hard route, and the third recovers concepts connected by recent consequence conflicts. In small exact implementations one may simply take $N(h)=\{1,\ldots,N_t\}$.
 If $I_t(j)$ is the set of edges incident to prototype $j$, define the soft compatibility of $h$ with prototype $j$ by
 \begin{align*}
 \log \chi_j(h)=
@@ -71,13 +77,13 @@ where structural distinction edges have $\beta_e\in(0,1]$ and the empty sum give
 \begin{align}
 \alpha_j(h)=
 \frac{\exp(-d_j(h)/T)\chi_j(h)}
-{\sum_{r\in N_k(h)}\exp(-d_r(h)/T)\chi_r(h)},
-\qquad j\in N_k(h).
+{\sum_{r\in N(h)}\exp(-d_r(h)/T)\chi_r(h)},
+\qquad j\in N(h).
 \label{eq:edge-gated-routing}
 \end{align}
 The prediction is the local mixture
 \begin{align*}
-\hat y=\sum_{j\in N_k(h)}\alpha_j(h)M_j(h).
+\hat y=\sum_{j\in N(h)}\alpha_j(h)M_j(h).
 \end{align*}
 
 The hard version makes the information-structure connection explicit. A prototype $j$ is eligible for $h$ if every incident edge bit places $h$ on $j$'s recorded side:
@@ -107,11 +113,20 @@ Thus the exact information-structure theory applies to anchor-DGM. Soft-DGM keep
 With finite $E_t$, finite frozen anchors $a_1,\ldots,a_{N_t}$, and deterministic tie-breaking, the exact Hard-DGM selected prototype index, defined as the nearest eligible anchor with fallback to the nearest anchor, is measurable with respect to $\calF_t^{\mathrm{DGM}}=\calF_t^{\mathrm{edge}}\vee \calF_t^{\mathrm{anchor\text{-}order}}$.
 \end{theorem}
 
-The next statement is analytic rather than structural: it applies to whichever fixed distances a soft read uses. With anchor distances it recovers the exact hard anchor route; with centroid distances it describes the behavior of the soft retrieval approximation.
+The next statement is analytic rather than structural: it applies to whichever fixed distances a soft read uses. With anchor distances it recovers the exact hard anchor route; with centroid distances it describes the behavior of the soft retrieval approximation. It also exposes the candidate-recall requirement that links the formal Hard-DGM route to the sparse implementation.
+
+\begin{condition}[Candidate recall]
+\label{cond:candidate-recall}
+Let $j^\star(h)$ be the unique prototype selected by exact Hard-DGM for query $h$. The sparse soft read satisfies candidate recall at $h$ if
+\begin{align*}
+j^\star(h)\in N(h).
+\end{align*}
+If this condition fails, the soft read has no guarantee of selecting the hard route, regardless of how sharp the edge gates are.
+\end{condition}
 
 \begin{theorem}[Soft routing approaches hard routing]
 \label{thm:soft-routing-hard-limit:informal}
-If the hard nearest eligible prototype is unique with distance margin $\delta>0$, then its soft routing weight tends to one exponentially as $T\to0$. If every wrong-side candidate violates some incident structural edge with weight at least $\beta_{\min}>0$, signed margin at least $\delta_e>0$, and degree at most $D_{\max}$, then each wrong-side compatibility decays uniformly after degree normalization. If at least one eligible reference candidate has compatibility bounded below and the wrong-side/reference distance-score ratios are bounded, then total wrong-side routing mass vanishes as the edge temperature $\tau_e\to0$.
+Assume candidate recall holds for $h$. If the hard nearest eligible prototype is unique within $N(h)$ with distance margin $\delta>0$, then its soft routing weight tends to one exponentially as $T\to0$. If every wrong-side candidate violates some incident structural edge with weight at least $\beta_{\min}>0$, signed margin at least $\delta_e>0$, and degree at most $D_{\max}$, then each wrong-side compatibility decays uniformly after degree normalization. If at least one eligible reference candidate has compatibility bounded below and the wrong-side/reference distance-score ratios are bounded, then total wrong-side routing mass vanishes as the edge temperature $\tau_e\to0$. Without candidate recall, the theorem gives no correctness guarantee for the omitted hard-selected prototype.
 \end{theorem}
 
 \begin{algorithm}[H]
@@ -120,12 +135,12 @@ If the hard nearest eligible prototype is unique with distance margin $\delta>0$
 \begin{algorithmic}[1]
 \State \textbf{Input:} state $\calS_t=(\{a_j,c_j,M_j,n_j\}_{j=1}^{N_t},G_t)$, encoder $\phi_\theta$, example $x$
 \State $h\gets\phi_\theta(x)$
-\State $N_k(h)\gets$ the $k$ nearest centroids to $h$
-\For{$j\in N_k(h)$}
+\State $N(h)\gets N_{k_c}^{\mathrm{centroid}}(h)\cup N_{k_a}^{\mathrm{anchor}}(h)\cup\operatorname{GraphNeighbors}(N_{k_c}^{\mathrm{centroid}}(h))$
+\For{$j\in N(h)$}
 \State compute edge compatibility $\chi_j(h)$ from incident distinctions
 \State compute edge-gated weight $\alpha_j(h)$ by \eqref{eq:edge-gated-routing}
 \EndFor
-\State \Return $\sum_{j\in N_k(h)}\alpha_j(h)M_j(h)$
+\State \Return $\sum_{j\in N(h)}\alpha_j(h)M_j(h)$
 \end{algorithmic}
 \end{algorithm}
 
@@ -135,25 +150,34 @@ After observing consequence $y$, DGM first asks whether an existing concept can 
 \begin{align*}
 \rho_t=L(y,M_{j^\star}(h)).
 \end{align*}
-Define neighborhood consequence disagreement on $N_k(h)$ by the task-appropriate local prediction divergence. For classification one may use
+Define neighborhood consequence disagreement on $N(h)$ by the task-appropriate local prediction divergence. For classification one may use
 \begin{align*}
-D_t=\max_{i,r\in N_k(h)}\operatorname{TV}(p_i(\cdot\mid h),p_r(\cdot\mid h)),
+D_t=\max_{i,r\in N(h)}\operatorname{TV}(p_i(\cdot\mid h),p_r(\cdot\mid h)),
 \end{align*}
 where $p_j$ is the distribution represented by memory $M_j$. For regression one may use
 \begin{align*}
-D_t=\max_{i,r\in N_k(h)}\norm{\mu_i(h)-\mu_r(h)}_2,
+D_t=\max_{i,r\in N(h)}\norm{\mu_i(h)-\mu_r(h)}_2,
 \end{align*}
 and for language modeling the log-loss surprise $-\log p_{j^\star}(x_{t+1}\mid x_{\le t})$ is the local disagreement signal.
 
-If $\rho_t$ is small, the information structure is treated as adequate and the machine repairs the local state:
+If $\rho_t$ is small, the information structure is treated as adequate and the machine tries to repair the local state. Repair is guarded rather than blindly committed. The implementation proposes a small set of repair candidates, such as a memory-only update, a memory-plus-centroid update, and one or more reduced centroid steps:
 \begin{align*}
-M_{j^\star}\leftarrow\operatorname{Repair}(M_{j^\star},h,y),
-\qquad
-c_{j^\star}\leftarrow c_{j^\star}+\eta_c(h-c_{j^\star}),
-\qquad
-n_{j^\star}\leftarrow n_{j^\star}+1.
+\calC_{\mathrm{repair}}(\calS_t,h,y)
+=
+\{\calS_t^{\mathrm{mem}},\calS_t^{\mathrm{mem+centroid}},\calS_t^{\mathrm{shrink}},\calS_t\}.
 \end{align*}
-The anchor $a_{j^\star}$ is not moved by repair. Consequently, local memory repair and centroid adaptation do not rewrite previously accepted edge generators.
+Each candidate keeps anchors and edges fixed. DGM commits the best candidate whose scoring-buffer loss is not larger than the current one:
+\begin{align}
+\calS_{t+1}\in
+\argmin_{\calS'\in\calC_{\mathrm{repair}}}
+\widehat R(\calS';\calB_t^{\mathrm{score}})
+\quad\text{subject to}\quad
+\widehat R(\calS';\calB_t^{\mathrm{score}})
+\le
+\widehat R(\calS_t;\calB_t^{\mathrm{score}}).
+\label{eq:guarded-repair}
+\end{align}
+If no nontrivial repair passes the guard, the machine either leaves the local state unchanged or enters the refinement test below. Thus monotone repair is an enforced algorithmic property, not merely a theorem assumption. The anchor $a_{j^\star}$ is never moved by repair. Consequently, local memory repair and centroid adaptation do not rewrite previously accepted edge generators.
 If local surprise and disagreement are large, DGM evaluates a candidate refinement. To match the statistical guarantee, the local evidence is logically split into a proposal buffer and a scoring buffer,
 \begin{align*}
 \calB_t^{\mathrm{prop}}
@@ -182,7 +206,7 @@ The candidate is accepted only if
 D_t>\tau_{\mathrm{disagree}}.
 \label{eq:refine-accept}
 \end{align}
-Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m=\abs{\calB_t^{\mathrm{score}}}$; it can be set to zero for a purely empirical implementation, or to the finite-class bound in Theorem~\ref{thm:safe-refinement:informal}. Otherwise DGM performs the best local repair available under the current graph. This makes refinement a statistically guarded penalized empirical-risk decision rather than an unscored heuristic.
+Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m=\abs{\calB_t^{\mathrm{score}}}$; it can be set to zero for a purely empirical implementation, or to the finite-class bound in Theorem~\ref{thm:safe-refinement:informal}. Otherwise DGM attempts guarded local repair under the current graph. This makes refinement a statistically guarded penalized empirical-risk decision rather than an unscored heuristic.
 
 \begin{algorithm}[H]
 \caption{\textsc{Observe} for a Distinction Graph Machine}
@@ -194,33 +218,35 @@ Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m
 \State create anchor and centroid $a_1=c_1=h$ with memory $\operatorname{InitMemory}(h,y)$
 \State \Return updated state
 \EndIf
-\State retrieve $N_k(h)$ and compute edge-gated routing weights
-\State $j^\star\gets\argmax_{j\in N_k(h)}\alpha_j(h)$
+\State retrieve $N(h)$ and compute edge-gated routing weights
+\State $j^\star\gets\argmax_{j\in N(h)}\alpha_j(h)$
 \State $\rho\gets L(y,M_{j^\star}(h))$
 \State compute neighborhood disagreement $D_t$
 \If{$\rho\le\tau_{\mathrm{repair}}$}
-\State repair $M_{j^\star}$ and move centroid $c_{j^\star}$ toward $h$; keep anchor $a_{j^\star}$ fixed
+\State propose repair candidates with anchors and edges fixed
+\State commit the best candidate satisfying the guarded repair test \eqref{eq:guarded-repair}; otherwise leave state unchanged or enter refinement test
 \Else
 \State form a candidate new anchor/centroid from $h$ and $\calB_t^{\mathrm{prop}}$, with candidate edges to confused neighbors
 \State estimate $\Delta_{\mathrm{refine}}$ on the held-out scoring buffer $\calB_t^{\mathrm{score}}$
 \If{$\Delta_{\mathrm{refine}}>\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q+\tau+2\epsilon_m$ and $D_t>\tau_{\mathrm{disagree}}$}
 \State commit the new anchored concept and its distinction edges
 \Else
-\State repair the best existing local memory under the current graph
+\State attempt guarded repair under the current graph
 \EndIf
 \EndIf
 \State \Return updated state
 \end{algorithmic}
 \end{algorithm}
 
-\begin{definition}[Monotone local repair]
+\begin{definition}[Guarded monotone local repair]
 \label{def:monotone-repair}
-A repair operator is monotone on scoring buffer $\calB_t^{\mathrm{score}}$ if the state $\calS_{t+1}$ obtained by repairing local memories and moving retrieval centroids, while keeping anchors and edges fixed, satisfies
+A guarded repair operator is monotone on scoring buffer $\calB_t^{\mathrm{score}}$ if it commits a candidate state $\calS_{t+1}$ only when local memories and retrieval centroids may change, anchors and edges remain fixed, and
 \begin{align*}
 \widehat R(\calS_{t+1};\calB_t^{\mathrm{score}})
 \le
 \widehat R(\calS_t;\calB_t^{\mathrm{score}}).
 \end{align*}
+The identity candidate $\calS_{t+1}=\calS_t$ is always allowed, so the guard is feasible even when every nontrivial repair would hurt the scoring buffer.
 \end{definition}
 
 \begin{theorem}[Refine-or-repair objective descent]
@@ -233,7 +259,7 @@ J_{\calB_t^{\mathrm{score}}}(\calS)
 +\lambda_{\mathrm{proto}}N_{\mathrm{proto}}(\calS)
 +\lambda_{\mathrm{edge}}\abs{E(\calS)}.
 \end{align*}
-If repair is monotone on the scoring buffer, then $J_{\calB_t^{\mathrm{score}}}$ does not increase. If a refinement adding one anchored concept and $q$ edges is accepted only under \eqref{eq:refine-accept}, then the empirical penalized objective $J_{\calB_t^{\mathrm{score}}}$ decreases by more than $\tau+2\epsilon_m$.
+If repair is committed by the guarded rule \eqref{eq:guarded-repair}, then $J_{\calB_t^{\mathrm{score}}}$ does not increase. If a refinement adding one anchored concept and $q$ edges is accepted only under \eqref{eq:refine-accept}, then the empirical penalized objective $J_{\calB_t^{\mathrm{score}}}$ decreases by more than $\tau+2\epsilon_m$.
 \end{theorem}
 
 This is a local-buffer statement. It does not imply monotone descent of a global objective when the scoring buffer changes over time; a global finiteness claim requires a common potential or validation objective.
@@ -291,7 +317,7 @@ r_j=\frac{1}{n_j}\sum_{s\in C_j}E[y_s].
 \end{align*}
 It contributes the score
 \begin{align*}
-\ell_{\mathrm{DGM}}(y\mid h)=\sum_{j\in N_k(h)}\alpha_j(h)E[y]^\top r_j.
+\ell_{\mathrm{DGM}}(y\mid h)=\sum_{j\in N(h)}\alpha_j(h)E[y]^\top r_j.
 \end{align*}
 Repair is the sufficient-statistic update
 \begin{align*}
@@ -317,7 +343,7 @@ h_t=\phi_\theta(x_{\le t}).
 \end{align*}
 DGM is inserted as a runtime memory over hidden states. Each anchor-centroid pair $(a_j,c_j)$ represents a recurring context type: a citation pattern, a local syntax regime, a document-specific entity usage, or a repeated task format. Distinction edges separate contexts whose next-token consequences force a split. The DGM-Mean memory predicts a correction to the next-token distribution:
 \begin{align*}
-\ell_{\mathrm{DGM}}(y\mid h_t)=\sum_{j\in N_k(h_t)}\alpha_j(h_t)E[y]^\top r_j,
+\ell_{\mathrm{DGM}}(y\mid h_t)=\sum_{j\in N(h_t)}\alpha_j(h_t)E[y]^\top r_j,
 \end{align*}
 where $\alpha_j$ is edge-gated. The final logits are
 \begin{align*}
@@ -335,7 +361,7 @@ This differs from a cache language model in what is updated. A cache appends or 
 \begin{algorithmic}[1]
 \State \textbf{Input:} prefix $x_{\le t}$, observed token $x_{t+1}$, DGM state $\calS_t$
 \State $h_t\gets\phi_\theta(x_{\le t})$
-\State retrieve $N_k(h_t)$ and compute edge-gated logits $\ell_\theta+\lambda_t\ell_{\mathrm{DGM}}$
+\State retrieve $N(h_t)$ and compute edge-gated logits $\ell_\theta+\lambda_t\ell_{\mathrm{DGM}}$
 \State $j^\star\gets$ highest-weight prototype
 \State $\rho\gets-\log p(x_{t+1}\mid x_{\le t})$
 \If{$\rho\le\tau_{\mathrm{repair}}$}
@@ -351,11 +377,11 @@ This differs from a cache language model in what is updated. A cache appends or 
 
 Let
 \begin{align*}
-Q_k(h)=\sum_{j\in N_k(h)}\abs{I_t(j)}
+Q(h)=\sum_{j\in N(h)}\abs{I_t(j)}
 \end{align*}
 be the number of incident edge gates evaluated for the selected candidates. With exact nearest-neighbor search, prediction costs
 \begin{align*}
-O(N_td+Q_k(h)+kd+C_{\mathrm{local}}),
+O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}}),
 \end{align*}
 where $C_{\mathrm{local}}$ is the cost of evaluating the selected local memories. With approximate nearest-neighbor indexing, the $N_td$ term can be replaced by the query cost of the index \citep{indyk1998approximate,johnson2019billion}. Creating an anchor-centroid pair costs $O(d)$ plus the cost of initializing its memory. Adding $q$ distinction edges costs $O(qd)$. If each prototype stores an embedding mean in $\R^{d_e}$, runtime memory is
 \begin{align*}
@@ -364,5 +390,5 @@ O(N_t(2d+d_e)+|E_t|d).
 
 \begin{theorem}[DGM data-structure bound]
 \label{thm:dpm-complexity:informal}
-For exact search over $N_t$ centroids in $\R^d$, one edge-gated DGM prediction costs $O(N_td+Q_k+kd+C_{\mathrm{local}})$. One observation that repairs a selected prototype costs this plus the local repair cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. With embedding-mean memories, the runtime state uses $O(N_t(2d+d_e)+|E_t|d)$ memory.
+For exact search over $N_t$ centroids in $\R^d$, one edge-gated DGM prediction costs $O(N_td+Q+\abs{N}d+C_{\mathrm{local}})$, where $N=N(h)$ and $Q=Q(h)$. One observation that repairs a selected prototype costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. With embedding-mean memories, the runtime state uses $O(N_t(2d+d_e)+|E_t|d)$ memory.
 \end{theorem}

@@ -132,6 +132,7 @@ Edge eligibility is determined by finitely many edge-bit events, so it is measur
 The main-text statement is Theorem~\ref{thm:soft-routing-hard-limit:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
+The sparse soft read can only assign mass to candidates it retrieved. Therefore, if the exact hard-selected prototype is omitted from the candidate set, no temperature limit can recover that route. Under candidate recall, the remaining argument is a finite softmax and gate-sharpening calculation.
 For ordinary nearest-prototype routing, every nonnearest candidate has unnormalized weight smaller by at least $\exp(-\delta/T)$, so the total nonnearest mass is bounded by a finite candidate-count factor times this exponential. For a structural edge gate with uniformly positive weight, a wrong-side signed margin $-\delta_e$ contributes a log-sigmoid term bounded by $-\delta_e/\tau_e$. Degree normalization rescales the exponent but does not remove exponential decay under a uniform degree bound. After normalizing against an eligible candidate with compatibility bounded below and bounded distance-score ratio, the wrong-side mass vanishes as the edge temperature tends to zero.
 \end{proof}
 
@@ -140,7 +141,7 @@ For ordinary nearest-prototype routing, every nonnearest candidate has unnormali
 The main-text statement is Theorem~\ref{thm:refine-repair-descent:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Monotone repair changes only local memories and retrieval centroids while keeping anchors and edges fixed, and by definition does not increase the empirical loss on the fixed scoring buffer $\calB_t^{\mathrm{score}}$. The prototype and edge penalties therefore stay fixed, so the local objective $J_{\calB_t^{\mathrm{score}}}$ does not increase. A refinement that creates one anchored concept and $q$ edges changes $J_{\calB_t^{\mathrm{score}}}$ by the empirical-risk decrease on the scoring buffer minus $\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q$. The acceptance test requires this net decrease to exceed $\tau+2\epsilon_m$.
+Guarded repair proposes local memory or centroid changes while keeping anchors and edges fixed, then commits only candidates that do not increase empirical loss on the fixed scoring buffer $\calB_t^{\mathrm{score}}$. The identity candidate is always feasible. The prototype and edge penalties therefore stay fixed, so the local objective $J_{\calB_t^{\mathrm{score}}}$ does not increase. A refinement that creates one anchored concept and $q$ edges changes $J_{\calB_t^{\mathrm{score}}}$ by the empirical-risk decrease on the scoring buffer minus $\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q$. The acceptance test requires this net decrease to exceed $\tau+2\epsilon_m$.
 \end{proof}
 
 \begin{theorem}[Safe refinement, proof sketch for Theorem~\ref{thm:safe-refinement:formal}]
@@ -180,11 +181,11 @@ Make one prototype for each tree leaf and attach the root-to-leaf binary tests a
 The main-text statement is Theorem~\ref{thm:dpm-complexity:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-A prediction computes distances from $h$ to $N_t$ prototypes in $\R^d$, costing
+A prediction computes centroid and anchor distances from $h$ to $N_t$ prototypes in $\R^d$, costing
 \begin{align*}
 O(N_td).
 \end{align*}
-It then evaluates $Q_k$ selected incident edge gates and $k$ selected local memories, costing $O(Q_k+kd+C_{\mathrm{local}})$ including sparse routing weights. Repair adds the local repair cost. Creating one anchor-centroid pair stores two vectors in $\R^d$, still $O(d)$. Adding $q$ distinction edges stores $q$ vectors and thresholds, costing
+It then evaluates $Q(h)$ selected incident edge gates and $|N(h)|$ selected local memories, costing $O(Q(h)+|N(h)|d+C_{\mathrm{local}})$ including sparse routing weights. Guarded repair adds the cost of scoring proposed local candidates. Creating one anchor-centroid pair stores two vectors in $\R^d$, still $O(d)$. Adding $q$ distinction edges stores $q$ vectors and thresholds, costing
 \begin{align*}
 O(qd).
 \end{align*}
@@ -199,17 +200,17 @@ O(N_t(2d+d_e)+|E_t|d).
 The main-text statement is Theorem~\ref{thm:dgm-layer-cost:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Computing $q=Qh$ costs $O(dd_q)$. Retrieval costs $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Edge-gate evaluation over selected incident edges costs $O(Q_k)$. For each selected prototype, a rank-$r$ adapter computes
+Computing $q=Qh$ costs $O(dd_q)$. Retrieval costs $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Edge-gate evaluation over selected incident edges costs $O(Q_N)$. For each selected prototype, a rank-$r$ adapter computes
 \begin{align*}
 W_jKh.
 \end{align*}
-The matrix-vector product with one local adapter costs $O(dr)$, so $k$ selected adapters cost
+The matrix-vector product with one local adapter costs $O(dr)$, so $|N|$ selected adapters cost
 \begin{align*}
-O(kdr).
+O(|N|dr).
 \end{align*}
 The detached write path repeats query, retrieval, and edge-gate evaluation, then updates only selected local states. A rank-one local repair or low-rank sufficient-statistic update costs $O(dr)$ per selected memory, with $O(d_q)$ additional prototype bookkeeping. Hence write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_k+k(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+|N|(d_q+dr)).
 \end{align*}
 Because the write path is detached, backpropagation does not need intermediate copies of $\calS_t$ for all $t$. It stores the selected read computation used in the forward loss.
 \end{proof}

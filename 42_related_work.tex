@@ -3,25 +3,43 @@
 
 Distinction Graph Machines sit at the intersection of several mature lines of work: adaptive category creation, online splitting, prototype learning, cache and retrieval language models, fast weights, memory-augmented networks, sparse routing, test-time adaptation, and continual learning. The paper should therefore not claim novelty for prototypes, runtime memory, online expansion, or retrieval alone. The specific claim is narrower: DGM separates runtime learning into consequence-forced refinement of the information structure and local repair of state inside the current structure, and implements this separation as a graph of anchored concepts, edge-generated distinctions, and repairable local memories.
 
+\paragraph{Closest ancestors and non-novel components.}
+The components of DGM have clear ancestors. ART, online trees, Hoeffding trees, Mondrian forests, LVQ, SOMs, Growing Neural Gas, and prototype learning already contain category creation, splitting, or prototype growth. Passive-aggressive learning, online ridge/RLS, fast weights, linear attention, Projection Memory, and CPM already contain local runtime repair. Cache language models, $k$NN-LMs, Memorizing Transformers, RETRO/RAG, memory networks, MoE layers, TTA, and TTT already contain retrieval, sparse routing, or runtime adaptation. The DGM contribution is not any one component in isolation. It is the runtime-learning decomposition:
+\[
+\text{missing consequence distinction}\Rightarrow\text{refine},
+\qquad
+\text{stale local state}\Rightarrow\text{repair}.
+\]
+The graph layer is the implementation of this decomposition: edges are consequence-forced binary generators that both induce an information structure and enter routing, while node memories are repaired only after the current concept is treated as adequate.
+
 \begin{center}
 \small
 \begin{tabular}{p{0.20\linewidth}p{0.31\linewidth}p{0.39\linewidth}}
 \toprule
 Family & Similar to DGM & Missing relative to DGM \\
 \midrule
-ART & stable category creation & no DGM graph memory layer \\
-Online trees & consequence-driven refinement & rooted hierarchy, not graph concepts with local repair memories \\
-Prototype learning & anchors, centroids, and exemplar-like concepts & no consequence-forced distinction edges \\
-Cache/$k$NN-LM & hidden-state retrieval memory & no refine-or-repair rule and no concept graph \\
-Fast weights & dynamic key-value memory & no missing-distinction operation \\
-TTT/TTA & runtime adaptation & gradient or surrogate-loss update, not explicit concept refinement \\
-MoE and PKM & sparse routing to capacity & static trained experts or keys, not runtime concept creation \\
+ART & stable category creation under mismatch & vigilance/resonance is a category-match rule, not a graph-generated measurable structure that gates local memories \\
+Online trees & consequence-driven refinement & rooted hierarchy; no local pairwise distinction graph with repairable node memories \\
+Prototype learning & anchors, centroids, and exemplar-like concepts & similarity organization without consequence-forced distinction edges \\
+Cache/$k$NN-LM & hidden-state retrieval memory & appends and retrieves contexts; does not create runtime concepts and edges after consequence conflict \\
+Fast weights & dynamic key-value memory & local repair without a prior missing-distinction diagnosis \\
+TTT/TTA & runtime adaptation & optimizes surrogate or test-time losses rather than selecting refine versus repair \\
+MoE and PKM & sparse routing to capacity & static trained experts or keys, not runtime concept creation from contradiction \\
 MANNs & external memory read/write & learned controller, not explicit refinement semantics \\
-Continual learning & forgetting control and capacity growth & task-level, not instance-level DGM state \\
+Continual learning & forgetting control and capacity growth & task-level adaptation, not instance-level DGM state \\
 CBM/FCA & concepts and concept structure & human-given or lattice concepts, not runtime consequence-forced graph \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+\paragraph{Refine: concept and category growth.}
+Adaptive resonance, online decision trees, Hoeffding-style streaming trees, Mondrian forests, prototype methods, LVQ, SOMs, and growing neural gas all address some form of category creation or refinement. DGM inherits this concern but changes the refinement object. A DGM refinement creates an anchored runtime concept and local pairwise edges whose binary generators are used by routing. The node also carries a repairable memory, so refinement does not merely create a new region; it creates a new place where local state can be repaired.
+
+\paragraph{Repair: local runtime state update.}
+Passive-aggressive learning, online convex optimization, RLS, ridge updates, fast weights, linear attention, Projection Memory, and CPM all provide mechanisms for changing a predictor in a fixed representation. DGM uses such mechanisms as local memories, but only after diagnosing that the representation is adequate. If the same current atom must support incompatible consequences, DGM treats that as a missing distinction rather than asking a fixed local memory to absorb the conflict.
+
+\paragraph{Retrieve and adapt: memory and runtime adaptation.}
+Cache LMs, $k$NN-LMs, Memorizing Transformers, RETRO/RAG, MoE, memory-augmented networks, TTA, and TTT all retrieve, route, or adapt at runtime. DGM is closest to this family in its DGM-Embedding layer. The boundary is the write semantics: cache and retrieval methods mostly add or look up examples, and TTT/TTA choose losses for adaptation; DGM creates new runtime concepts and distinction edges when a consequence conflict shows that retrieval alone is not enough.
 
 \paragraph{Adaptive resonance and stability-plasticity.}
 Adaptive Resonance Theory (ART) is the closest conceptual ancestor of DGM. ART systems were designed for stable incremental category learning under the stability-plasticity dilemma: existing recognition codes should remain stable, while mismatching inputs can trigger new categories through vigilance and resonance mechanisms \citep{carpenter1987massively,carpenter1987art2,grossberg2013adaptive}. This is close to DGM's decision to create a new anchored concept when the current atom cannot absorb observed consequences. The difference is the object being refined. ART categories are resonance-controlled recognition codes. DGM concepts are nodes in a graph whose edges are binary distinction generators; these edges induce a finite information structure and gate local neural memories. In short, ART asks whether an input resonates with an existing category, while DGM asks whether the current concept is too coarse or whether its local memory is merely wrong.
