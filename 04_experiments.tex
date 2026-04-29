@@ -16,7 +16,7 @@ Backprop MLP, online & one backprop step & $0.569\pm0.065$ & $0.654\pm0.038$ \\
 DGM-style memory, online & refine-or-repair & $0.804\pm0.025$ & $0.944\pm0.026$ \\
 \bottomrule
 \end{tabular}
-\caption{DGM-style distinction memory versus backpropagation on a limited online contextual-XOR stream. Offline backprop is a batch upper bound. The relevant runtime comparison is between online backpropagation and online distinction refinement. The distinction-memory run has monotone objective decrease at accepted refinements in all runs.}
+\caption{DGM-style distinction memory versus backpropagation on a limited online contextual-XOR stream. Offline backprop is a batch upper bound. The relevant runtime comparison is between online backpropagation and online distinction refinement. The distinction-memory run has monotone local scoring-objective decrease at accepted refinements in all runs.}
 \label{tab:dgm-check}
 \end{table}
 
@@ -32,7 +32,7 @@ Repair only & 0 & $0.491$ & $0.501$ \\
 Refine+repair & 9 & $0.939$ & $0.967$ \\
 \bottomrule
 \end{tabular}
-\caption{Single-run hard-routing ablation on XOR Gaussian clusters. This checks that local repair alone cannot solve a missing-distinction task, while accepted refinements decrease the penalized objective and recover the required partition.}
+\caption{Single-run hard-routing ablation on XOR Gaussian clusters. This checks that local repair alone cannot solve a missing-distinction task, while accepted refinements decrease the local penalized objective and recover the required partition.}
 \label{tab:repair-refine-ablation}
 \end{table}
 

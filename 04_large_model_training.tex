@@ -9,13 +9,13 @@ Let $h_t\in\R^d$ be the hidden state at a Transformer layer and let
 \begin{align*}
 q_t=Qh_t\in\R^{d_q}
 \end{align*}
-be the DGM query. A DGM layer maintains query-space prototypes $c_j\in\R^{d_q}$, local memories, counts, and distinction edges. Retrieval gives $N_k(q_t)$ and the read path uses the edge-gated weights from \eqref{eq:edge-gated-routing}, with $q_t$ in place of $h$. The read path is differentiable through the selected memories, routing weights, and backbone parameters. The top-$k$ retrieval itself may be treated as a sparse selection operator, as in mixture-of-experts and retrieval systems.
+be the DGM query. A DGM layer maintains frozen query-space anchors $a_j\in\R^{d_q}$, movable query-space centroids $c_j\in\R^{d_q}$, local memories, counts, and distinction edges. Retrieval uses the centroids, while edges are computed from anchors. Retrieval gives $N_k(q_t)$ and the read path uses the edge-gated weights from \eqref{eq:edge-gated-routing}, with $q_t$ in place of $h$. The read path is differentiable through the selected memories, routing weights, and backbone parameters. The top-$k$ retrieval itself may be treated as a sparse selection operator, as in mixture-of-experts and retrieval systems.
 
 \subsection{DGM-Embedding layer}
 
 The simplest large-model layer stores an output embedding mean at each prototype:
 \begin{align*}
-\calS_t^{\mathrm{emb}}=\{c_j,r_j,n_j\}_{j=1}^{N_t}\cup G_t,
+\calS_t^{\mathrm{emb}}=\{a_j,c_j,r_j,n_j\}_{j=1}^{N_t}\cup G_t,
 \qquad
 r_j\in\R^{d_e}.
 \end{align*}
@@ -33,13 +33,13 @@ r_j^+=\frac{n_jr_j+\alpha_j(q_t)v_t}{n_j+\alpha_j(q_t)},
 \qquad
 n_j^+=n_j+\alpha_j(q_t).
 \end{align*}
-If the penalized refinement test in \eqref{eq:refine-accept} accepts a new concept, the layer creates a new prototype at $q_t$, initializes $r_{\mathrm{new}}=v_t$, and adds distinction edges to the confused prototypes.
+If the penalized refinement test in \eqref{eq:refine-accept} accepts a new concept, the layer creates a new anchor and centroid at $q_t$, initializes $r_{\mathrm{new}}=v_t$, and adds distinction edges to the confused prototypes. Ordinary repairs may update centroids and memories but leave anchors fixed.
 
 \subsection{DGM-Adapter layer}
 
 A richer layer stores a local linear repair map:
 \begin{align*}
-\calS_t^{\mathrm{adp}}=\{c_j,W_j,n_j\}_{j=1}^{N_t}\cup G_t,
+\calS_t^{\mathrm{adp}}=\{a_j,c_j,W_j,n_j\}_{j=1}^{N_t}\cup G_t,
 \qquad
 W_j\in\R^{d\times r}.
 \end{align*}
