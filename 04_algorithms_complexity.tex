@@ -1,37 +1,94 @@
 \section{Distinction Graph Machines}
 \label{sec:algorithms}
 
-The tree model is a useful finite special case, but it is not the most natural runtime data structure. A tree makes every decision through one irreversible path. A more flexible object is a graph of concepts: local memories live at prototypes, and distinctions live on edges between prototypes that have been confused. This section defines that model.
-
-\subsection{State and prediction}
-
-Let $\phi_\theta:\calX\to\R^d$ be an encoder. A Distinction Graph Machine has runtime state
+The tree model is a useful finite special case, but it is not the most natural runtime data structure. A tree makes every decision through one irreversible path. A more flexible object is a graph of concepts: local memories live at prototypes, and distinctions live on edges between prototypes that have been confused. The central object is
 \begin{align*}
-\calS_t=\left(\{c_j,M_j,n_j\}_{j=1}^{N_t},G_t\right).
+\text{DGM}=\text{graph-generated information structure}+\text{local memory repair}.
 \end{align*}
-Here $c_j\in\R^d$ is a prototype, $M_j$ is a local predictor or memory, $n_j$ is a usage count, and $G_t$ is a graph on the prototypes. An edge $(i,j)$ stores a distinction separating the two concepts, typically
+This section defines that object. The graph is not metadata: its edges generate the finite information structure and gate the read path.
+
+\subsection{State and graph-generated information}
+
+Let $\phi_\theta:\calX\to\R^d$ be an encoder and write $h=\phi_\theta(x)$. A Distinction Graph Machine has runtime state
 \begin{align*}
-u_{ij}=\frac{c_i-c_j}{\norm{c_i-c_j}_2},\qquad b_{ij}=\frac{1}{2}u_{ij}^\top(c_i+c_j).
+\calS_t=\left(\{c_j,M_j,n_j\}_{j=1}^{N_t},G_t\right),
+\qquad
+G_t=(V_t,E_t).
 \end{align*}
-The edge distinction is
+Here $c_j\in\R^d$ is a prototype, $M_j$ is a local memory, $n_j$ is a usage count, and $E_t$ is a set of distinction edges. An edge $e=(i,j)$ stores a linear distinction
 \begin{align*}
-g_{ij}(h)=\one\{u_{ij}^\top h>b_{ij}\}.
+u_e=\frac{c_i-c_j}{\norm{c_i-c_j}_2},\qquad b_e=\frac{1}{2}u_e^\top(c_i+c_j),
+\end{align*}
+with side labels $s_{e,i}=+1$ and $s_{e,j}=-1$. Its binary generator is
+\begin{align*}
+g_e(h)=\one\{u_e^\top h>b_e\}.
 \end{align*}
 
-Given $h=\phi_\theta(x)$, the machine computes distances $d_j(h)$ to prototypes and a sparse neighborhood
+The edge set induces an information structure. Define the graph signature
+\begin{align*}
+\sigma_t^G(h)=\big(g_e(h)\big)_{e\in E_t}\in\{0,1\}^{E_t}.
+\end{align*}
+Two hidden states are indistinguishable by the current graph if their signatures agree. The nonempty level sets
+\begin{align*}
+A_a^t=\{h:\sigma_t^G(h)=a\},\qquad a\in\{0,1\}^{E_t},
+\end{align*}
+form a finite partition $\calP_t^G$ of hidden-state space, and the generated sigma-algebra is $\sigma(\calP_t^G)$. Adding a new edge is therefore a join with one binary generator:
+\begin{align*}
+\calP_{t+1}^G=\calP_t^G\vee\sigma(g_e).
+\end{align*}
+Prototypes and local memories are statistics attached to atoms or sparse neighborhoods of this graph-generated partition.
+
+\begin{theorem}[Prototype distinction separates its endpoints, informal version of Theorem~\ref{thm:prototype-edge:formal}]
+\label{thm:prototype-edge:informal}
+If $c_i\ne c_j$ and $u_e,b_e$ are defined as above for edge $e=(i,j)$, then
+\begin{align*}
+u_e^\top c_i-b_e=\frac{1}{2}\norm{c_i-c_j}_2,
+\qquad
+u_e^\top c_j-b_e=-\frac{1}{2}\norm{c_i-c_j}_2.
+\end{align*}
+Thus each edge distinction separates the two prototypes that caused it.
+\end{theorem}
+
+\begin{theorem}[DGM graph generates a finite information structure, informal version of Theorem~\ref{thm:dgm-graph-partition:formal}]
+\label{thm:dgm-graph-partition:informal}
+For any finite edge set $E_t$, equality of signatures $\sigma_t^G(h)$ is an equivalence relation whose classes form a finite partition $\calP_t^G$. Adding one edge $g$ refines the partition by $\calP_t^G\vee\sigma(g)$.
+\end{theorem}
+
+\subsection{Edge-gated prediction}
+
+Given $h$, the machine first computes distances $d_j(h)$ to prototypes and a sparse neighborhood
 \begin{align*}
 N_k(h)\subseteq\{1,\ldots,N_t\}.
 \end{align*}
-It then forms routing weights
+If $I_t(j)$ is the set of edges incident to prototype $j$, define the soft compatibility of $h$ with prototype $j$ by
 \begin{align*}
-\alpha_j(h)=\frac{\exp(-d_j(h)/T)}{\sum_{r\in N_k(h)}\exp(-d_r(h)/T)}
-\qquad j\in N_k(h),
+\chi_j(h)=\prod_{e\in I_t(j)}
+\operatorname{sigmoid}\left(\frac{s_{e,j}(u_e^\top h-b_e)}{\tau_e}\right),
 \end{align*}
-and predicts by local mixture
+with the empty product equal to one. The edge-gated routing weights are
+\begin{align}
+\alpha_j(h)=
+\frac{\exp(-d_j(h)/T)\chi_j(h)}
+{\sum_{r\in N_k(h)}\exp(-d_r(h)/T)\chi_r(h)},
+\qquad j\in N_k(h).
+\label{eq:edge-gated-routing}
+\end{align}
+The prediction is the local mixture
 \begin{align*}
 \hat y=\sum_{j\in N_k(h)}\alpha_j(h)M_j(h).
 \end{align*}
-Hard nearest-prototype routing is the limit $T\to0$.
+
+The hard version makes the information-structure connection explicit. A prototype $j$ is eligible for $h$ if
+\begin{align*}
+s_{e,j}(u_e^\top h-b_e)\ge 0
+\qquad\text{for every }e\in I_t(j).
+\end{align*}
+Hard-DGM routes to the nearest eligible prototype, falling back to the nearest prototype if no eligible prototype is available. Soft-DGM in \eqref{eq:edge-gated-routing} is a differentiable relaxation of this hard edge-constrained route.
+
+\begin{theorem}[Soft routing approaches hard routing, informal version of Theorem~\ref{thm:soft-routing-hard-limit:formal}]
+\label{thm:soft-routing-hard-limit:informal}
+If the hard nearest eligible prototype is unique with distance margin $\delta>0$, then its soft routing weight tends to one exponentially as $T\to0$. If a candidate violates an incident edge by signed margin at least $\delta_e>0$, its compatibility is at most $\exp(-\delta_e/\tau_e)$, so wrong-side routing mass vanishes exponentially as the edge temperature $\tau_e\to0$ up to the bounded distance-score ratio.
+\end{theorem}
 
 \begin{algorithm}[H]
 \caption{\textsc{Predict} for a Distinction Graph Machine}
@@ -40,17 +97,30 @@ Hard nearest-prototype routing is the limit $T\to0$.
 \State \textbf{Input:} state $\calS_t=(\{c_j,M_j,n_j\}_{j=1}^{N_t},G_t)$, encoder $\phi_\theta$, example $x$
 \State $h\gets\phi_\theta(x)$
 \State $N_k(h)\gets$ the $k$ nearest prototypes to $h$
-\State compute weights $\alpha_j(h)$ for $j\in N_k(h)$
+\For{$j\in N_k(h)$}
+\State compute edge compatibility $\chi_j(h)$ from incident distinctions
+\State compute edge-gated weight $\alpha_j(h)$ by \eqref{eq:edge-gated-routing}
+\EndFor
 \State \Return $\sum_{j\in N_k(h)}\alpha_j(h)M_j(h)$
 \end{algorithmic}
 \end{algorithm}
 
 \subsection{Refine or repair on a graph}
 
-After observing consequence $y$, DGM first asks whether an existing concept can absorb the evidence. Let $j^\star$ be the nearest or highest-weight prototype. Define a local inconsistency score
+After observing consequence $y$, DGM first asks whether an existing concept can absorb the evidence. Let $j^\star$ be the highest-weight prototype under \eqref{eq:edge-gated-routing}. Define local surprise
 \begin{align*}
 \rho_t=L(y,M_{j^\star}(h)).
 \end{align*}
+Define neighborhood consequence disagreement on $N_k(h)$ by the task-appropriate local prediction divergence. For classification one may use
+\begin{align*}
+D_t=\max_{i,r\in N_k(h)}\operatorname{TV}(p_i(\cdot\mid h),p_r(\cdot\mid h)),
+\end{align*}
+where $p_j$ is the distribution represented by memory $M_j$. For regression one may use
+\begin{align*}
+D_t=\max_{i,r\in N_k(h)}\norm{\mu_i(h)-\mu_r(h)}_2,
+\end{align*}
+and for language modeling the log-loss surprise $-\log p_{j^\star}(x_{t+1}\mid x_{\le t})$ is the local disagreement signal.
+
 If $\rho_t$ is small, the information structure is treated as adequate and the machine repairs the local state:
 \begin{align*}
 M_{j^\star}\leftarrow\operatorname{Repair}(M_{j^\star},h,y),
@@ -59,11 +129,25 @@ c_{j^\star}\leftarrow c_{j^\star}+\eta_c(h-c_{j^\star}),
 \qquad
 n_{j^\star}\leftarrow n_{j^\star}+1.
 \end{align*}
-If $\rho_t$ is large and the neighborhood contains incompatible consequences, the machine refines by creating a new prototype
+If local surprise and disagreement are large, DGM evaluates a candidate refinement. Let $\calB_t$ be the local buffer used to score the decision. A candidate creates
 \begin{align*}
-c_{N_t+1}=h,\qquad M_{N_t+1}=\operatorname{InitMemory}(h,y),
+c_{\mathrm{new}}=h,\qquad
+M_{\mathrm{new}}=\operatorname{InitMemory}(h,y),
 \end{align*}
-and adds distinction edges from the new prototype to the confused neighbors.
+and adds $q$ distinction edges from the new prototype to the confused neighbors. Let $\widehat R(\calS;\calB_t)$ be the empirical local loss on the buffer after routing with state $\calS$. The refinement gain is
+\begin{align*}
+\Delta_{\mathrm{refine}}
+=\widehat R(\calS_t;\calB_t)-\widehat R(\calS_t^{\mathrm{new}};\calB_t).
+\end{align*}
+The candidate is accepted only if
+\begin{align}
+\Delta_{\mathrm{refine}}>
+\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q+\tau
+\qquad\text{and}\qquad
+D_t>\tau_{\mathrm{disagree}}.
+\label{eq:refine-accept}
+\end{align}
+Otherwise DGM performs the best local repair available under the current graph. This makes refinement a penalized empirical-risk decision rather than an unscored heuristic.
 
 \begin{algorithm}[H]
 \caption{\textsc{Observe} for a Distinction Graph Machine}
@@ -75,52 +159,76 @@ and adds distinction edges from the new prototype to the confused neighbors.
 \State create prototype $c_1=h$ with memory $\operatorname{InitMemory}(h,y)$
 \State \Return updated state
 \EndIf
-\State $j^\star\gets\argmin_j d_j(h)$
+\State retrieve $N_k(h)$ and compute edge-gated routing weights
+\State $j^\star\gets\argmax_{j\in N_k(h)}\alpha_j(h)$
 \State $\rho\gets L(y,M_{j^\star}(h))$
+\State compute neighborhood disagreement $D_t$
 \If{$\rho\le\tau_{\mathrm{repair}}$}
 \State repair $M_{j^\star}$ and move $c_{j^\star}$ toward $h$
 \Else
-\State create a new prototype $c_{N_t+1}=h$
-\State initialize $M_{N_t+1}$ from $(h,y)$
-\For{confused neighbor $i$ of $h$}
-\State add edge $(i,N_t+1)$ with distinction $(u_{i,N_t+1},b_{i,N_t+1})$
-\EndFor
+\State form a candidate new prototype at $h$ and candidate edges to confused neighbors
+\State estimate $\Delta_{\mathrm{refine}}$ on the local buffer $\calB_t$
+\If{$\Delta_{\mathrm{refine}}>\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q+\tau$ and $D_t>\tau_{\mathrm{disagree}}$}
+\State commit the new prototype and its distinction edges
+\Else
+\State repair the best existing local memory under the current graph
+\EndIf
 \EndIf
 \State \Return updated state
 \end{algorithmic}
 \end{algorithm}
 
-\begin{theorem}[Prototype distinction separates its endpoints, informal version of Theorem~\ref{thm:prototype-edge:formal}]
-\label{thm:prototype-edge:informal}
-If $c_i\ne c_j$ and $u_{ij},b_{ij}$ are defined as above, then
+\begin{theorem}[Refine-or-repair objective descent, informal version of Theorem~\ref{thm:refine-repair-descent:formal}]
+\label{thm:refine-repair-descent:informal}
+Let
 \begin{align*}
-u_{ij}^\top c_i-b_{ij}=\frac{1}{2}\norm{c_i-c_j}_2,
-\qquad
-u_{ij}^\top c_j-b_{ij}=-\frac{1}{2}\norm{c_i-c_j}_2.
+J(\calS)=\widehat R(\calS)+\lambda_{\mathrm{proto}}N_{\mathrm{proto}}(\calS)+\lambda_{\mathrm{edge}}\abs{E(\calS)}.
 \end{align*}
-Thus each edge distinction separates the two prototypes that caused it.
+If repair chooses an empirical-risk minimizer for the unchanged local cell, then $J$ does not increase. If a refinement adding one prototype and $q$ edges is accepted only under \eqref{eq:refine-accept}, then $J(\calS_{t+1})<J(\calS_t)-\tau$.
 \end{theorem}
+
+\begin{corollary}[Finite number of accepted refinements, informal version of Corollary~\ref{cor:finite-refinements:formal}]
+\label{cor:finite-refinements:informal}
+If $J\ge0$ and every accepted refinement decreases $J$ by at least $\tau>0$, then the number of accepted refinements is at most $J(\calS_0)/\tau$.
+\end{corollary}
 
 \subsection{Why graph memory is different from a tree}
 
 A tree stores distinctions as a hierarchy. A mistake near the root changes every downstream routing decision. A graph stores distinctions locally between concepts. Creating a new concept does not rewrite old paths; it adds a local alternative and edges explaining why the new concept differs from its neighbors.
 
-A binary distinction tree is recovered by restricting $G_t$ to a rooted binary hierarchy and forcing every input to follow a single path. DGM is therefore the parent data structure; trees are a sparse, hard-routing special case.
+\begin{proposition}[Decision trees are hierarchical hard-DGMs, informal version of Proposition~\ref{prop:tree-as-dgm:formal}]
+\label{prop:tree-as-dgm:informal}
+Given a binary distinction tree, construct one DGM prototype for each leaf and attach the path distinctions as hard eligibility constraints for that prototype. If DGM uses exact hard routing to the unique eligible leaf prototype and each prototype memory equals the tree leaf predictor, then DGM and the tree make identical predictions.
+\end{proposition}
 
-\subsection{Local memories}
+Thus DGM is the parent data structure. A decision tree is the sparse case in which distinctions are forced into a rooted hierarchy and routing is hard and single-path.
 
-The local memory $M_j$ can be chosen according to the task.
+\subsection{Canonical local memories}
 
-\begin{itemize}
-\item {\bf Classification.} $M_j$ stores label counts or exemplars associated with prototype $j$.
-\item {\bf Regression.} $M_j$ stores a local mean, local linear model, or ridge regressor.
-\item {\bf Associative repair.} $M_j$ stores a Projection Memory matrix $W_j$ and updates it by
+The local memory $M_j$ is the repair mechanism inside an already chosen concept. To keep the main method fixed, we use two canonical variants.
+
+\paragraph{DGM-Mean.} For classification or language modeling with output embeddings $E[y]\in\R^{d_e}$, prototype $j$ stores
 \begin{align*}
-W_{j,t+1}=W_{j,t}+\frac{\eta}{1+\eta\norm{k_t}_2^2}(v_t-W_{j,t}k_t)k_t^\top.
+r_j=\frac{1}{n_j}\sum_{s\in C_j}E[y_s].
 \end{align*}
-\end{itemize}
+It contributes the score
+\begin{align*}
+\ell_{\mathrm{DGM}}(y\mid h)=\sum_{j\in N_k(h)}\alpha_j(h)E[y]^\top r_j.
+\end{align*}
+Repair is the sufficient-statistic update
+\begin{align*}
+r_j^+=\frac{n_jr_j+\alpha_j(h)E[y]}{n_j+\alpha_j(h)},
+\qquad
+n_j^+=n_j+\alpha_j(h).
+\end{align*}
 
-The conceptual rule is unchanged: if the prototype is adequate, repair its local state; if evidence is incompatible with the current prototypes, create a new distinction.
+\paragraph{DGM-Ridge.} For few-shot adaptation or local readout repair, a memory stores a small support set $Z\in\R^{n\times d}$ and labels $Y\in\R^{n\times C}$. The closed-form adapter is
+\begin{align*}
+\Gamma=(ZZ^\top+\lambda I)^{-1}Y,
+\qquad
+\operatorname{logits}(z)=zZ^\top\Gamma.
+\end{align*}
+This is the canonical stronger adapter version. Projection Memory and CPM are advanced repair rules inside $M_j$ after the graph has fixed the relevant local concept; Section~\ref{sec:projection-bridge} treats that relation directly.
 
 \subsection{Language modeling instance}
 \label{sec:language-dgm}
@@ -129,34 +237,15 @@ For language modeling, the world state is a prefix and the consequence is the ne
 \begin{align*}
 h_t=\phi_\theta(x_{\le t}).
 \end{align*}
-DGM is inserted as a runtime memory over hidden states. Each prototype $c_j$ represents a recurring context type: a citation pattern, a local syntax regime, a document-specific entity usage, or a repeated task format. The local memory $M_j$ predicts a correction to the next-token distribution.
-
-A scalable instance stores a target embedding mean
+DGM is inserted as a runtime memory over hidden states. Each prototype $c_j$ represents a recurring context type: a citation pattern, a local syntax regime, a document-specific entity usage, or a repeated task format. Distinction edges separate contexts whose next-token consequences force a split. The DGM-Mean memory predicts a correction to the next-token distribution:
 \begin{align*}
-r_j=\frac{1}{n_j}\sum_{s\in C_j}E[x_{s+1}],
+\ell_{\mathrm{DGM}}(y\mid h_t)=\sum_{j\in N_k(h_t)}\alpha_j(h_t)E[y]^\top r_j,
 \end{align*}
-where $E[y]\in\R^{d_e}$ is the output embedding of token $y$. For a new prefix, DGM retrieves prototypes $N_k(h_t)$ and forms the correction
-\begin{align*}
-\ell_{\mathrm{DGM}}(y\mid h_t)=\sum_{j\in N_k(h_t)}\alpha_j(h_t)E[y]^\top r_j.
-\end{align*}
-The final logits are
+where $\alpha_j$ is edge-gated. The final logits are
 \begin{align*}
 \ell(y\mid x_{\le t})=\ell_\theta(y\mid x_{\le t})+\lambda_t\ell_{\mathrm{DGM}}(y\mid h_t).
 \end{align*}
-Here $\lambda_t$ is a learned or fixed trust weight. After the next token $x_{t+1}$ is observed, the machine updates by \textsc{Observe} with consequence $y=x_{t+1}$. If an existing prototype is repaired, its embedding memory can be updated by
-\begin{align*}
-r_j^+=\frac{n_jr_j+E[x_{t+1}]}{n_j+1},
-\qquad
-n_j^+=n_j+1.
-\end{align*}
-If the observed next token is surprising under the nearest prototype and the context is not well explained by existing prototypes, DGM creates a new prototype at $h_t$ and initializes
-\begin{align*}
-c_{N_t+1}=h_t,
-\qquad
-r_{N_t+1}=E[x_{t+1}],
-\qquad
-n_{N_t+1}=1.
-\end{align*}
+Here $\lambda_t$ is a learned or fixed trust weight. After the next token $x_{t+1}$ is observed, the machine updates by \textsc{Observe} with consequence $y=x_{t+1}$.
 
 This gives a direct test-time learning protocol for language modeling. During streaming prediction, document continuation, user correction, tool feedback, or supervised next-token evaluation, the next observed token is genuine evidence and can refine or repair the runtime memory. During unconstrained generation, the model should not update from its own sampled token by default, because self-generated samples are actions, not external consequences.
 
@@ -166,14 +255,13 @@ This gives a direct test-time learning protocol for language modeling. During st
 \begin{algorithmic}[1]
 \State \textbf{Input:} prefix $x_{\le t}$, observed token $x_{t+1}$, DGM state $\calS_t$
 \State $h_t\gets\phi_\theta(x_{\le t})$
-\State retrieve $N_k(h_t)$ and compute logits $\ell_\theta+\lambda_t\ell_{\mathrm{DGM}}$
-\State $j^\star\gets$ nearest or highest-weight prototype
+\State retrieve $N_k(h_t)$ and compute edge-gated logits $\ell_\theta+\lambda_t\ell_{\mathrm{DGM}}$
+\State $j^\star\gets$ highest-weight prototype
 \State $\rho\gets-\log p(x_{t+1}\mid x_{\le t})$
 \If{$\rho\le\tau_{\mathrm{repair}}$}
 \State update the local token memory at $j^\star$
 \Else
-\State create a new prototype at $h_t$ with local memory initialized by $E[x_{t+1}]$
-\State add distinction edges to confused neighboring prototypes
+\State accept a new prototype only if the penalized refinement gain test holds
 \EndIf
 \State \Return updated state
 \end{algorithmic}
@@ -181,9 +269,13 @@ This gives a direct test-time learning protocol for language modeling. During st
 
 \subsection{Complexity}
 
-With exact nearest-neighbor search, prediction costs
+Let
 \begin{align*}
-O(N_td+kd+C_{\mathrm{local}}),
+Q_k(h)=\sum_{j\in N_k(h)}\abs{I_t(j)}
+\end{align*}
+be the number of incident edge gates evaluated for the selected candidates. With exact nearest-neighbor search, prediction costs
+\begin{align*}
+O(N_td+Q_k(h)+kd+C_{\mathrm{local}}),
 \end{align*}
 where $C_{\mathrm{local}}$ is the cost of evaluating the selected local memories. With approximate nearest-neighbor indexing, the $N_td$ term can be replaced by the query cost of the index. Creating a prototype costs $O(d)$ plus the cost of initializing its memory. Adding $q$ distinction edges costs $O(qd)$. If each prototype stores an embedding mean in $\R^{d_e}$, runtime memory is
 \begin{align*}
@@ -192,5 +284,5 @@ O(N_t(d+d_e)+|E_t|d).
 
 \begin{theorem}[DGM data-structure bound, informal version of Theorem~\ref{thm:dpm-complexity:formal}]
 \label{thm:dpm-complexity:informal}
-For exact search over $N_t$ prototypes in $\R^d$, one DGM prediction costs $O(N_td+kd+C_{\mathrm{local}})$. One observation that repairs a selected prototype costs this plus the local repair cost. One observation that creates a new prototype and $q$ distinction edges costs an additional $O(d+qd)$. With embedding-mean memories, the runtime state uses $O(N_t(d+d_e)+|E_t|d)$ memory.
+For exact search over $N_t$ prototypes in $\R^d$, one edge-gated DGM prediction costs $O(N_td+Q_k+kd+C_{\mathrm{local}})$. One observation that repairs a selected prototype costs this plus the local repair cost. One observation that creates a new prototype and $q$ distinction edges costs an additional $O(d+qd)$. With embedding-mean memories, the runtime state uses $O(N_t(d+d_e)+|E_t|d)$ memory.
 \end{theorem}

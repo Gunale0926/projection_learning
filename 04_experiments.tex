@@ -1,7 +1,7 @@
 \section{Computational Checks}
 \label{sec:experiments}
 
-The theory above is structural, but the model is meant to be executable. We include small reproducible comparisons against backpropagation. The accompanying script is in the experiment directory and uses PyTorch for the backpropagation baselines and NumPy for the distinction-memory methods.
+The theory above is structural, but the model is meant to be executable. We include small reproducible computational checks. These are not meant to settle broad benchmark performance; they test whether refine-or-repair behavior appears in controlled settings. Stronger empirical claims would require comparisons to kNN and nearest-centroid methods, online trees, LVQ, RLS or online ridge, passive-aggressive updates, replay-buffer SGD, TTT-style adaptation, and stronger frozen-encoder baselines. The accompanying script is in the experiment directory and uses PyTorch for the backpropagation baselines and NumPy for the distinction-memory methods.
 
 The first task is a two-context XOR stream. In the first context the label is XOR of two Gaussian cluster signs; in the second context the labels are flipped. The context coordinate is observable, but the learner must discover the relevant distinction. We compare three learners. The offline MLP is trained by ordinary backpropagation on the full stream for 500 epochs and should be read as a batch upper bound, not as a runtime learner. The online MLP predicts each example and then performs one backpropagation step on that example. The DGM-style distinction memory uses the same online protocol: predict first, then observe and refine-or-repair. Results are averaged over five seeds with 100 examples per context.
 
@@ -20,7 +20,23 @@ DGM-style memory, online & refine-or-repair & $0.804\pm0.025$ & $0.944\pm0.026$ 
 \label{tab:dgm-check}
 \end{table}
 
-We also run small online image-stream checks on MNIST and CIFAR-10 using cached local datasets. In these experiments the distinction-memory method uses exemplar/prototype repair. The online backpropagation baseline sees each example once and performs one gradient step. Offline backpropagation is again a batch upper bound.
+As a minimal ablation of the refine step, we also run the same distinction-tree hard-routing special case on XOR Gaussian clusters with repair disabled from creating distinctions. The repair-only model has one leaf and cannot represent XOR, while refine+repair creates accepted distinctions with objective decrease.
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lccc}
+\toprule
+Model & Accepted splits & Prequential accuracy & Test accuracy \\
+\midrule
+Repair only & 0 & $0.491$ & $0.501$ \\
+Refine+repair & 9 & $0.939$ & $0.967$ \\
+\bottomrule
+\end{tabular}
+\caption{Single-run hard-routing ablation on XOR Gaussian clusters. This checks that local repair alone cannot solve a missing-distinction task, while accepted refinements decrease the penalized objective and recover the required partition.}
+\label{tab:repair-refine-ablation}
+\end{table}
+
+We also run small online image-stream checks on MNIST and CIFAR-10 using cached local datasets. These are deliberately reported as sanity checks, not as evidence that DGM is a competitive image classifier. In these experiments the distinction-memory method uses exemplar/prototype repair. The online backpropagation baseline sees each example once and performs one gradient step. Offline backpropagation is again a batch upper bound.
 
 \begin{table}[t]
 \centering
@@ -36,7 +52,7 @@ CIFAR-10 & $0.273\pm0.003$ & $0.137\pm0.010$ & $0.243\pm0.008$ \\
 \label{tab:image-check}
 \end{table}
 
-These experiments test a specific thesis rather than a broad benchmark claim. When the representation lacks a useful distinction, one gradient step on the current example is a weak runtime update. A distinction-memory system can instead create or retrieve a local concept and then repair local state. With full offline access and many epochs, backpropagation remains strong, as expected.
+These experiments test a specific thesis rather than a broad benchmark claim. When the representation lacks a useful distinction, one gradient step on the current example is a weak runtime update. A distinction-memory system can instead create or retrieve a local concept and then repair local state. With full offline access and many epochs, backpropagation remains strong, as expected. The image-stream results should mainly be read as implementation checks; the more relevant settings are context switching, few-shot adaptation with a frozen encoder, long-document memory, repeated syntax regimes, and hidden task identity.
 
 For a stronger adapter benchmark, we train a shared convolutional encoder and freeze it. The adaptation problem is then deliberately narrow: given only five labeled support examples per class, adapt the readout. We compare DGM-Ridge, a closed-form projection adapter from Section~\ref{sec:large-model-training}, against a one-pass backpropagation head and a 200-step backpropagation head on the same frozen embeddings. This isolates the large-model use case: a strong backbone already exists, and the question is whether runtime adaptation should be a gradient loop or a closed-form memory repair.
 

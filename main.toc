@@ -1,49 +1,56 @@
 \contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
 \contentsline {paragraph}{Organization.}{1}{section*.2}%
-\contentsline {section}{\numberline {2}Preliminaries}{1}{section.2}%
-\contentsline {subsection}{\numberline {2.1}Notation}{1}{subsection.2.1}%
+\contentsline {section}{\numberline {2}Preliminaries}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Notation}{2}{subsection.2.1}%
 \contentsline {subsection}{\numberline {2.2}Partitions and measurable predictors}{2}{subsection.2.2}%
 \contentsline {subsection}{\numberline {2.3}Bayes risk under information}{2}{subsection.2.3}%
 \contentsline {subsection}{\numberline {2.4}Projection memory notation}{2}{subsection.2.4}%
-\contentsline {section}{\numberline {3}Minimal Information Refinement}{2}{section.3}%
+\contentsline {section}{\numberline {3}Minimal Information Refinement}{3}{section.3}%
 \contentsline {subsection}{\numberline {3.1}The finite refinement rule}{3}{subsection.3.1}%
 \contentsline {subsection}{\numberline {3.2}The sigma-algebra form}{3}{subsection.3.2}%
 \contentsline {subsection}{\numberline {3.3}Contradiction inside an atom}{3}{subsection.3.3}%
-\contentsline {section}{\numberline {4}The Value of a Distinction}{3}{section.4}%
+\contentsline {section}{\numberline {4}The Value of a Distinction}{4}{section.4}%
 \contentsline {subsection}{\numberline {4.1}Risk monotonicity}{4}{subsection.4.1}%
 \contentsline {subsection}{\numberline {4.2}Log loss}{4}{subsection.4.2}%
 \contentsline {subsection}{\numberline {4.3}Squared loss}{4}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}Finite empirical scores}{4}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.4}Finite empirical scores}{5}{subsection.4.4}%
 \contentsline {section}{\numberline {5}Distinction Graph Machines}{5}{section.5}%
-\contentsline {subsection}{\numberline {5.1}State and prediction}{5}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Refine or repair on a graph}{6}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Why graph memory is different from a tree}{7}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Local memories}{7}{subsection.5.4}%
-\contentsline {subsection}{\numberline {5.5}Language modeling instance}{7}{subsection.5.5}%
-\contentsline {subsection}{\numberline {5.6}Complexity}{8}{subsection.5.6}%
-\contentsline {section}{\numberline {6}DGM Layers for Large-Model Training}{9}{section.6}%
-\contentsline {subsection}{\numberline {6.1}A trainable DGM layer}{9}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}Detached write path}{9}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Why this can scale}{10}{subsection.6.3}%
-\contentsline {subsection}{\numberline {6.4}Distributed training}{10}{subsection.6.4}%
-\contentsline {subsection}{\numberline {6.5}Closed-form adapters}{11}{subsection.6.5}%
-\contentsline {section}{\numberline {7}From Distinctions to Projection Memory}{11}{section.7}%
-\contentsline {subsection}{\numberline {7.1}One-hot partition memory}{11}{subsection.7.1}%
-\contentsline {subsection}{\numberline {7.2}CPM conflict as missing distinction}{12}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}The hierarchy}{12}{subsection.7.3}%
-\contentsline {section}{\numberline {8}Technical Overview}{12}{section.8}%
-\contentsline {section}{\numberline {9}Computational Checks}{15}{section.9}%
-\contentsline {section}{\numberline {10}Conclusion}{17}{section.10}%
-\contentsline {section}{\numberline {A}Appendix Roadmap}{20}{appendix.A}%
-\contentsline {section}{\numberline {B}Limitations}{20}{appendix.B}%
-\contentsline {section}{\numberline {C}Related Work}{20}{appendix.C}%
-\contentsline {paragraph}{Prototype and memory methods.}{20}{section*.8}%
-\contentsline {paragraph}{Decision trees and splitting criteria.}{21}{section*.9}%
-\contentsline {paragraph}{Sparse experts and retrieval layers.}{21}{section*.10}%
-\contentsline {paragraph}{Information theory and statistical decision theory.}{21}{section*.11}%
-\contentsline {paragraph}{Backpropagation and gradient learning.}{21}{section*.12}%
-\contentsline {paragraph}{Projection learning and online repair.}{21}{section*.13}%
-\contentsline {paragraph}{Test-time adaptation.}{21}{section*.14}%
-\contentsline {section}{\numberline {D}Minimal Refinement Proofs}{21}{appendix.D}%
-\contentsline {section}{\numberline {E}Value of Distinction Proofs}{23}{appendix.E}%
-\contentsline {section}{\numberline {F}DGM Algorithm and Projection-Bridge Proofs}{25}{appendix.F}%
+\contentsline {subsection}{\numberline {5.1}State and graph-generated information}{5}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Edge-gated prediction}{6}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Refine or repair on a graph}{7}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Why graph memory is different from a tree}{9}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Canonical local memories}{9}{subsection.5.5}%
+\contentsline {paragraph}{DGM-Mean.}{9}{section*.3}%
+\contentsline {paragraph}{DGM-Ridge.}{9}{section*.4}%
+\contentsline {subsection}{\numberline {5.6}Language modeling instance}{9}{subsection.5.6}%
+\contentsline {subsection}{\numberline {5.7}Complexity}{10}{subsection.5.7}%
+\contentsline {section}{\numberline {6}DGM Layers for Large-Model Training}{11}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Common layer interface}{11}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}DGM-Embedding layer}{11}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}DGM-Adapter layer}{12}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Detached write path}{12}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Why this can scale}{13}{subsection.6.5}%
+\contentsline {subsection}{\numberline {6.6}Distributed training}{13}{subsection.6.6}%
+\contentsline {subsection}{\numberline {6.7}Closed-form adapters}{13}{subsection.6.7}%
+\contentsline {section}{\numberline {7}From Distinctions to Projection Memory}{14}{section.7}%
+\contentsline {subsection}{\numberline {7.1}One-hot partition memory}{14}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}CPM conflict as missing distinction}{14}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}The hierarchy}{14}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Technical Overview}{15}{section.8}%
+\contentsline {section}{\numberline {9}Computational Checks}{19}{section.9}%
+\contentsline {section}{\numberline {10}Conclusion}{21}{section.10}%
+\contentsline {section}{\numberline {A}Appendix Roadmap}{24}{appendix.A}%
+\contentsline {section}{\numberline {B}Limitations}{24}{appendix.B}%
+\contentsline {section}{\numberline {C}Related Work}{25}{appendix.C}%
+\contentsline {paragraph}{Prototype and memory methods.}{25}{section*.11}%
+\contentsline {paragraph}{Decision trees and splitting criteria.}{25}{section*.12}%
+\contentsline {paragraph}{Sparse experts and retrieval layers.}{25}{section*.13}%
+\contentsline {paragraph}{Cache and nonparametric language models.}{25}{section*.14}%
+\contentsline {paragraph}{Memory-augmented networks.}{25}{section*.15}%
+\contentsline {paragraph}{Information theory and statistical decision theory.}{25}{section*.16}%
+\contentsline {paragraph}{Backpropagation and gradient learning.}{25}{section*.17}%
+\contentsline {paragraph}{Projection learning and online repair.}{25}{section*.18}%
+\contentsline {paragraph}{Test-time adaptation.}{26}{section*.19}%
+\contentsline {section}{\numberline {D}Minimal Refinement Proofs}{26}{appendix.D}%
+\contentsline {section}{\numberline {E}Value of Distinction Proofs}{27}{appendix.E}%
+\contentsline {section}{\numberline {F}DGM Algorithm and Projection-Bridge Proofs}{29}{appendix.F}%

@@ -112,6 +112,46 @@ u^\top c_j-b&=-\frac{1}{2}u^\top(c_i-c_j)=-\frac{1}{2}\norm{c_i-c_j}_2.
 \end{align*}
 \end{proof}
 
+\begin{theorem}[DGM graph partition, proof sketch for Theorem~\ref{thm:dgm-graph-partition:formal}]
+\label{thm:dgm-graph-partition:sketch}
+The informal statement is Theorem~\ref{thm:dgm-graph-partition:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+The graph signature records the value of every binary edge generator. Equality of signatures is an equivalence relation, and its classes are exactly the nonempty common level sets of those generators. Adding a new edge appends one binary coordinate to the signature, so each old atom is either left intact or cut by the two events $g^{-1}(1)$ and $g^{-1}(0)$.
+\end{proof}
+
+\begin{theorem}[Soft routing hard limit, proof sketch for Theorem~\ref{thm:soft-routing-hard-limit:formal}]
+\label{thm:soft-routing-hard-limit:sketch}
+The informal statement is Theorem~\ref{thm:soft-routing-hard-limit:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+For ordinary nearest-prototype routing, every nonnearest candidate has unnormalized weight smaller by at least $\exp(-\delta/T)$, so the total nonnearest mass is bounded by a finite candidate-count factor times this exponential. For an edge gate, a wrong-side signed margin $-\delta_e$ contributes a sigmoid factor at most $\exp(-\delta_e/\tau_e)$. After normalizing against an eligible candidate with bounded distance-score ratio, the wrong-side mass has the same exponential decay.
+\end{proof}
+
+\begin{theorem}[Refine-or-repair descent, proof sketch for Theorem~\ref{thm:refine-repair-descent:formal}]
+\label{thm:refine-repair-descent:sketch}
+The informal statement is Theorem~\ref{thm:refine-repair-descent:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Repair changes only a local memory and is chosen not to increase empirical loss, while the prototype and edge penalties stay fixed. A refinement that creates one prototype and $q$ edges changes the objective by the empirical-risk decrease minus $\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q$. The acceptance test requires this net decrease to exceed $\tau$.
+\end{proof}
+
+\begin{corollary}[Finite refinements, proof sketch for Corollary~\ref{cor:finite-refinements:formal}]
+\label{cor:finite-refinements:sketch}
+The informal statement is Corollary~\ref{cor:finite-refinements:informal}.
+\end{corollary}
+\begin{proof}[Proof sketch]
+After $m$ accepted refinements the objective has decreased by at least $m\tau$. Since the objective is nonnegative, $m\tau\le J(\calS_0)$.
+\end{proof}
+
+\begin{proposition}[Tree as hard-DGM, proof sketch for Proposition~\ref{prop:tree-as-dgm:formal}]
+\label{prop:tree-as-dgm:sketch}
+The informal statement is Proposition~\ref{prop:tree-as-dgm:informal}.
+\end{proposition}
+\begin{proof}[Proof sketch]
+Make one prototype for each tree leaf and attach the root-to-leaf binary tests as hard eligibility constraints. Every input satisfies exactly the path constraints of the leaf reached by the tree, so hard-DGM selects the same memory and returns the same prediction.
+\end{proof}
+
 \begin{theorem}[DGM data structure, proof sketch for Theorem~\ref{thm:dpm-complexity:formal}]
 \label{thm:dpm-complexity:sketch}
 The informal statement is Theorem~\ref{thm:dpm-complexity:informal}.
@@ -121,7 +161,7 @@ A prediction computes distances from $h$ to $N_t$ prototypes in $\R^d$, costing
 \begin{align*}
 O(N_td).
 \end{align*}
-It then evaluates $k$ selected local memories, costing $O(kd+C_{\mathrm{local}})$ including sparse routing weights. Repair adds the local repair cost. Creating one prototype stores a vector in $\R^d$. Adding $q$ distinction edges stores $q$ vectors and thresholds, costing
+It then evaluates $Q_k$ selected incident edge gates and $k$ selected local memories, costing $O(Q_k+kd+C_{\mathrm{local}})$ including sparse routing weights. Repair adds the local repair cost. Creating one prototype stores a vector in $\R^d$. Adding $q$ distinction edges stores $q$ vectors and thresholds, costing
 \begin{align*}
 O(qd).
 \end{align*}
@@ -136,17 +176,17 @@ O(N_t(d+d_e)+|E_t|d).
 The informal statement is Theorem~\ref{thm:dgm-layer-cost:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Computing $q=Qh$ costs $O(dd_q)$. Retrieval costs $C_{\mathrm{ret}}(N_t,d_q)$ by definition. For each selected prototype, a rank-$r$ adapter computes
+Computing $q=Qh$ costs $O(dd_q)$. Retrieval costs $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Edge-gate evaluation over selected incident edges costs $O(Q_k)$. For each selected prototype, a rank-$r$ adapter computes
 \begin{align*}
-B_jA_jh.
+W_jKh.
 \end{align*}
-The two matrix-vector products cost $O(dr)$, so $k$ selected adapters cost
+The matrix-vector product with one local adapter costs $O(dr)$, so $k$ selected adapters cost
 \begin{align*}
 O(kdr).
 \end{align*}
-The detached write path repeats query and retrieval, then updates only selected local states. A rank-one local repair or low-rank sufficient-statistic update costs $O(dr)$ per selected memory, with $O(d_q)$ additional prototype bookkeeping. Hence write overhead is
+The detached write path repeats query, retrieval, and edge-gate evaluation, then updates only selected local states. A rank-one local repair or low-rank sufficient-statistic update costs $O(dr)$ per selected memory, with $O(d_q)$ additional prototype bookkeeping. Hence write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+k(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_k+k(d_q+dr)).
 \end{align*}
 Because the write path is detached, backpropagation does not need intermediate copies of $\calS_t$ for all $t$. It stores the selected read computation used in the forward loss.
 \end{proof}

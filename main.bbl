@@ -1,5 +1,5 @@
 \newcommand{\etalchar}[1]{$^{#1}$}
-\begin{thebibliography}{BHM{\etalchar{+}}16}
+\begin{thebibliography}{SMM{\etalchar{+}}17}
 
 \bibitem[AW01]{azoury2001relative}
 Katy~S. Azoury and Manfred~K. Warmuth.
@@ -26,39 +26,54 @@ Koby Crammer, Ofer Dekel, Joseph Keshet, Shai Shalev-Shwartz, and Yoram Singer.
 \newblock Online passive-aggressive algorithms.
 \newblock {\em Journal of Machine Learning Research}, 7:551--585, 2006.
 
+\bibitem[DH00]{domingos2000mining}
+Pedro Domingos and Geoff Hulten.
+\newblock Mining high-speed data streams.
+\newblock In {\em Proceedings of the Sixth ACM SIGKDD International Conference
+  on Knowledge Discovery and Data Mining}, pages 71--80, 2000.
+
+\bibitem[GCJ17]{grave2017improving}
+Edouard Grave, Moustapha~M. Cisse, and Armand Joulin.
+\newblock Improving neural language models with a continuous cache.
+\newblock In {\em International Conference on Learning Representations}, 2017.
+
 \bibitem[Haz16]{hazan2016introduction}
 Elad Hazan.
 \newblock {\em Introduction to Online Convex Optimization}.
 \newblock Foundations and Trends in Optimization, 2016.
 
-\bibitem[JCO{\etalchar{+}}17]{jaderberg2017decoupled}
-Max Jaderberg, Wojciech~Marian Czarnecki, Simon Osindero, Oriol Vinyals, Alex
-  Graves, David Silver, and Koray Kavukcuoglu.
-\newblock Decoupled neural interfaces using synthetic gradients.
-\newblock In {\em Proceedings of the 34th International Conference on Machine
-  Learning}, volume~70 of {\em Proceedings of Machine Learning Research}, pages
-  1627--1635, 2017.
+\bibitem[KLJ{\etalchar{+}}20]{khandelwal2020generalization}
+Urvashi Khandelwal, Omer Levy, Dan Jurafsky, Luke Zettlemoyer, and Mike Lewis.
+\newblock Generalization through memorization: Nearest neighbor language
+  models.
+\newblock In {\em International Conference on Learning Representations}, 2020.
 
-\bibitem[KVPF20]{katharopoulos2020transformers}
-Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and Fran{\c{c}}ois
-  Fleuret.
-\newblock Transformers are {RNNs}: Fast autoregressive transformers with linear
-  attention.
-\newblock In {\em Proceedings of the 37th International Conference on Machine
-  Learning}, volume 119 of {\em Proceedings of Machine Learning Research},
-  pages 5156--5165, 2020.
+\bibitem[Koh90]{kohonen1990self}
+Teuvo Kohonen.
+\newblock The self-organizing map.
+\newblock {\em Proceedings of the IEEE}, 78(9):1464--1480, 1990.
+
+\bibitem[LSR{\etalchar{+}}19]{lample2019large}
+Guillaume Lample, Alexandre Sablayrolles, Marc'Aurelio Ranzato, Ludovic
+  Denoyer, and Herve Jegou.
+\newblock Large memory layers with product keys.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~32, 2019.
+
+\bibitem[MS91]{martinetz1991neural}
+Thomas~M. Martinetz and Klaus~J. Schulten.
+\newblock A neural-gas network learns topologies.
+\newblock In {\em Artificial Neural Networks}, pages 397--402, 1991.
 
 \bibitem[RHW86]{rumelhart1986learning}
 David~E. Rumelhart, Geoffrey~E. Hinton, and Ronald~J. Williams.
 \newblock Learning representations by back-propagating errors.
 \newblock {\em Nature}, 323(6088):533--536, 1986.
 
-\bibitem[SIS21]{schlag2021linear}
-Imanol Schlag, Kazuki Irie, and J{\"u}rgen Schmidhuber.
-\newblock Linear transformers are secretly fast weight programmers.
-\newblock In {\em Proceedings of the 38th International Conference on Machine
-  Learning}, volume 139 of {\em Proceedings of Machine Learning Research},
-  pages 9355--9366, 2021.
+\bibitem[RRD{\etalchar{+}}16]{rusu2016progressive}
+Andrei~A. Rusu, Neil~C. Rabinowitz, Guillaume Desjardins, Hubert Soyer, James
+  Kirkpatrick, Koray Kavukcuoglu, Razvan Pascanu, and Raia Hadsell.
+\newblock Progressive neural networks, 2016.
 
 \bibitem[SLD{\etalchar{+}}25]{sun2025learning}
 Yu~Sun, Xinhao Li, Karan Dalal, Jiarui Xu, Arjun Vikram, Genghan Zhang, Yann
@@ -69,6 +84,13 @@ Yu~Sun, Xinhao Li, Karan Dalal, Jiarui Xu, Arjun Vikram, Genghan Zhang, Yann
 \newblock In {\em Proceedings of the 42nd International Conference on Machine
   Learning}, volume 267 of {\em Proceedings of Machine Learning Research},
   pages 57503--57522, 2025.
+
+\bibitem[SMM{\etalchar{+}}17]{shazeer2017outrageously}
+Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le,
+  Geoffrey Hinton, and Jeff Dean.
+\newblock Outrageously large neural networks: The sparsely-gated
+  mixture-of-experts layer.
+\newblock In {\em International Conference on Learning Representations}, 2017.
 
 \bibitem[SS12]{shalev2012online}
 Shai Shalev-Shwartz.
@@ -90,6 +112,11 @@ Volodya Vovk.
 \newblock Competitive on-line linear regression.
 \newblock In {\em Advances in Neural Information Processing Systems},
   volume~10, 1997.
+
+\bibitem[WCB15]{weston2015memory}
+Jason Weston, Sumit Chopra, and Antoine Bordes.
+\newblock Memory networks.
+\newblock In {\em International Conference on Learning Representations}, 2015.
 
 \bibitem[Zin03]{zinkevich2003online}
 Martin Zinkevich.

@@ -27,22 +27,137 @@ u^\top c_j-b&=u^\top c_j-\frac{1}{2}u^\top c_i-\frac{1}{2}u^\top c_j\\
 \end{align*}
 \end{proof}
 
+\begin{theorem}[DGM graph generates a finite information structure, formal version of Theorem~\ref{thm:dgm-graph-partition:informal}]
+\label{thm:dgm-graph-partition:formal}
+Let $E$ be a finite set of binary generators $g_e:\calH\to\{0,1\}$. Define
+\begin{align*}
+\sigma_E(h)=\big(g_e(h)\big)_{e\in E}.
+\end{align*}
+The relation $h\sim_E h'$ iff $\sigma_E(h)=\sigma_E(h')$ is an equivalence relation. Its nonempty equivalence classes form a finite partition $\calP_E^G$ of $\calH$. If a new generator $g$ is added, then
+\begin{align*}
+\calP_{E\cup\{g\}}^G=\calP_E^G\vee\sigma(g),
+\end{align*}
+where the right side denotes cutting each atom of $\calP_E^G$ by $g^{-1}(1)$ and $g^{-1}(0)$ and keeping nonempty pieces.
+\end{theorem}
+\begin{proof}
+Equality of signatures is reflexive, symmetric, and transitive, so $\sim_E$ is an equivalence relation. Equivalence classes are disjoint, nonempty, and cover $\calH$, hence they form a partition. Since $E$ is finite, there are at most $2^{|E|}$ signatures, so the partition is finite.
+
+For the update, two points have the same signature under $E\cup\{g\}$ exactly when they have the same old $E$-signature and the same value of $g$. Therefore each new equivalence class is an old atom intersected with either $g^{-1}(1)$ or $g^{-1}(0)$, with empty intersections discarded. This is precisely $\calP_E^G\vee\sigma(g)$.
+\end{proof}
+
+\begin{theorem}[Soft routing approaches hard routing, formal version of Theorem~\ref{thm:soft-routing-hard-limit:informal}]
+\label{thm:soft-routing-hard-limit:formal}
+Let $N$ be a finite candidate set and let
+\begin{align*}
+\alpha_j=\frac{\exp(-d_j/T)\chi_j}{\sum_{r\in N}\exp(-d_r/T)\chi_r}.
+\end{align*}
+If $j^\star$ is the unique candidate with $d_j-d_{j^\star}\ge\delta>0$ for all $j\ne j^\star$ and $\chi_j=\chi_{j^\star}=1$, then
+\begin{align*}
+1-\alpha_{j^\star}\le (|N|-1)\exp(-\delta/T).
+\end{align*}
+Moreover, suppose $\chi_j$ contains a factor
+\begin{align*}
+\operatorname{sigmoid}\left(\frac{m_j}{\tau_e}\right)
+\end{align*}
+and candidate $j$ violates that edge with $m_j\le-\delta_e<0$. Then $\chi_j\le \exp(-\delta_e/\tau_e)$. Consequently, if the distance score ratio between any wrong-side candidate and at least one eligible candidate is bounded by $C$, the total wrong-side routing mass is at most
+\begin{align*}
+C|N|\exp(-\delta_e/\tau_e).
+\end{align*}
+\end{theorem}
+\begin{proof}
+For the nearest-prototype statement,
+\begin{align*}
+\frac{\sum_{j\ne j^\star}\exp(-d_j/T)}
+{\exp(-d_{j^\star}/T)}
+=\sum_{j\ne j^\star}\exp(-(d_j-d_{j^\star})/T)
+\le (|N|-1)\exp(-\delta/T).
+\end{align*}
+Since
+\begin{align*}
+1-\alpha_{j^\star}
+=\frac{\sum_{j\ne j^\star}\exp(-d_j/T)}
+{\exp(-d_{j^\star}/T)+\sum_{j\ne j^\star}\exp(-d_j/T)},
+\end{align*}
+the same upper bound follows.
+
+For an edge violation, set $a=\delta_e/\tau_e>0$. Since
+\begin{align*}
+\operatorname{sigmoid}(-a)=\frac{1}{1+\exp(a)}\le \exp(-a),
+\end{align*}
+any compatibility product containing this factor is at most $\exp(-\delta_e/\tau_e)$. If $A$ is the wrong-side set and $r$ is an eligible candidate whose unnormalized distance score provides the denominator reference, the assumed score-ratio bound gives
+\begin{align*}
+\sum_{j\in A}\alpha_j
+\le \sum_{j\in A} C\exp(-\delta_e/\tau_e)
+\le C|N|\exp(-\delta_e/\tau_e).
+\end{align*}
+\end{proof}
+
+\begin{theorem}[Refine-or-repair objective descent, formal version of Theorem~\ref{thm:refine-repair-descent:informal}]
+\label{thm:refine-repair-descent:formal}
+Let
+\begin{align*}
+J(\calS)=\widehat R(\calS)+\lambda_{\mathrm{proto}}N_{\mathrm{proto}}(\calS)+\lambda_{\mathrm{edge}}\abs{E(\calS)}
+\end{align*}
+with nonnegative penalties. If a repair step leaves the graph and prototype count unchanged and chooses a local memory whose empirical loss is no larger than before, then $J$ does not increase. If a refinement creates one prototype and $q$ edges and is accepted only when
+\begin{align*}
+\Delta_{\mathrm{refine}}>
+\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q+\tau,
+\end{align*}
+where $\Delta_{\mathrm{refine}}=\widehat R(\calS_t)-\widehat R(\calS_{t+1})$, then
+\begin{align*}
+J(\calS_{t+1})<J(\calS_t)-\tau.
+\end{align*}
+\end{theorem}
+\begin{proof}
+For repair, $N_{\mathrm{proto}}$ and $|E|$ are unchanged. The empirical-risk term is no larger by assumption, so $J$ does not increase.
+
+For refinement,
+\begin{align*}
+J(\calS_t)-J(\calS_{t+1})
+&=\widehat R(\calS_t)-\widehat R(\calS_{t+1})
+-\lambda_{\mathrm{proto}}-\lambda_{\mathrm{edge}}q\\
+&=\Delta_{\mathrm{refine}}-\lambda_{\mathrm{proto}}-\lambda_{\mathrm{edge}}q\\
+&>\tau.
+\end{align*}
+Rearranging gives the claim.
+\end{proof}
+
+\begin{corollary}[Finite number of accepted refinements, formal version of Corollary~\ref{cor:finite-refinements:informal}]
+\label{cor:finite-refinements:formal}
+If $J(\calS)\ge0$ for all reachable states and each accepted refinement decreases $J$ by at least $\tau>0$, then the number of accepted refinements is at most $J(\calS_0)/\tau$.
+\end{corollary}
+\begin{proof}
+After $m$ accepted refinements,
+\begin{align*}
+J(\calS_m)\le J(\calS_0)-m\tau.
+\end{align*}
+Since $J(\calS_m)\ge0$, we have $m\le J(\calS_0)/\tau$.
+\end{proof}
+
+\begin{proposition}[Decision trees are hierarchical hard-DGMs, formal version of Proposition~\ref{prop:tree-as-dgm:informal}]
+\label{prop:tree-as-dgm:formal}
+Let $\calT$ be a binary decision tree whose internal nodes compute binary distinctions $g_\nu(h)\in\{0,1\}$ and whose leaves have predictors $M_\ell$. Construct a DGM with one prototype $c_\ell$ and memory $M_\ell$ for each leaf $\ell$. For each leaf, add hard eligibility constraints equal to the signed distinctions along the root-to-leaf path. If hard-DGM routes to the unique eligible leaf prototype, then its prediction equals the tree prediction for every $h$.
+\end{proposition}
+\begin{proof}
+For any input $h$, the tree follows exactly one root-to-leaf path. The leaf reached by the tree is the unique leaf whose path constraints are all satisfied by $h$. By construction, the corresponding DGM prototype has exactly those eligibility constraints, and all other leaf prototypes violate at least one path constraint at the first node where their path differs from the tree path. Therefore hard-DGM selects the same leaf and applies the same memory $M_\ell$.
+\end{proof}
+
 \begin{theorem}[DGM data-structure bound, formal version of Theorem~\ref{thm:dpm-complexity:informal}]
 \label{thm:dpm-complexity:formal}
-Assume DGM has $N_t$ prototypes in $\R^d$, exact nearest-prototype search, sparse neighborhood size $k$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+kd+C_{\mathrm{local}})$. One observation that repairs a selected prototype costs this plus the local repair cost. One observation that creates a new prototype and $q$ distinction edges costs an additional $O(d+qd)$. If each prototype stores an embedding mean in $\R^{d_e}$ and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(d+d_e)+|E_t|d)$ memory.
+Assume DGM has $N_t$ prototypes in $\R^d$, exact nearest-prototype search, sparse neighborhood size $k$, selected incident edge-gate count $Q_k$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q_k+kd+C_{\mathrm{local}})$. One observation that repairs a selected prototype costs this plus the local repair cost. One observation that creates a new prototype and $q$ distinction edges costs an additional $O(d+qd)$. If each prototype stores an embedding mean in $\R^{d_e}$ and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(d+d_e)+|E_t|d)$ memory.
 \end{theorem}
 \begin{proof}
 A distance computation between $h\in\R^d$ and one prototype costs $O(d)$. Exact search over $N_t$ prototypes therefore costs
 \begin{align*}
 O(N_td).
 \end{align*}
-After the $k$ nearest prototypes are selected, computing sparse routing weights and evaluating selected local memories costs
+After the $k$ nearest prototypes are selected, evaluating the incident edge gates costs $O(Q_k)$. Computing sparse routing weights, distances within the selected set, and evaluating selected local memories costs
 \begin{align*}
 O(kd+C_{\mathrm{local}}).
 \end{align*}
 Thus prediction costs
 \begin{align*}
-O(N_td+kd+C_{\mathrm{local}}).
+O(N_td+Q_k+kd+C_{\mathrm{local}}).
 \end{align*}
 Observation begins with the same retrieval computation. If it repairs a selected prototype, it adds the local repair cost. If it creates a new prototype, storing the new center costs $O(d)$. For each new edge, computing and storing the linear distinction vector costs $O(d)$, so $q$ edges cost
 \begin{align*}
@@ -63,13 +178,13 @@ Adding the two terms proves the claimed bound.
 
 \begin{theorem}[DGM layer cost, formal version of Theorem~\ref{thm:dgm-layer-cost:informal}]
 \label{thm:dgm-layer-cost:formal}
-Consider a DGM layer with hidden dimension $d$, query dimension $d_q$, rank $r$, top-$k$ retrieval, and prototype-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
+Consider a DGM-Adapter layer with hidden dimension $d$, query dimension $d_q$, local rank $r$, top-$k$ retrieval, selected incident edge-gate count $Q_k$, and prototype-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+kdr).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_k+kdr).
 \end{align*}
 If the write path is detached and uses rank-one local repair, the write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+k(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_k+k(d_q+dr)).
 \end{align*}
 For a block of length $L$, backpropagation through the slow parameters does not require storing the full DGM state history $\calS_1,\ldots,\calS_L$.
 \end{theorem}
@@ -78,21 +193,21 @@ For a token hidden state $h\in\R^d$, the query computation
 \begin{align*}
 q=Qh
 \end{align*}
-costs $O(dd_q)$. The retrieval cost is $C_{\mathrm{ret}}(N_t,d_q)$ by definition.
+costs $O(dd_q)$. The retrieval cost is $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Evaluating selected incident edge gates costs $O(Q_k)$.
 
 For a selected prototype $j$, the rank-$r$ adapter read is
 \begin{align*}
-B_jA_jh.
+W_jKh.
 \end{align*}
-The product $A_jh$ costs $O(rd)$, and the product $B_j(A_jh)$ costs $O(dr)$. Therefore one selected adapter costs $O(dr)$ and $k$ selected adapters cost
+Multiplying one selected $W_j\in\R^{d\times r}$ by a rank-$r$ key costs $O(dr)$. Therefore $k$ selected adapters cost
 \begin{align*}
 O(kdr).
 \end{align*}
 The routing weights add lower-order top-$k$ normalization cost, absorbed into the same bound. This proves the read overhead.
 
-The write path first computes the same query and retrieval. It then updates selected prototype statistics and selected local memories. Prototype bookkeeping costs $O(d_q)$ per selected prototype. A rank-one local repair of a rank-$r$ or low-rank sufficient-statistic memory costs $O(dr)$ per selected memory. Hence the write overhead is
+The write path first computes the same query, retrieval, and edge gates. It then updates selected prototype statistics and selected local memories. Prototype bookkeeping costs $O(d_q)$ per selected prototype. A rank-one local repair of a rank-$r$ or low-rank sufficient-statistic memory costs $O(dr)$ per selected memory. Hence the write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+k(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_k+k(d_q+dr)).
 \end{align*}
 
 Finally, the update rule is applied as
