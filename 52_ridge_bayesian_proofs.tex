@@ -29,13 +29,15 @@ u^\top a_j-b&=u^\top a_j-\frac{1}{2}u^\top a_i-\frac{1}{2}u^\top a_j\\
 \end{align*}
 \end{proof}
 
-\begin{theorem}[DGM graph generates a finite information structure, formal version of Theorem~\ref{thm:dgm-graph-partition:informal}]
+The construction is used only for separated anchors. In implementations, proposed edges with $\norm{a_i-a_j}_2\le\eta_{\mathrm{anchor}}$ are skipped or replaced by a fallback distinction, so the normalized direction is never formed from duplicate or numerically indistinguishable anchors.
+
+\begin{theorem}[DGM graph generates a finite edge-skeleton information structure, formal version of Theorem~\ref{thm:dgm-graph-partition:informal}]
 \label{thm:dgm-graph-partition:formal}
 Let $S$ be a finite set of binary generators $g_s:\mathsf H\to\{0,1\}$. Define
 \begin{align*}
 \sigma_S(h)=\big(g_s(h)\big)_{s\in S}.
 \end{align*}
-The relation $h\sim_S h'$ iff $\sigma_S(h)=\sigma_S(h')$ is an equivalence relation. Its nonempty equivalence classes form a finite partition $\calP_S^G$ of $\mathsf H$. If a new generator $g$ is added, then
+The relation $h\sim_S h'$ iff $\sigma_S(h)=\sigma_S(h')$ is an equivalence relation. Its nonempty equivalence classes form a finite edge-skeleton partition $\calP_S^G$ of $\mathsf H$. If a new generator $g$ is added, then
 \begin{align*}
 \calP_{S\cup\{g\}}^G=\calP_S^G\vee\sigma(g),
 \end{align*}
@@ -138,7 +140,7 @@ J_{\calB_t^{\mathrm{score}}}(\calS)
 +\lambda_{\mathrm{concept}}N_{\mathrm{concept}}(\calS)
 +\lambda_{\mathrm{edge}}\abs{E(\calS)}
 \end{align*}
-with nonnegative penalties on a fixed scoring buffer. If a repair step is committed only after the guarded test
+with nonnegative penalties on a fixed scoring buffer, where $\lambda_{\mathrm{concept}}$ includes the anchored concept and the anchor-order bookkeeping induced by creating it. If a repair step is committed only after the guarded test
 \begin{align*}
 \widehat R(\calS_{t+1};\calB_t^{\mathrm{score}})
 \le
@@ -190,7 +192,7 @@ The theorem is local to the fixed scoring buffer used in its statement. If the s
 
 \begin{theorem}[Statistically safe adaptive refinement, formal version of Theorem~\ref{thm:safe-refinement:informal}]
 \label{thm:safe-refinement:formal}
-Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing the past stream, current DGM state, and all proposal-buffer information available before scoring at time $t$. Let $\calC_t$ be a finite candidate class predictable with respect to $\mathfrak H_t$, and let $\calB_t^{\mathrm{score}}$ contain $m_t$ samples independent of $\mathfrak H_t$ conditional on the current scoring distribution. For candidate $g$, let $\widehat\Delta_t(g)$ be the empirical gain on $\calB_t^{\mathrm{score}}$ and let $\Delta_t(g)$ be the corresponding population gain. Define
+Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing the past stream, current DGM state, and all proposal-buffer information available before scoring at time $t$. Let $\calC_t$ be a finite candidate class predictable with respect to $\mathfrak H_t$, and let $\calB_t^{\mathrm{score}}$ contain $m_t$ fresh held-out samples, or samples not previously used to choose proposals or update the state, independent of $\mathfrak H_t$ conditional on the current scoring distribution. For candidate $g$, let $\widehat G_t(g)$ be the empirical raw risk decrease on $\calB_t^{\mathrm{score}}$ before complexity cost and let $G_t(g)$ be the corresponding population raw gain. Define
 \begin{align*}
 \epsilon_t=
 \sqrt{
@@ -200,28 +202,28 @@ Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing
 \end{align*}
 Then, with probability at least $1-\delta$, every time $t$ and candidate $g\in\calC_t$ satisfy
 \begin{align*}
-\abs{\widehat\Delta_t(g)-\Delta_t(g)}
+\abs{\widehat G_t(g)-G_t(g)}
 \le
 2\epsilon_t.
 \end{align*}
 Consequently, if
 \begin{align*}
-\widehat\Delta_t(g)>
+\widehat G_t(g)>
 \lambda\operatorname{cost}(g)+\tau+2\epsilon_t,
 \end{align*}
 then on the same event
 \begin{align*}
-\Delta_t(g)>
+G_t(g)>
 \lambda\operatorname{cost}(g)+\tau.
 \end{align*}
 \end{theorem}
 \begin{proof}
-Condition on $\mathfrak H_t$. The candidate class is then fixed, and the scoring buffer is independent of the proposal mechanism by assumption. Apply Hoeffding's inequality to the empirical risk of the old state and to the empirical risk of each candidate-refined state. For any fixed state in this finite collection,
+Condition on $\mathfrak H_t$. The candidate class is then fixed, and the scoring buffer is independent of the proposal mechanism and prior state-selection decisions by assumption. Apply Hoeffding's inequality to the empirical risk of the old state and to the empirical risk of each candidate-refined state. For any fixed state in this finite collection,
 \begin{align*}
 \mathbb P\left(\abs{\widehat R-R}>\epsilon\right)
 \le 2\exp(-2m\epsilon^2).
 \end{align*}
-With $m=m_t$ and $\epsilon=\epsilon_t$, the failure probability at time $t$ is at most $\delta/(2t^2)$ after a union bound over the old state and the $\abs{\calC_t}$ candidate states. Since $\sum_{t\ge1}t^{-2}<2$, the displayed constant $4t^2$ gives total failure probability at most $\delta$ over all times. On this event, each gain is a difference of two risks, so empirical and population gain differ by at most $2\epsilon_t$. The implication follows by subtracting this deviation from the empirical gain lower bound.
+With $m=m_t$ and $\epsilon=\epsilon_t$, the failure probability at time $t$ is at most $\delta/(2t^2)$ after a union bound over the old state and the $\abs{\calC_t}$ candidate states. Since $\sum_{t\ge1}t^{-2}<2$, the displayed constant $4t^2$ gives total failure probability at most $\delta$ over all times. On this event, each raw gain is a difference of two risks, so empirical and population raw gain differ by at most $2\epsilon_t$. The implication follows by subtracting this deviation from the empirical raw-gain lower bound.
 \end{proof}
 
 \begin{corollary}[Bounded language-model refinement score, formal version of Corollary~\ref{cor:lm-clipped-refinement:informal}]
@@ -233,7 +235,7 @@ For language modeling, let
 \frac{1}{L_{\max}}
 \min\{-\log p(x_{t+1}\mid x_{\le t}),L_{\max}\}
 \end{align*}
-for a fixed $L_{\max}>0$. If the scoring buffer, empirical gain, and population gain in Theorem~\ref{thm:safe-refinement:formal} are computed using $\ell_{\mathrm{clip}}$, then the theorem applies to language-model refinement decisions made with this clipped score. In particular, an accepted refinement has positive clipped population gain after paying complexity cost and margin $\tau$ with probability at least $1-\delta$.
+for a fixed $L_{\max}>0$. If the scoring buffer, empirical raw gain, and population raw gain in Theorem~\ref{thm:safe-refinement:formal} are computed using $\ell_{\mathrm{clip}}$, then the theorem applies to language-model refinement decisions made with this clipped score. In particular, an accepted refinement has positive clipped population gain after paying complexity cost and margin $\tau$ with probability at least $1-\delta$.
 \end{corollary}
 \begin{proof}
 The clipped score satisfies $0\le \ell_{\mathrm{clip}}\le 1$. Substituting this bounded loss into Theorem~\ref{thm:safe-refinement:formal} gives the claim directly. The statement is only about the clipped score; raw negative log likelihood is unbounded and would require a separate concentration assumption.

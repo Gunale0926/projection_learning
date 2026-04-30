@@ -5,7 +5,7 @@ We start with a finite model. The measurable-space notation used later is the di
 
 \subsection{Partitions, predictors, and risk}
 
-Let $\Omega$ be a finite case space, let $P$ be a distribution on $\Omega$, let $Y:\Omega\to\calY$ be the consequence variable, let $\mathsf A$ be an action space, and let $L:\calY\times\mathsf A\to\R$ be a loss. A finite partition
+Let $\Omega$ be a finite case space, let $P$ be a distribution on $\Omega$, let $Y:\Omega\to\calY$ be the consequence variable, let $\mathsf A$ be an action space, and let $L:\calY\times\mathsf A\to\R$ be a loss with finite expectations for the predictors under discussion. A finite partition
 \begin{align*}
 \Pi=\{B_1,\ldots,B_m\}
 \end{align*}
@@ -16,6 +16,11 @@ induces the equivalence relation $\omega\sim_\Pi\omega'$ iff $\omega,\omega'$ li
 \{f:\Omega\to\mathsf A:
 \omega\sim_\Pi\omega'\Rightarrow f(\omega)=f(\omega')\}.
 \end{align*}
+For any concrete predictor $f:\Omega\to\mathsf A$, write
+\begin{align}
+R_L(f)=\E[L(Y,f(\omega))].
+\label{eq:predictor-risk}
+\end{align}
 The Bayes risk achievable under partition $\Pi$ is
 \begin{align}
 R_L(\Pi)
@@ -33,9 +38,9 @@ where atoms with $P(B)=0$ may be assigned arbitrary actions. Thus $R_L(\Pi)$ is 
 \label{def:refinable-online-prediction}
 A refinable online prediction problem is a tuple
 \begin{align*}
-\mathfrak P=(\Omega,\calY,\mathsf A,P,L,\calU,c),
+\mathfrak P=(\Omega,\calY,\mathsf A,P,L,\calO,\calU,c),
 \end{align*}
-where $\Omega$ is finite, $Y:\Omega\to\calY$ is the consequence variable, $P$ is the sampling distribution, $L:\calY\times\mathsf A\to[0,1]$ is a bounded loss, $\calU\subseteq\{0,1\}^{\Omega}$ is a class of admissible binary distinctions, and $c:\calU\to\R_+$ assigns refinement costs.
+where $\Omega$ is finite, $Y:\Omega\to\calY$ is the consequence variable, $P$ is the sampling distribution, $L:\calY\times\mathsf A\to\R$ has finite risk for admissible predictors, $\calO\subseteq 2^\Omega$ is the pre-outcome observable sigma-algebra, $\calU\subseteq\{0,1\}^{\Omega}$ is a class of admissible binary distinctions that are $\calO$-measurable, and $c:\calU\to\R_+$ assigns refinement costs. Bounded losses are required only in finite-sample concentration statements, where they are stated explicitly. The $\calO$-measurability condition prevents a prediction-time distinction from depending directly on the consequence label; pure value-of-information examples can be recovered by taking $\calO=2^\Omega$.
 
 At round $t$, the learner maintains $S_t=(\Pi_t,a_t)$ with $a_t:\Pi_t\to\mathsf A$. A case $\omega_t\sim P$ is drawn, the learner observes only the atom $B_t\in\Pi_t$ containing $\omega_t$, predicts $a_t(B_t)$, observes $Y_t=Y(\omega_t)$, and then chooses one of two updates:
 \begin{align*}
@@ -104,13 +109,13 @@ Let $\Pi$ be a fixed partition and let $\Pi^\star$ be a refinement. Consider any
 \ge
 T R_L(\Pi).
 \end{align*}
-Consequently, relative to an oracle using $\Pi^\star$,
+Consequently, if Bayes actions exist under $\Pi^\star$, then relative to an oracle using $\Pi^\star$,
 \begin{align*}
 \E[\mathrm{Regret}_T]
 \ge
 T\left(R_L(\Pi)-R_L(\Pi^\star)\right).
 \end{align*}
-If $R_L(\Pi)>R_L(\Pi^\star)$, every repair-only learner suffers $\Omega(T)$ expected regret against the refined oracle.
+If the infimum under $\Pi^\star$ is not attained, the same statement holds in the epsilon-oracle sense: for every $\epsilon>0$, regret against an $\epsilon$-optimal $\Pi^\star$-measurable oracle is at least $T(R_L(\Pi)-R_L(\Pi^\star)-\epsilon)$. Thus if $R_L(\Pi)>R_L(\Pi^\star)$, every repair-only learner suffers $\Omega(T)$ expected regret against refined or epsilon-refined oracles.
 \end{theorem}
 
 \begin{proof}
@@ -120,7 +125,7 @@ Condition on the learner's history before round $t$. The chosen predictor $\hat 
 \ge
 R_L(\Pi).
 \end{align*}
-Taking expectation and summing over $t$ gives the first inequality. The $\Pi^\star$ oracle achieves $R_L(\Pi^\star)$ per round by using the Bayes action on each atom of $\Pi^\star$, so subtracting its cumulative risk gives the regret bound.
+Taking expectation and summing over $t$ gives the first inequality. If Bayes actions exist on the atoms of $\Pi^\star$, the $\Pi^\star$ oracle achieves $R_L(\Pi^\star)$ per round by using them, so subtracting its cumulative risk gives the regret bound. Without attained Bayes actions, for every $\epsilon>0$ choose an $\epsilon$-optimal atomwise predictor under $\Pi^\star$; subtracting its cumulative risk gives the epsilon-oracle bound, and $\epsilon\downarrow0$ recovers the infimum form.
 \end{proof}
 
 \begin{example}[Two-state separation]
@@ -148,6 +153,12 @@ The finite partition model is the main computational model. The sigma-algebra no
 R_L(\calF)=\inf_{a\in\Pred(\calF)}\E[L(Y,a)].
 \end{align*}
 For a finite partition $\Pi$, this recovers the previous definitions by taking $\calF=\sigma(\Pi)$.
+
+Implementations often have fixed pre-existing information that is not created by the runtime refinement mechanism: a frozen hidden state, a backbone distribution, or other features available before observing the consequence. We write this base information as a sigma-algebra $\calB$ and measure runtime refinements through the total information $\calB\vee\calF_t$. Thus the refinement gap relative to a target $\calF^\star$ is
+\begin{align*}
+R_L(\calB\vee\calF_t)-R_L(\calB\vee\calF^\star).
+\end{align*}
+Repairs keep $\calF_t$ fixed, while refinements replace $\calF_t$ by $\calF_t\vee\sigma(U_t)$. All monotonicity and value identities below apply after joining both sides with the same fixed $\calB$.
 
 When the infimum is attained, write $a_\calF^\star$ for a Bayes action under $\calF$. A richer information structure is useful only when its optimal action cannot already be expressed using the old information.
 

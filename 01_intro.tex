@@ -29,7 +29,7 @@ This operation cuts exactly the atoms crossed by $U$ and leaves all other atoms 
 
 Not every new bit is worth adding. A refinement should be accepted only if it changes the best achievable decision. We characterize this condition in Bayes-risk terms: if $\calF\subseteq\calG$ and the $\calG$-Bayes action is unique, then $R_L(\calF)-R_L(\calG)=0$ iff that refined Bayes action already has an $\calF$-measurable version. Under log loss, the gap becomes an expected conditional KL divergence, and a binary distinction has value $I(Y;U\mid\calF)$. This gives a consequence-based split score: accept distinctions because they change outcome distributions, not because they are geometrically novel.
 
-Distinction Graph Machines (DGM) are the data-structure realization of this abstract model. The formal object is Hard-DGM: fixed anchors and accepted binary edges generate a partition, node memories repair predictions on the resulting states, and refinement adds a new binary generator. The practical implementation is Soft-DGM: centroids, sparse retrieval, and differentiable edge gates approximate the hard route. The formal guarantees apply directly to Hard-DGM and to Soft-DGM only under candidate-recall and margin conditions.
+Distinction Graph Machines (DGM) are the data-structure realization of this abstract model. The formal object is Hard-DGM: fixed anchors and accepted binary edges generate an edge skeleton, anchor-distance ordering completes the exact hard route, node memories repair predictions on the resulting states, and refinement adds a new anchored concept together with its edge and order information. The practical implementation is Soft-DGM: centroids, sparse retrieval, and differentiable edge gates approximate the hard route. The partition-level guarantees apply exactly to Hard-DGM and to Soft-DGM only as an approximation under candidate-recall and margin conditions.
 
 \paragraph{Contributions.}
 We make six contributions.
@@ -37,8 +37,8 @@ We make six contributions.
     \item \textbf{Model.} We introduce online prediction with refinable information partitions, where repair preserves $\Pi_t$ and refinement replaces $\Pi_t$ by $\Pi_t\vee U$.
     \item \textbf{Lower bound.} We prove that any repair-only learner suffers linear regret against a refined oracle whenever $R_L(\Pi)>R_L(\Pi^\star)$.
     \item \textbf{Characterization.} We show that a refinement has positive value exactly when it changes the Bayes action; under log loss, the value of a binary distinction is $I(Y;U\mid\calF)$.
-    \item \textbf{Algorithmic guarantees.} We give statistically guarded split tests, distinction-complexity parameters, realizable greedy recovery guarantees, and a finite-class oracle inequality.
-    \item \textbf{Data structure.} We implement refinable partitions as DGM, where graph edges are binary generators and node memories implement repair.
+    \item \textbf{Algorithmic guarantees.} We give bounded-loss statistically guarded split tests, distinction-complexity parameters, realizable greedy recovery guarantees, and a finite-class oracle inequality.
+    \item \textbf{Data structure.} We implement refinable information as DGM, where graph edges are binary generators, anchor order completes the exact hard route, and node memories implement repair.
     \item \textbf{Separating examples.} We give controlled streams showing that repair-only learners fail on missing-distinction tasks while refine-and-repair learners recover the needed partition. These are mechanism checks, not claims of language-model-scale competitiveness.
 \end{itemize}
 

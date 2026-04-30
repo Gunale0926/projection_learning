@@ -3,6 +3,8 @@
 
 Minimal refinement says how to add a distinction; it does not license every possible distinction. The value question is task-dependent: when does the new distinction actually change the best achievable prediction? We measure this by the decrease in optimal risk after the information structure is refined, in the same decision-theoretic sense used in classical comparisons of statistical experiments and value of information \citep{blackwell1953equivalent,berger1985statistical}.
 
+The identities in this section are population Bayes-risk statements and require the relevant expectations, entropies, or second moments to be finite. Bounded-loss assumptions enter only in the empirical concentration and validation results.
+
 \subsection{Risk monotonicity}
 
 The first fact is purely order-theoretic. If $\calG$ contains all events in $\calF$, then every $\calF$-measurable predictor is also $\calG$-measurable. The decision class has only grown; this is the Bayes-risk analogue of Blackwell's monotonicity of decision value under more informative experiments \citep{blackwell1953equivalent}.
@@ -165,7 +167,7 @@ with value $+\infty$ if no such sequence exists. Repair-only learning is the cas
 
 \subsection{Greedy recovery under realizability}
 
-The next theorem is a clean realizable upper bound for greedy refinement. It is intentionally stated for the abstract partition model rather than for Soft-DGM retrieval.
+The next theorem is a clean realizable upper bound for greedy refinement. It is intentionally stated for the abstract partition model rather than for Soft-DGM retrieval. The distinction class is understood to contain only prediction-time observable distinctions, as in Definition~\ref{def:refinable-online-prediction}.
 
 \begin{definition}[Target-respecting distinction]
 \label{def:target-respecting}
@@ -183,19 +185,19 @@ where the risks are conditional on $\omega\in B$. Under log loss, $V_{\log}(B,U)
 
 \begin{theorem}[Greedy recovery under target-respecting splits]
 \label{thm:greedy-recovery:informal}
-Let $\Pi^\star$ have $K$ atoms and suppose the current partition is initially a coarsening of $\Pi^\star$. Assume that every impure current atom $B$ admits a $\Pi^\star$-respecting distinction $U\in\calU$ such that $U$ splits $\Pi^\star|_B$ into two nonempty groups and
+Let $\Pi^\star$ have $K$ atoms and suppose the current partition $\Pi_0$ is initially a coarsening of $\Pi^\star$, with $m_0=\abs{\Pi_0}$. Assume that every positive-mass impure current atom $B$ admits a $\Pi^\star$-respecting distinction $U\in\calU$ such that $U$ splits $\Pi^\star|_B$ into two nonempty groups and
 \begin{align*}
 V_L(B,U)\ge\gamma.
 \end{align*}
-Consider a greedy refinement algorithm whose candidate set contains at least one such distinction for every impure atom, whose accepted candidates are $\Pi^\star$-respecting, and whose empirical local values satisfy
+Consider a greedy refinement algorithm that repeatedly selects a positive-mass impure current atom whenever one exists. Assume its candidate set contains at least one such distinction for every selected impure atom, its accepted candidates are $\Pi^\star$-respecting, and its empirical local values satisfy
 \begin{align*}
 \abs{\widehat V_L(B,U)-V_L(B,U)}\le \gamma/4
 \end{align*}
-for all candidates it scores. If the algorithm accepts a split whenever $\widehat V_L(B,U)>\gamma/2$, then it accepts a useful split in every impure atom it visits and recovers $\Pi^\star$ after at most $K-1$ accepted splits.
+for all candidates it scores. If the algorithm accepts a split whenever $\widehat V_L(B,U)>\gamma/2$, then it accepts a useful split for every selected impure atom and recovers $\Pi^\star$ on the positive-mass support after at most $K-m_0\le K-1$ accepted splits.
 \end{theorem}
 
 \begin{proof}
-Because every accepted split is $\Pi^\star$-respecting, the current partition remains a coarsening of $\Pi^\star$ after each accepted refinement. A candidate with true value at least $\gamma$ has empirical value at least $3\gamma/4$, so it exceeds the $\gamma/2$ threshold and is accepted when proposed. Since the candidate also splits $\Pi^\star|_B$ into two nonempty groups, it increases by one the number of represented target blocks inside the current coarsening. Starting from one represented block per connected component and ending with at most $K$ target atoms, at most $K-1$ accepted splits are needed before no atom is impure.
+Because every accepted split is $\Pi^\star$-respecting, the current partition remains a coarsening of $\Pi^\star$ after each accepted refinement. A candidate with true value at least $\gamma$ has empirical value at least $3\gamma/4$, so it exceeds the $\gamma/2$ threshold and is accepted when proposed. Since the candidate also splits $\Pi^\star|_B$ into two nonempty groups, it replaces one current atom by two nonempty unions of target atoms and increases the number of represented current atoms by one. The algorithm keeps selecting impure positive-mass atoms until none remain. Starting from $m_0$ atoms and ending with at most $K$ positive-mass target atoms, at most $K-m_0\le K-1$ accepted splits are needed.
 \end{proof}
 
 For finite $\calU$ and bounded loss, the event in Theorem~\ref{thm:greedy-recovery:informal} follows from a standard held-out concentration bound. It suffices to score each accepted split with
@@ -211,7 +213,7 @@ independent validation samples, up to constants and the bounded-loss range.
 
 \subsection{A finite-class oracle inequality}
 
-The same finite model gives a structural-risk bound for searching over refinements. Let $\mathfrak P_B(\calU)$ be the set of partitions obtainable from an initial partition $\Pi_0$ by at most $B$ distinctions from finite $\calU$. If $\Pi_0$ has $m_0$ atoms, every $\Pi\in\mathfrak P_B(\calU)$ has at most $m_0+B$ atoms, and the number of distinction sequences is at most $\abs{\calU}^B$.
+The same finite model gives a structural-risk bound for searching over refinements. Let $\mathfrak P_B(\calU)$ be the set of partitions obtainable from an initial partition $\Pi_0$ by at most $B$ global distinctions from finite $\calU$, where each distinction is applied by the join operation in \eqref{eq:partition-join}. If $\Pi_0$ has $m_0$ atoms, every $\Pi\in\mathfrak P_B(\calU)$ has at most $m_0 2^B$ atoms, because one binary distinction can cut every current atom. The sharper $m_0+B$ count applies only to a different local-split class in which each step is restricted to split a single current atom.
 
 \begin{theorem}[Finite-class refinement oracle inequality]
 \label{thm:oracle-refinement:informal}
@@ -234,7 +236,8 @@ R_L(\Pi)+\lambda\abs{\Pi}
 +2\sqrt{
 \frac{
 B\log\abs{\calU}
-+(m_0+B)\log\abs{\mathsf A}
++m_0 2^B\log\abs{\mathsf A}
++\log(B+1)
 +\log(2/\delta)}
 {2n}
 }.
@@ -242,5 +245,5 @@ B\log\abs{\calU}
 \end{theorem}
 
 \begin{proof}
-For any fixed sequence of at most $B$ distinctions and any assignment of actions to the resulting at most $m_0+B$ atoms, Hoeffding's inequality controls the empirical-population risk deviation. The number of such partition-action pairs is at most $\abs{\calU}^B\abs{\mathsf A}^{m_0+B}$. A union bound gives a uniform deviation $\epsilon$ equal to the square-root term without the leading factor $2$. On this event, empirical penalized risk and population penalized risk differ by at most $\epsilon$ for every candidate. Applying the usual empirical-minimizer argument gives the displayed $2\epsilon$ bound.
+For any fixed sequence of at most $B$ distinctions and any assignment of actions to the resulting at most $m_0 2^B$ atoms, Hoeffding's inequality controls the empirical-population risk deviation. The number of sequence lengths is at most $B+1$, the number of distinction sequences is at most $\abs{\calU}^B$, and the number of action assignments for any resulting partition is at most $\abs{\mathsf A}^{m_0 2^B}$. Thus the number of partition-action pairs is at most $(B+1)\abs{\calU}^B\abs{\mathsf A}^{m_0 2^B}$. A union bound gives a uniform deviation $\epsilon$ equal to the square-root term without the leading factor $2$. On this event, empirical penalized risk and population penalized risk differ by at most $\epsilon$ for every candidate. Applying the usual empirical-minimizer argument gives the displayed $2\epsilon$ bound.
 \end{proof}
