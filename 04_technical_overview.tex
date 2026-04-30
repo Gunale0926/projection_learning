@@ -1,7 +1,7 @@
-﻿\section{Guarantees}
+\section{Guarantees}
 \label{sec:technical-overview}
 
-This section collects the main proof ideas behind the story: contradictions require distinctions; minimal refinement adds the missing distinction and nothing else; useful distinctions have exact value under standard losses; and guarded DGM updates decrease the local penalized objective. The measure-theoretic notation, conditional-expectation facts, and decision-theoretic Bayes-risk framing are standard \citep{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}. Full formal versions appear in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
+This section collects the main proof ideas in the order used by the paper: contradictions require distinctions; minimal refinement adds the missing distinction and nothing else; useful distinctions have exact value under standard losses; and guarded DGM updates decrease the local penalized objective. The measure-theoretic notation, conditional-expectation facts, and decision-theoretic Bayes-risk framing are standard \citep{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}. Full formal versions appear in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
 
 \begin{theorem}[Contradiction, proof sketch for Theorem~\ref{thm:contradiction:formal}]
 \label{thm:contradiction:sketch}
@@ -99,9 +99,9 @@ Y-\E[Y\mid\calF]=\left(Y-\E[Y\mid\calG]\right)+\left(\E[Y\mid\calG]-\E[Y\mid\cal
 The two terms are orthogonal because the first has conditional mean zero given $\calG$ and the second is $\calG$-measurable. Taking squared $\ell_2$ norms and expectations gives the identity.
 \end{proof}
 
-\begin{theorem}[Prototype edge separation, proof sketch for Theorem~\ref{thm:prototype-edge:formal}]
-\label{thm:prototype-edge:sketch}
-The main-text statement is Theorem~\ref{thm:prototype-edge:informal}.
+\begin{theorem}[Anchor edge separation, proof sketch for Theorem~\ref{thm:anchor-edge:formal}]
+\label{thm:anchor-edge:sketch}
+The main-text statement is Theorem~\ref{thm:anchor-edge:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
 With $u=(a_i-a_j)/\norm{a_i-a_j}_2$ and $b=u^\top(a_i+a_j)/2$,
@@ -119,7 +119,7 @@ The main-text statement is Theorem~\ref{thm:dgm-graph-partition:informal}.
 The graph signature records the value of every binary edge generator. Equality of signatures is an equivalence relation, and its classes are exactly the nonempty common level sets of those generators. Adding a new edge appends one binary coordinate to the signature, so each old atom is either left intact or cut by the two events $g^{-1}(1)$ and $g^{-1}(0)$.
 \end{proof}
 
-\begin{theorem}[Hard-DGM measurability, proof sketch for Theorem~\ref{thm:hard-dgm-measurable:formal}]
+\begin{theorem}[Hard-route measurability, proof sketch for Theorem~\ref{thm:hard-dgm-measurable:formal}]
 \label{thm:hard-dgm-measurable:sketch}
 The main-text statement is Theorem~\ref{thm:hard-dgm-measurable:informal}.
 \end{theorem}
@@ -132,8 +132,8 @@ Edge eligibility is determined by finitely many edge-bit events, so it is measur
 The main-text statement is Theorem~\ref{thm:soft-routing-hard-limit:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-The sparse soft read can only assign mass to candidates it retrieved. Therefore, if the exact hard-selected prototype is omitted from the candidate set, no temperature limit can recover that route. Under candidate recall, the remaining argument is a finite softmax and gate-sharpening calculation.
-For ordinary nearest-prototype routing, every nonnearest candidate has unnormalized weight smaller by at least $\exp(-\delta/T)$, so the total nonnearest mass is bounded by a finite candidate-count factor times this exponential. For a structural edge gate with uniformly positive weight, a wrong-side signed margin $-\delta_e$ contributes a log-sigmoid term bounded by $-\delta_e/\tau_e$. Degree normalization rescales the exponent but does not remove exponential decay under a uniform degree bound. After normalizing against an eligible candidate with compatibility bounded below and bounded distance-score ratio, the wrong-side mass vanishes as the edge temperature tends to zero.
+The sparse soft read can only assign mass to candidates it retrieved. Therefore, if the exact hard-route concept is omitted from the candidate set, no temperature limit can recover that route. Under candidate recall, the remaining argument is a finite softmax and gate-sharpening calculation.
+For ordinary nearest-center routing, every nonnearest candidate has unnormalized weight smaller by at least $\exp(-\delta/T)$, so the total nonnearest mass is bounded by a finite candidate-count factor times this exponential. For a structural edge gate with uniformly positive weight, a wrong-side signed margin $-\delta_e$ contributes a log-sigmoid term bounded by $-\delta_e/\tau_e$. Degree normalization rescales the exponent but does not remove exponential decay under a uniform degree bound. After normalizing against an eligible candidate with compatibility bounded below and bounded distance-score ratio, the wrong-side mass vanishes as the edge temperature tends to zero.
 \end{proof}
 
 \begin{theorem}[Refine-or-repair descent, proof sketch for Theorem~\ref{thm:refine-repair-descent:formal}]
@@ -141,7 +141,7 @@ For ordinary nearest-prototype routing, every nonnearest candidate has unnormali
 The main-text statement is Theorem~\ref{thm:refine-repair-descent:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Guarded repair proposes local memory or centroid changes while keeping anchors and edges fixed, then commits only candidates that do not increase empirical loss on the fixed scoring buffer $\calB_t^{\mathrm{score}}$. The identity candidate is always feasible. The prototype and edge penalties therefore stay fixed, so the local objective $J_{\calB_t^{\mathrm{score}}}$ does not increase. A refinement that creates one anchored concept and $q$ edges changes $J_{\calB_t^{\mathrm{score}}}$ by the empirical-risk decrease on the scoring buffer minus $\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q$. The acceptance test requires this net decrease to exceed $\tau+2\epsilon_m$.
+Guarded repair proposes local memory or centroid changes while keeping anchors and edges fixed, then commits only candidates that do not increase empirical loss on the fixed scoring buffer $\calB_t^{\mathrm{score}}$. The identity candidate is always feasible. The concept and edge penalties therefore stay fixed, so the local objective $J_{\calB_t^{\mathrm{score}}}$ does not increase. A refinement that creates one anchored concept and $q$ edges changes $J_{\calB_t^{\mathrm{score}}}$ by the empirical-risk decrease on the scoring buffer minus $\lambda_{\mathrm{concept}}+\lambda_{\mathrm{edge}}q$. The acceptance test requires this net decrease to exceed $\tau+2\epsilon_m$.
 \end{proof}
 
 \begin{theorem}[Safe refinement, proof sketch for Theorem~\ref{thm:safe-refinement:formal}]
@@ -181,15 +181,15 @@ After $m$ accepted refinements a common potential $\Phi$ has decreased by at lea
 The main-text statement is Proposition~\ref{prop:tree-as-dgm:informal}.
 \end{proposition}
 \begin{proof}[Proof sketch]
-Make one prototype for each tree leaf and attach the root-to-leaf binary tests as hard eligibility constraints. Every input satisfies exactly the path constraints of the leaf reached by the tree, so generalized hard-DGM selects the same memory and returns the same prediction.
+Make one concept for each tree leaf and attach the root-to-leaf binary tests as hard eligibility constraints. Every input satisfies exactly the path constraints of the leaf reached by the tree, so the generalized hard route selects the same memory and returns the same prediction.
 \end{proof}
 
-\begin{theorem}[DGM data structure, proof sketch for Theorem~\ref{thm:dpm-complexity:formal}]
-\label{thm:dpm-complexity:sketch}
-The main-text statement is Theorem~\ref{thm:dpm-complexity:informal}.
+\begin{theorem}[DGM data structure, proof sketch for Theorem~\ref{thm:dgm-complexity:formal}]
+\label{thm:dgm-complexity:sketch}
+The main-text statement is Theorem~\ref{thm:dgm-complexity:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-A prediction computes centroid and anchor distances from $h$ to $N_t$ prototypes in $\R^d$, costing
+A prediction computes centroid and anchor distances from $h$ to $N_t$ concepts in $\R^d$, costing
 \begin{align*}
 O(N_td).
 \end{align*}
@@ -197,7 +197,7 @@ It then evaluates $Q(h)$ selected incident edge gates and $|N(h)|$ selected loca
 \begin{align*}
 O(qd).
 \end{align*}
-For embedding-mean memories, each prototype stores $a_j,c_j\in\R^d$ and $r_j\in\R^{d_e}$, while each edge stores one distinction vector in $\R^d$. Hence memory is
+For mean memories, each concept stores $a_j,c_j\in\R^d$ and $r_j\in\R^{d_e}$, while each edge stores one distinction vector in $\R^d$. Hence memory is
 \begin{align*}
 O(N_t(2d+d_e)+|E_t|d).
 \end{align*}
@@ -208,7 +208,7 @@ O(N_t(2d+d_e)+|E_t|d).
 The main-text statement is Theorem~\ref{thm:dgm-layer-cost:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Computing $q=Qh$ costs $O(dd_q)$. Retrieval costs $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Edge-gate evaluation over selected incident edges costs $O(Q_N)$. For each selected prototype, a rank-$r$ adapter computes
+Computing $q=Qh$ costs $O(dd_q)$. Retrieval costs $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Edge-gate evaluation over selected incident edges costs $O(Q_N)$. For each selected concept, a rank-$r$ adapter computes
 \begin{align*}
 W_jKh.
 \end{align*}
@@ -216,7 +216,7 @@ The matrix-vector product with one local adapter costs $O(dr)$, so $|N|$ selecte
 \begin{align*}
 O(|N|dr).
 \end{align*}
-The detached write path repeats query, retrieval, and edge-gate evaluation, then updates only selected local states. A rank-one local repair or low-rank sufficient-statistic update costs $O(dr)$ per selected memory, with $O(d_q)$ additional prototype bookkeeping. Hence write overhead is
+The detached write path repeats query, retrieval, and edge-gate evaluation, then updates only selected local states. A rank-one local repair or low-rank sufficient-statistic update costs $O(dr)$ per selected memory, with $O(d_q)$ additional concept bookkeeping. Hence write overhead is
 \begin{align*}
 O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+|N|(d_q+dr)).
 \end{align*}

@@ -1,7 +1,7 @@
 \section{Distinction Graph Machines}
 \label{sec:algorithms}
 
-The theory so far says what must happen when an atom is wrong: the learner must add a distinction. A runtime model then needs a data structure that can create distinctions without destroying the local state that is still useful. A tree is a useful finite special case, but it is not the most natural runtime data structure. A tree makes every decision through one rooted path. Hidden-state conflicts are often local: a new concept may need to be separated from a few confused neighbors without rewriting a global hierarchy.
+The theory so far says what must happen when an atom is wrong: the learner must add a distinction. A runtime model then needs a data structure that can create distinctions without destroying the local state that remains useful. A tree is a useful finite special case, but it is not the most natural runtime structure for neural hidden states. A tree makes every decision through one rooted path. Hidden-state conflicts are often local: a new concept may need to be separated from a few confused neighbors without rewriting a global hierarchy.
 
 \subsection{Why a graph, not a tree?}
 
@@ -10,6 +10,8 @@ DGM uses a graph of concepts. Local memories live at nodes, and distinctions liv
 \text{DGM}=\text{graph-generated information structure}+\text{local memory repair}.
 \end{align*}
 This section defines that object. The graph is not metadata: its edges generate the finite information structure and gate the read path. The partition and generated-sigma-algebra language follows standard finite measurable-space constructions \citep{billingsley1995probability,kallenberg2002foundations}. The main-text statements below give the operational theorem forms; full proofs are collected in Appendix~\ref{app:algorithm-bridge-proofs}.
+
+The minimal DGM loop has four moving parts. First, anchors and edges define what the machine can distinguish. Second, centroids retrieve a small candidate set. Third, local memories predict through edge-gated routing. Fourth, after observing the consequence, the machine commits either a guarded repair that leaves anchors and edges fixed, or a guarded refinement that adds a new anchor and distinction edges. The rest of the section only makes these four operations precise.
 
 \subsection{State: anchors, centroids, memories, and edges}
 
@@ -47,40 +49,44 @@ Anchors generate the distinction skeleton. Centroids and local memories are adap
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}[x=1cm,y=1cm,>=stealth]
-\fill[black] (1.0,1.0) circle (0.08);
-\fill[black] (4.0,1.4) circle (0.08);
-\fill[black] (2.6,3.0) circle (0.08);
-\draw[thick] (1.0,1.0) -- (4.0,1.4);
-\draw[thick] (4.0,1.4) -- (2.6,3.0);
-\draw[dashed] (2.45,0.25) -- (2.25,2.25);
-\draw[dashed] (3.05,2.1) -- (4.65,3.4);
-\draw[blue,thick] (1.35,1.25) circle (0.16);
-\draw[blue,thick] (3.75,1.1) circle (0.16);
-\draw[blue,thick] (2.25,2.75) circle (0.16);
-\node[font=\scriptsize] at (0.72,0.68) {$a_i$};
-\node[font=\scriptsize] at (4.32,1.72) {$a_j$};
-\node[font=\scriptsize] at (2.85,3.26) {$a_k$};
-\node[font=\scriptsize,blue] at (1.6,1.55) {$c_i$};
-\node[font=\scriptsize,blue] at (3.95,0.78) {$c_j$};
-\node[font=\scriptsize,blue] at (2.0,2.45) {$c_k$};
-\draw[rounded corners,fill=green!10] (0.25,1.55) rectangle (1.35,2.05);
-\draw[rounded corners,fill=green!10] (4.35,0.55) rectangle (5.45,1.05);
-\draw[rounded corners,fill=green!10] (1.35,3.25) rectangle (2.45,3.75);
-\node[font=\scriptsize] at (0.8,1.8) {$M_i$};
-\node[font=\scriptsize] at (4.9,0.8) {$M_j$};
-\node[font=\scriptsize] at (1.9,3.5) {$M_k$};
-\fill[orange!80] (5.4,2.7) circle (0.09);
-\node[font=\scriptsize] at (5.75,2.7) {query};
-\draw[->,orange!80,thick] (5.3,2.6) -- (3.05,2.95);
-\draw[->,orange!80,thick] (5.25,2.55) -- (4.15,1.55);
-\node[font=\scriptsize,align=center] at (3.0,0.05) {edges generate distinctions; centroids retrieve; node memories repair};
+\tikzset{
+    anchorpt/.style={circle,fill=black,inner sep=0pt,minimum size=4.2pt},
+    centroid/.style={circle,draw=blue!75,thick,inner sep=0pt,minimum size=9pt},
+    memory/.style={draw,rounded corners=2pt,fill=green!10,minimum width=0.85cm,minimum height=0.38cm,font=\scriptsize},
+    lab/.style={font=\scriptsize},
+    query/.style={circle,fill=orange!85,inner sep=0pt,minimum size=5pt}
+}
+
+\node[anchorpt,label={[lab]225:$a_i$}] (ai) at (0.9,0.9) {};
+\node[anchorpt,label={[lab]20:$a_j$}] (aj) at (4.0,1.25) {};
+\node[anchorpt,label={[lab]80:$a_k$}] (ak) at (2.55,3.0) {};
+\draw[thick] (ai) -- (aj);
+\draw[thick] (aj) -- (ak);
+
+\draw[dashed,gray!70] (2.35,0.25) -- (2.12,2.25);
+\draw[dashed,gray!70] (3.1,2.02) -- (4.72,3.35);
+
+\node[centroid,label={[lab,blue!75]35:$c_i$}] (ci) at (1.32,1.22) {};
+\node[centroid,label={[lab,blue!75]260:$c_j$}] (cj) at (3.72,0.94) {};
+\node[centroid,label={[lab,blue!75]200:$c_k$}] (ck) at (2.18,2.68) {};
+
+\node[memory] (mi) at (0.72,1.78) {$M_i$};
+\node[memory] (mj) at (4.88,0.65) {$M_j$};
+\node[memory] (mk) at (1.78,3.55) {$M_k$};
+
+\node[query,label={[lab]0:query}] (q) at (5.35,2.7) {};
+\draw[->,orange!85,thick] (q) -- (ak);
+\draw[->,orange!85,thick] (q) -- (aj);
+
+\node[font=\scriptsize,align=center,text width=6.0cm] at (2.85,0.0)
+{distinction edges define the information structure; centroids retrieve; memories repair};
 \end{tikzpicture}
-\caption{DGM state. Anchors are stable concept identities, centroids are movable retrieval statistics, edges are distinction generators, and node memories are repaired after a concept is judged adequate.}
+\caption{DGM state. Anchors are stable concept identities, centroids are movable retrieval statistics, distinction edges generate the information structure, and concept memories are repaired after a concept is judged adequate.}
 \label{fig:dgm-state}
 \end{figure}
 
-\begin{theorem}[Prototype distinction separates its endpoints]
-\label{thm:prototype-edge:informal}
+\begin{theorem}[Anchor distinction separates its endpoints]
+\label{thm:anchor-edge:informal}
 If $a_i\ne a_j$ and $u_e,b_e$ are defined as above for edge $e=(i,j)$, then
 \begin{align*}
 u_e^\top a_i-b_e=\frac{1}{2}\norm{a_i-a_j}_2,
@@ -107,14 +113,14 @@ N_{k_a}^{\mathrm{anchor}}(h)
 \operatorname{GraphNeighbors}\!\left(N_{k_c}^{\mathrm{centroid}}(h)\right),
 \end{align*}
 with duplicates removed and with an optional budget cap after the union. The first term gives adaptive locality, the second protects the anchor-defined hard route, and the third recovers concepts connected by recent consequence conflicts. In small exact implementations one may simply take $N(h)=\{1,\ldots,N_t\}$.
-If $I_t(j)$ is the set of edges incident to prototype $j$, define the soft compatibility of $h$ with prototype $j$ by
+If $I_t(j)$ is the set of edges incident to concept $j$, define the soft compatibility of $h$ with concept $j$ by
 \begin{align*}
 \log \chi_j(h)=
 \frac{1}{\sqrt{\max\{1,\abs{I_t(j)}\}}}
 \sum_{e\in I_t(j)}
 \beta_e\log \operatorname{sigmoid}\left(\frac{s_{e,j}(u_e^\top h-b_e)}{\tau_e}\right),
 \end{align*}
-where structural distinction edges have $\beta_e\in(0,1]$ and the empty sum gives $\chi_j(h)=1$. The degree normalization avoids systematically suppressing high-degree prototypes while preserving hard rejection in the low-temperature limit. The edge-gated routing weights are
+where structural distinction edges have $\beta_e\in(0,1]$ and the empty sum gives $\chi_j(h)=1$. The degree normalization avoids systematically suppressing high-degree concepts while preserving hard rejection in the low-temperature limit. The edge-gated routing weights are
 \begin{align}
 \alpha_j(h)=
 \frac{\exp(-d_j(h)/T)\chi_j(h)}
@@ -127,7 +133,7 @@ The prediction is the local mixture
 \hat y=\sum_{j\in N(h)}\alpha_j(h)M_j(h).
 \end{align*}
 
-The hard version makes the information-structure connection explicit. A prototype $j$ is eligible for $h$ if every incident edge bit places $h$ on $j$'s recorded side:
+The hard route makes the information-structure connection explicit. A concept $j$ is eligible for $h$ if every incident edge bit places $h$ on $j$'s recorded side:
 \begin{align*}
 \begin{cases}
 g_e(h)=1,& s_{e,j}=+1,\\
@@ -135,7 +141,7 @@ g_e(h)=0,& s_{e,j}=-1,
 \end{cases}
 \qquad\text{for every }e\in I_t(j).
 \end{align*}
-This convention assigns boundary points to the nonpositive side because $g_e(h)=\one\{u_e^\top h>b_e\}$. The exact Hard-DGM object used in the refinement theory routes to the nearest eligible anchor, falling back to the nearest anchor if no eligible prototype is available. Soft-DGM in \eqref{eq:edge-gated-routing} is the trainable read path: it may retrieve by movable centroids, but those centroids are retrieval statistics rather than formal information atoms.
+This convention assigns boundary points to the nonpositive side because $g_e(h)=\one\{u_e^\top h>b_e\}$. The exact hard route used in the refinement theory routes to the nearest eligible anchor, falling back to the nearest anchor if no eligible concept is available. The soft read in \eqref{eq:edge-gated-routing} is the trainable implementation: it may retrieve by movable centroids, but those centroids are retrieval statistics rather than formal information atoms.
 
 The distinction partition alone is not the whole exact hard route. Anchor distances add a stable order geometry. Let $\calF_t^{\mathrm{edge}}=\sigma(g_e:e\in E_t)$ and let $\calF_t^{\mathrm{anchor\text{-}order}}$ be the finite sigma-algebra generated by all pairwise anchor-distance comparison events
 \begin{align*}
@@ -147,18 +153,18 @@ with deterministic tie-breaking. The hard routing skeleton is measurable with re
 \calF_t^{\mathrm{DGM}}=
 \calF_t^{\mathrm{edge}}\vee \calF_t^{\mathrm{anchor\text{-}order}}.
 \end{align*}
-Thus the exact information-structure theory applies to anchor-DGM. Soft-DGM keeps the same graph skeleton but may use movable centroids and smooth gates for locality, so it should be read as a differentiable engineering relaxation of the anchor-generated information structure rather than as a new formal refinement.
+Thus the exact information-structure theory applies to the anchor-based hard route. The soft read keeps the same graph skeleton but may use movable centroids and smooth gates for locality, so it should be read as a differentiable engineering relaxation of the anchor-generated information structure rather than as a new formal refinement.
 
-\begin{theorem}[Anchor-DGM routing is graph-plus-anchor-order measurable]
+\begin{theorem}[Anchor-based hard routing is graph-plus-anchor-order measurable]
 \label{thm:hard-dgm-measurable:informal}
-With finite $E_t$, finite frozen anchors $a_1,\ldots,a_{N_t}$, and deterministic tie-breaking, the exact Hard-DGM selected prototype index, defined as the nearest eligible anchor with fallback to the nearest anchor, is measurable with respect to $\calF_t^{\mathrm{DGM}}=\calF_t^{\mathrm{edge}}\vee \calF_t^{\mathrm{anchor\text{-}order}}$.
+With finite $E_t$, finite frozen anchors $a_1,\ldots,a_{N_t}$, and deterministic tie-breaking, the exact hard-route selected concept index, defined as the nearest eligible anchor with fallback to the nearest anchor, is measurable with respect to $\calF_t^{\mathrm{DGM}}=\calF_t^{\mathrm{edge}}\vee \calF_t^{\mathrm{anchor\text{-}order}}$.
 \end{theorem}
 
-The next statement is analytic rather than structural: it applies to whichever fixed distances a soft read uses. With anchor distances it recovers the exact hard anchor route; with centroid distances it describes the behavior of the soft retrieval approximation. It also exposes the candidate-recall requirement that links the formal Hard-DGM route to the sparse implementation.
+The next statement is analytic rather than structural: it applies to whichever fixed distances a soft read uses. With anchor distances it recovers the exact hard route; with centroid distances it describes the behavior of the soft retrieval approximation. It also exposes the candidate-recall requirement that links the formal hard route to the sparse implementation.
 
 \begin{condition}[Candidate recall]
 \label{cond:candidate-recall}
-Let $j^\star(h)$ be the unique prototype selected by exact Hard-DGM for query $h$. The sparse soft read satisfies candidate recall at $h$ if
+Let $j^\star(h)$ be the unique concept selected by the exact hard route for query $h$. The sparse soft read satisfies candidate recall at $h$ if
 \begin{align*}
 j^\star(h)\in N(h).
 \end{align*}
@@ -167,7 +173,7 @@ If this condition fails, the soft read has no guarantee of selecting the hard ro
 
 \begin{theorem}[Soft routing approaches hard routing]
 \label{thm:soft-routing-hard-limit:informal}
-Assume candidate recall holds for $h$. If the hard nearest eligible prototype is unique within $N(h)$ with distance margin $\delta>0$, then its soft routing weight tends to one exponentially as $T\to0$. If every wrong-side candidate violates some incident structural edge with weight at least $\beta_{\min}>0$, signed margin at least $\delta_e>0$, and degree at most $D_{\max}$, then each wrong-side compatibility decays uniformly after degree normalization. If at least one eligible reference candidate has compatibility bounded below and the wrong-side/reference distance-score ratios are bounded, then total wrong-side routing mass vanishes as the edge temperature $\tau_e\to0$. Without candidate recall, the theorem gives no correctness guarantee for the omitted hard-selected prototype.
+Assume candidate recall holds for $h$. If the hard-route selected concept is unique within $N(h)$ with distance margin $\delta>0$, then its soft routing weight tends to one exponentially as $T\to0$. If every wrong-side candidate violates some incident structural edge with weight at least $\beta_{\min}>0$, signed margin at least $\delta_e>0$, and degree at most $D_{\max}$, then each wrong-side compatibility decays uniformly after degree normalization. If at least one eligible reference candidate has compatibility bounded below and the wrong-side/reference distance-score ratios are bounded, then total wrong-side routing mass vanishes as the edge temperature $\tau_e\to0$. Without candidate recall, the theorem gives no correctness guarantee for an omitted hard-route concept.
 \end{theorem}
 
 \begin{algorithm}[H]
@@ -187,7 +193,7 @@ Assume candidate recall holds for $h$. If the hard nearest eligible prototype is
 
 \subsection{Refine or repair on a graph}
 
-After observing consequence $y$, DGM first asks whether an existing concept can absorb the evidence. Let $j^\star$ be the highest-weight prototype under \eqref{eq:edge-gated-routing}. Define local surprise
+After observing consequence $y$, DGM runs the central test: can an existing concept absorb the evidence, or is the current concept set missing a distinction? Let $j^\star$ be the highest-weight concept under \eqref{eq:edge-gated-routing}. Define local surprise
 \begin{align*}
 \rho_t=L(y,M_{j^\star}(h)).
 \end{align*}
@@ -262,7 +268,7 @@ and adds distinction edges from the new anchored concept to $\operatorname{Confu
 The candidate is accepted only if
 \begin{align}
 \Delta_{\mathrm{refine}}>
-\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q+\tau+2\epsilon_m
+\lambda_{\mathrm{concept}}+\lambda_{\mathrm{edge}}q+\tau+2\epsilon_m
 \qquad\text{and}\qquad
 D_t>\tau_{\mathrm{disagree}}.
 \label{eq:refine-accept}
@@ -289,7 +295,7 @@ Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m
 \Else
 \State form a candidate new anchor/centroid from $h$ and $\calB_t^{\mathrm{prop}}$, with candidate edges to $\operatorname{Confused}_q(h,y)$
 \State estimate $\Delta_{\mathrm{refine}}$ on the held-out scoring buffer $\calB_t^{\mathrm{score}}$
-\If{$\Delta_{\mathrm{refine}}>\lambda_{\mathrm{proto}}+\lambda_{\mathrm{edge}}q+\tau+2\epsilon_m$ and $D_t>\tau_{\mathrm{disagree}}$}
+\If{$\Delta_{\mathrm{refine}}>\lambda_{\mathrm{concept}}+\lambda_{\mathrm{edge}}q+\tau+2\epsilon_m$ and $D_t>\tau_{\mathrm{disagree}}$}
 \State commit the new anchored concept and its distinction edges
 \Else
 \State attempt guarded repair under the current graph
@@ -317,7 +323,7 @@ Let the local scoring objective on a fixed scoring buffer $\calB_t^{\mathrm{scor
 J_{\calB_t^{\mathrm{score}}}(\calS)
 =
 \widehat R(\calS;\calB_t^{\mathrm{score}})
-+\lambda_{\mathrm{proto}}N_{\mathrm{proto}}(\calS)
++\lambda_{\mathrm{concept}}N_{\mathrm{concept}}(\calS)
 +\lambda_{\mathrm{edge}}\abs{E(\calS)}.
 \end{align*}
 If repair is committed by the guarded rule \eqref{eq:guarded-repair}, then $J_{\calB_t^{\mathrm{score}}}$ does not increase. If a refinement adding one anchored concept and $q$ edges is accepted only under \eqref{eq:refine-accept}, then the empirical penalized objective $J_{\calB_t^{\mathrm{score}}}$ decreases by more than $\tau+2\epsilon_m$.
@@ -375,16 +381,16 @@ A tree stores distinctions as a hierarchy. A mistake near the root changes every
 
 \begin{proposition}[Trees as generalized hard-DGMs]
 \label{prop:tree-as-dgm:informal}
-Given a binary distinction tree, construct one generalized hard-DGM prototype for each leaf and attach the path distinctions as hard eligibility constraints for that prototype. If generalized hard-DGM uses exact hard routing to the unique eligible leaf prototype and each prototype memory equals the tree leaf predictor, then generalized hard-DGM and the tree make identical predictions.
+Given a binary distinction tree, construct one generalized hard-route DGM concept for each leaf and attach the path distinctions as hard eligibility constraints for that concept. If the generalized hard route selects the unique eligible leaf concept and each concept memory equals the tree leaf predictor, then the generalized DGM and the tree make identical predictions.
 \end{proposition}
 
-Thus the distinction-graph view contains trees after allowing arbitrary prototype-level eligibility constraints. A decision tree is the sparse case in which distinctions are forced into a rooted hierarchy and routing is hard and single-path.
+Thus the distinction-graph view contains trees after allowing arbitrary concept-level eligibility constraints. A decision tree is the sparse case in which distinctions are forced into a rooted hierarchy and routing is hard and single-path.
 
 \subsection{Canonical local memories}
 
 The local memory $M_j$ is the repair mechanism inside an already chosen concept. To keep the main method fixed, we use two canonical variants.
 
-\paragraph{DGM-Mean.} For classification or language modeling with output embeddings $E[y]\in\R^{d_e}$, prototype $j$ stores
+\paragraph{Mean memory.} For classification or language modeling with output embeddings $E[y]\in\R^{d_e}$, concept $j$ stores
 \begin{align*}
 r_j=\frac{1}{n_j}\sum_{s\in C_j}E[y_s].
 \end{align*}
@@ -398,9 +404,9 @@ r_j^+=\frac{n_jr_j+\alpha_j(h)E[y]}{n_j+\alpha_j(h)},
 \qquad
 n_j^+=n_j+\alpha_j(h).
 \end{align*}
-The low-cost hard-update variant is recovered by setting $\alpha_{j^\star}=1$ for the highest-weight prototype and $\alpha_j=0$ for all $j\ne j^\star$.
+The low-cost hard-update variant is recovered by setting $\alpha_{j^\star}=1$ for the highest-weight concept and $\alpha_j=0$ for all $j\ne j^\star$.
 
-\paragraph{DGM-Ridge.} For few-shot adaptation or local readout repair, a memory stores a small support set $Z\in\R^{n\times d}$ and labels $Y\in\R^{n\times C}$. The closed-form adapter is the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}:
+\paragraph{Ridge memory.} For few-shot adaptation or local readout repair, a memory stores a small support set $Z\in\R^{n\times d}$ and labels $Y\in\R^{n\times C}$. The closed-form adapter is the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}:
 \begin{align*}
 \Gamma=(ZZ^\top+\lambda I)^{-1}Y,
 \qquad
@@ -423,12 +429,12 @@ be the number of incident edge gates evaluated for the selected candidates. With
 \begin{align*}
 O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}}),
 \end{align*}
-where $C_{\mathrm{local}}$ is the cost of evaluating the selected local memories. With approximate nearest-neighbor indexing, the $N_td$ term can be replaced by the query cost of the index \citep{indyk1998approximate,johnson2019billion}. Creating an anchor-centroid pair costs $O(d)$ plus the cost of initializing its memory. Adding $q$ distinction edges costs $O(qd)$. If each prototype stores an embedding mean in $\R^{d_e}$, runtime memory is
+where $C_{\mathrm{local}}$ is the cost of evaluating the selected local memories. With approximate nearest-neighbor indexing, the $N_td$ term can be replaced by the query cost of the index \citep{indyk1998approximate,johnson2019billion}. Creating an anchor-centroid pair costs $O(d)$ plus the cost of initializing its memory. Adding $q$ distinction edges costs $O(qd)$. If each concept stores an embedding mean in $\R^{d_e}$, runtime memory is
 \begin{align*}
 O(N_t(2d+d_e)+|E_t|d).
 \end{align*}
 
 \begin{theorem}[DGM data-structure bound]
-\label{thm:dpm-complexity:informal}
-For exact search over $N_t$ centroids in $\R^d$, one edge-gated DGM prediction costs $O(N_td+Q+\abs{N}d+C_{\mathrm{local}})$, where $N=N(h)$ and $Q=Q(h)$. One observation that repairs a selected prototype costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. With embedding-mean memories, the runtime state uses $O(N_t(2d+d_e)+|E_t|d)$ memory.
+\label{thm:dgm-complexity:informal}
+For exact search over $N_t$ centroids in $\R^d$, one edge-gated DGM prediction costs $O(N_td+Q+\abs{N}d+C_{\mathrm{local}})$, where $N=N(h)$ and $Q=Q(h)$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. With embedding-mean memories, the runtime state uses $O(N_t(2d+d_e)+|E_t|d)$ memory.
 \end{theorem}

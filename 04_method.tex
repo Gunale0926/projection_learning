@@ -1,7 +1,7 @@
 \section{The Value of a Distinction}
 \label{sec:value}
 
-Minimal refinement says how to add a distinction. It does not say that every possible distinction is worth adding. The value question is task-dependent: when does the new distinction actually change the best achievable prediction? We measure this by the decrease in optimal risk after the information structure is refined, in the same decision-theoretic sense used in classical comparisons of statistical experiments and value of information \citep{blackwell1953equivalent,berger1985statistical}.
+Minimal refinement says how to add a distinction; it does not license every possible distinction. The value question is task-dependent: when does the new distinction actually change the best achievable prediction? We measure this by the decrease in optimal risk after the information structure is refined, in the same decision-theoretic sense used in classical comparisons of statistical experiments and value of information \citep{blackwell1953equivalent,berger1985statistical}.
 
 \subsection{Risk monotonicity}
 
@@ -29,7 +29,7 @@ R_{\log}(\calF)-R_{\log}(\calG)=I(Y;\calG\mid\calF).
 \end{align*}
 \end{theorem}
 
-Thus, for classification and language modeling, a refinement is useful exactly to the extent that it carries conditional mutual information about the consequence beyond what the learner already knows. If the new bit does not tell us anything about the next consequence beyond the old information, it is a gratuitous distinction.
+Thus, for classification and language modeling, a refinement is useful exactly to the extent that it carries conditional mutual information about the consequence beyond what the learner already knows. If the new bit does not tell us anything about the next consequence beyond the old information, it is a gratuitous distinction, even if it separates inputs.
 
 \subsection{Squared loss}
 
@@ -71,4 +71,4 @@ It also has the between-cell form
 \Delta_2(B,g)=|B_0|\norm{\hat\mu_{B_0}-\hat\mu_B}_2^2+|B_1|\norm{\hat\mu_{B_1}-\hat\mu_B}_2^2.
 \end{align*}
 
-These scores implement the same principle as the population theory: split only when the proposed distinction has measurable consequence value.
+These scores implement the same principle as the population theory: split only when the proposed distinction has measurable consequence value. The DGM algorithm below turns this population rule into a guarded empirical decision.

@@ -1,58 +1,60 @@
 \contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
-\contentsline {paragraph}{Contributions.}{2}{section*.3}%
-\contentsline {paragraph}{Organization.}{2}{section*.4}%
-\contentsline {section}{\numberline {2}Information Structures and Missing Distinctions}{3}{section.2}%
-\contentsline {subsection}{\numberline {2.1}Information as distinctions}{3}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}Measurable predictors}{3}{subsection.2.2}%
-\contentsline {subsection}{\numberline {2.3}Bayes risk under information}{3}{subsection.2.3}%
-\contentsline {subsection}{\numberline {2.4}Contradiction inside an atom}{4}{subsection.2.4}%
-\contentsline {subsection}{\numberline {2.5}Notation used later}{4}{subsection.2.5}%
-\contentsline {section}{\numberline {3}Minimal Refinement}{4}{section.3}%
-\contentsline {subsection}{\numberline {3.1}The finite refinement rule}{4}{subsection.3.1}%
-\contentsline {subsection}{\numberline {3.2}The sigma-algebra form}{5}{subsection.3.2}%
-\contentsline {section}{\numberline {4}The Value of a Distinction}{5}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Risk monotonicity}{5}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Log loss}{6}{subsection.4.2}%
-\contentsline {subsection}{\numberline {4.3}Squared loss}{6}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}Finite empirical scores}{6}{subsection.4.4}%
-\contentsline {section}{\numberline {5}Distinction Graph Machines}{7}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Why a graph, not a tree?}{7}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}State: anchors, centroids, memories, and edges}{7}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Edge-gated prediction}{8}{subsection.5.3}%
-\contentsline {subsection}{\numberline {5.4}Refine or repair on a graph}{10}{subsection.5.4}%
-\contentsline {subsection}{\numberline {5.5}Trees as a hard-routing special case}{13}{subsection.5.5}%
-\contentsline {subsection}{\numberline {5.6}Canonical local memories}{14}{subsection.5.6}%
-\contentsline {paragraph}{DGM-Mean.}{14}{section*.6}%
-\contentsline {paragraph}{DGM-Ridge.}{14}{section*.7}%
-\contentsline {subsection}{\numberline {5.7}From DGM to DGM-Embedding}{14}{subsection.5.7}%
-\contentsline {subsection}{\numberline {5.8}Complexity}{15}{subsection.5.8}%
-\contentsline {section}{\numberline {6}DGM-Embedding: A Runtime Memory Layer for Language Models}{15}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Hidden-state concepts}{15}{subsection.6.1}%
-\contentsline {subsection}{\numberline {6.2}Logit correction}{16}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Read before observe}{16}{subsection.6.3}%
-\contentsline {subsection}{\numberline {6.4}Sequential detached training}{17}{subsection.6.4}%
-\contentsline {paragraph}{Block-lagged approximation.}{18}{section*.9}%
-\contentsline {subsection}{\numberline {6.5}Training modes for representation drift}{18}{subsection.6.5}%
-\contentsline {paragraph}{Mode A: frozen encoder.}{18}{section*.10}%
-\contentsline {paragraph}{Mode B: EMA query encoder.}{18}{section*.11}%
-\contentsline {paragraph}{Mode C: periodic state rebuild.}{18}{section*.12}%
-\contentsline {subsection}{\numberline {6.6}Non-canonical adapter extension}{19}{subsection.6.6}%
-\contentsline {subsection}{\numberline {6.7}Cost and systems notes}{19}{subsection.6.7}%
-\contentsline {subsection}{\numberline {6.8}Closed-form local repair}{20}{subsection.6.8}%
-\contentsline {section}{\numberline {7}Guarantees}{20}{section.7}%
-\contentsline {section}{\numberline {8}From Distinctions to Projection Memory}{25}{section.8}%
-\contentsline {subsection}{\numberline {8.1}One-hot partition memory}{25}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}CPM conflict as missing distinction}{25}{subsection.8.2}%
-\contentsline {subsection}{\numberline {8.3}The hierarchy}{26}{subsection.8.3}%
-\contentsline {section}{\numberline {9}Experiments and Computational Checks}{26}{section.9}%
-\contentsline {section}{\numberline {10}Conclusion}{28}{section.10}%
-\contentsline {section}{\numberline {A}Appendix Roadmap}{35}{appendix.A}%
-\contentsline {section}{\numberline {B}Limitations}{35}{appendix.B}%
-\contentsline {section}{\numberline {C}Related Work}{36}{appendix.C}%
-\contentsline {subsection}{\numberline {C.1}Methods that repair without refining}{36}{subsection.C.1}%
-\contentsline {subsection}{\numberline {C.2}Methods that refine without local repair}{36}{subsection.C.2}%
-\contentsline {subsection}{\numberline {C.3}Methods that route without runtime concept creation}{37}{subsection.C.3}%
-\contentsline {subsection}{\numberline {C.4}DGM's position}{37}{subsection.C.4}%
-\contentsline {section}{\numberline {D}Minimal Refinement Proofs}{37}{appendix.D}%
-\contentsline {section}{\numberline {E}Value of Distinction Proofs}{39}{appendix.E}%
-\contentsline {section}{\numberline {F}DGM Algorithm and Projection-Bridge Proofs}{41}{appendix.F}%
+\contentsline {paragraph}{Terminology.}{2}{section*.4}%
+\contentsline {paragraph}{Contributions.}{3}{section*.5}%
+\contentsline {paragraph}{Scope of the formal claims.}{3}{section*.6}%
+\contentsline {paragraph}{Organization.}{4}{section*.7}%
+\contentsline {section}{\numberline {2}Information Structures and Missing Distinctions}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Information as distinctions}{4}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Measurable predictors}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Bayes risk under information}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Contradiction inside an atom}{5}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Notation used later}{5}{subsection.2.5}%
+\contentsline {section}{\numberline {3}Minimal Refinement}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}The finite refinement rule}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}The sigma-algebra form}{6}{subsection.3.2}%
+\contentsline {section}{\numberline {4}The Value of a Distinction}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Risk monotonicity}{6}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Log loss}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Squared loss}{7}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Finite empirical scores}{7}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Distinction Graph Machines}{8}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Why a graph, not a tree?}{8}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}State: anchors, centroids, memories, and edges}{8}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Edge-gated prediction}{10}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Refine or repair on a graph}{12}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Trees as a hard-routing special case}{15}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}Canonical local memories}{16}{subsection.5.6}%
+\contentsline {paragraph}{Mean memory.}{16}{section*.9}%
+\contentsline {paragraph}{Ridge memory.}{16}{section*.10}%
+\contentsline {subsection}{\numberline {5.7}From DGM to DGM-Embedding}{16}{subsection.5.7}%
+\contentsline {subsection}{\numberline {5.8}Complexity}{17}{subsection.5.8}%
+\contentsline {section}{\numberline {6}DGM-Embedding: A Runtime Memory Layer for Language Models}{17}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Hidden-state concepts}{17}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Logit correction}{18}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Read before observe}{18}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Sequential detached training}{19}{subsection.6.4}%
+\contentsline {paragraph}{Block-lagged approximation.}{20}{section*.12}%
+\contentsline {subsection}{\numberline {6.5}Training modes for representation drift}{20}{subsection.6.5}%
+\contentsline {paragraph}{Mode A: frozen encoder.}{20}{section*.13}%
+\contentsline {paragraph}{Mode B: EMA query encoder.}{20}{section*.14}%
+\contentsline {paragraph}{Mode C: periodic state rebuild.}{20}{section*.15}%
+\contentsline {subsection}{\numberline {6.6}Non-canonical adapter extension}{21}{subsection.6.6}%
+\contentsline {subsection}{\numberline {6.7}Cost and systems notes}{21}{subsection.6.7}%
+\contentsline {subsection}{\numberline {6.8}Closed-form local repair}{22}{subsection.6.8}%
+\contentsline {section}{\numberline {7}Guarantees}{22}{section.7}%
+\contentsline {section}{\numberline {8}From Distinctions to Projection Memory}{27}{section.8}%
+\contentsline {subsection}{\numberline {8.1}One-hot partition memory}{27}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}CPM conflict as missing distinction}{27}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}The hierarchy}{28}{subsection.8.3}%
+\contentsline {section}{\numberline {9}Experiments and Computational Checks}{28}{section.9}%
+\contentsline {section}{\numberline {10}Conclusion}{30}{section.10}%
+\contentsline {section}{\numberline {A}Appendix Roadmap}{37}{appendix.A}%
+\contentsline {section}{\numberline {B}Limitations}{37}{appendix.B}%
+\contentsline {section}{\numberline {C}Related Work}{38}{appendix.C}%
+\contentsline {subsection}{\numberline {C.1}Methods that repair without refining}{38}{subsection.C.1}%
+\contentsline {subsection}{\numberline {C.2}Methods that refine without local repair}{38}{subsection.C.2}%
+\contentsline {subsection}{\numberline {C.3}Methods that route without runtime concept creation}{39}{subsection.C.3}%
+\contentsline {subsection}{\numberline {C.4}DGM's position}{39}{subsection.C.4}%
+\contentsline {section}{\numberline {D}Minimal Refinement Proofs}{39}{appendix.D}%
+\contentsline {section}{\numberline {E}Value of Distinction Proofs}{41}{appendix.E}%
+\contentsline {section}{\numberline {F}DGM Algorithm and Projection-Bridge Proofs}{43}{appendix.F}%

@@ -3,6 +3,8 @@
 
 For language modeling, the world state is a prefix and the consequence is the next observed token. This makes the refine-or-repair decision concrete. If a prefix type is already represented, the layer should repair its next-token memory. If the same runtime concept is being asked to predict incompatible next-token consequences, the layer should refine the concept graph. DGM-Embedding is the canonical large-model layer because its detached target is directly observed: the next-token embedding.
 
+The layer should be read as the language-model analogue of the finite DGM loop. The prefix hidden state chooses edge-gated concepts; their memories produce a sparse logit correction; the true next token then supplies the detached consequence used for repair or refinement. There is no inference-time inner optimization problem in this write path.
+
 \subsection{Hidden-state concepts}
 
 Let a frozen or slowly trained backbone produce hidden states
@@ -45,7 +47,7 @@ DGM-Embedding uses the same streaming program during training and inference:
 \begin{align*}
 \text{predict }x_{t+1}\rightarrow\text{observe }x_{t+1}\rightarrow\text{repair or refine}\rightarrow\text{predict }x_{t+2}.
 \end{align*}
-After the next token is observed, $v_t=E[x_{t+1}]$ gives the detached sufficient-statistic write for every selected $j\in N(q_t)$, with all unselected memories unchanged:
+The order is important: the layer must predict before it sees the token that will update memory. After the next token is observed, $v_t=E[x_{t+1}]$ gives the detached sufficient-statistic write for every selected $j\in N(q_t)$, with all unselected memories unchanged:
 \begin{align*}
 r_j^+=\frac{n_jr_j+\alpha_j(q_t)v_t}{n_j+\alpha_j(q_t)},
 \qquad
@@ -58,19 +60,24 @@ During streaming prediction, document continuation, user correction, tool feedba
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}[x=1cm,y=1cm,>=stealth]
-\node[draw,rounded corners,fill=gray!10,font=\scriptsize,minimum width=1.7cm,minimum height=0.55cm] (h) at (0,0) {$h_t$};
-\node[draw,rounded corners,fill=blue!10,font=\scriptsize,minimum width=2.0cm,minimum height=0.55cm] (ret) at (2.4,0) {retrieve concepts};
-\node[draw,rounded corners,fill=green!10,font=\scriptsize,minimum width=1.8cm,minimum height=0.55cm] (logit) at (5.0,0) {logit correction};
-\node[draw,rounded corners,fill=gray!10,font=\scriptsize,minimum width=1.7cm,minimum height=0.55cm] (tok) at (7.4,0) {$x_{t+1}$};
-\draw[->,thick] (h) -- (ret);
-\draw[->,thick] (ret) -- (logit);
-\draw[->,thick] (logit) -- (tok);
-\node[draw,rounded corners,fill=orange!12,font=\scriptsize,minimum width=2.0cm,minimum height=0.55cm] (obs) at (7.4,-1.35) {observe token};
-\node[draw,rounded corners,fill=red!10,font=\scriptsize,minimum width=2.3cm,minimum height=0.55cm] (upd) at (4.75,-1.35) {repair or refine};
-\draw[->,thick] (tok) -- (obs);
-\draw[->,thick] (obs) -- (upd);
-\draw[->,thick] (upd) -- (ret);
-\node[font=\scriptsize,align=center] at (3.7,-2.15) {writes are detached and forward-only; reads remain differentiable};
+\tikzset{
+    flowbox/.style={draw,rounded corners=2pt,font=\scriptsize,align=center,minimum height=0.58cm,text width=1.7cm},
+    flow/.style={->,thick},
+    note/.style={font=\scriptsize,align=center,text width=5.8cm}
+}
+\node[flowbox,fill=gray!10] (h) at (0,0) {$h_t$};
+\node[flowbox,fill=blue!10,text width=1.95cm] (read) at (2.35,0) {edge-gated\\read};
+\node[flowbox,fill=green!10,text width=1.85cm] (logit) at (4.85,0) {logit\\correction};
+\node[flowbox,fill=gray!10] (tok) at (7.05,0) {$x_{t+1}$};
+\node[flowbox,fill=orange!12,text width=1.75cm] (obs) at (7.05,-1.35) {observe\\token};
+\node[flowbox,fill=red!10,text width=1.95cm] (write) at (4.85,-1.35) {repair\\or refine};
+\draw[flow] (h) -- (read);
+\draw[flow] (read) -- (logit);
+\draw[flow] (logit) -- (tok);
+\draw[flow] (tok) -- (obs);
+\draw[flow] (obs) -- (write);
+\draw[flow] (write.west) .. controls (3.35,-1.35) and (2.35,-0.95) .. (read.south);
+\node[note] at (3.55,-2.15) {detached forward-only writes; differentiable reads};
 \end{tikzpicture}
 \caption{DGM-Embedding sequence update. The layer reads before the next token is known, then uses the observed next token as evidence for repair or refinement.}
 \label{fig:dgm-embedding-update}
@@ -83,7 +90,7 @@ During streaming prediction, document continuation, user correction, tool feedba
 \State \textbf{Input:} prefix $x_{\le t}$, observed token $x_{t+1}$, DGM state $\calS_t$
 \State $h_t\gets\phi_\theta(x_{\le t})$ and $q_t\gets Qh_t$
 \State retrieve $N(q_t)$ and compute edge-gated logits $\ell_\theta+\lambda_t\Delta\ell_t$
-\State $j^\star\gets$ highest-weight prototype
+\State $j^\star\gets$ highest-weight concept
 \State $\rho\gets-\log p(x_{t+1}\mid x_{\le t})$
 \If{$\rho\le\tau_{\mathrm{repair}}$}
 \State update DGM-Embedding memories for all $j\in N(q_t)$ using soft credit $\alpha_j(q_t)$
@@ -112,7 +119,7 @@ In sequential detached training, the model trains slow parameters through the re
 \For{$t=1,\ldots,L$}
 \State compute hidden state $h_t$ using the backbone
 \State $q_t\gets Qh_t$
-\State retrieve $N(q_t)$ from the prototype bank
+\State retrieve $N(q_t)$ from the concept bank
 \State compute edge-gated weights $\alpha_j(q_t)$
 \State apply the DGM-Embedding read
 \State produce logits for $x_{t+1}$ and accumulate $\calL\gets\calL+\ell_t$
@@ -159,7 +166,7 @@ Let $K:\R^d\to\R^r$ be a learned or fixed key projection and set $k_t=Kh_t$. The
 \end{align*}
 Here $W_jk_t$ is a hidden-space residual, so the write rule requires an explicit residual target $v_t\in\R^d$. Natural choices include a token-embedding target $P E[x_{t+1}]$, a teacher-forced output-error target $P(E[x_{t+1}]-\hat e_t)$, or a distillation target $h_t^{\mathrm{teacher}}-h_t$. Without such a target, the adapter is only an architectural extension.
 
-Given a local residual target, the projected rank-one repair for a selected prototype is the same residual-correction pattern that appears in passive-aggressive updates, RLS/ridge-style online least squares, and delta-rule fast-weight memories \citep{crammer2006online,vovk1997competitive,schlag2021linear}:
+Given a local residual target, the projected rank-one repair for a selected concept is the same residual-correction pattern that appears in passive-aggressive updates, RLS/ridge-style online least squares, and delta-rule fast-weight memories \citep{crammer2006online,vovk1997competitive,schlag2021linear}:
 \begin{align*}
 W_j^+=W_j+
 \frac{\eta\alpha_j(q_t)}
@@ -177,7 +184,7 @@ During sequential detached training, backpropagation sees the selected read comp
 
 \begin{theorem}[DGM layer cost]
 \label{thm:dgm-layer-cost:informal}
-Consider a DGM adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $|N|$, selected incident edge-gate count $Q_N$, and prototype-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
+Consider a DGM adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $|N|$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
 \begin{align*}
 O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+|N|dr).
 \end{align*}
@@ -188,16 +195,16 @@ O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+|N|(d_q+dr)).
 For a block of length $L$, the DGM state history need not be stored for backpropagation; the additional activation memory is the selected read computation, not the full sequence of memory states. The DGM-Embedding layer replaces the $|N|dr$ adapter term by the selected embedding-logit cost.
 \end{theorem}
 
-The prototype bank can be sharded by the same principle used in retrieval and sparse expert systems. Each device owns a subset of prototypes. A query is routed to a small set of shards, each shard returns local top-$k$ candidates, and a final top-$k$ merge selects the memories used by the read path. Only selected memories receive gradients. Detached writes are sent back to the owning shards.
+The concept bank can be sharded by the same principle used in retrieval and sparse expert systems. Each device owns a subset of concepts. A query is routed to a small set of shards, each shard returns local top-$k$ candidates, and a final top-$k$ merge selects the memories used by the read path. Only selected memories receive gradients. Detached writes are sent back to the owning shards.
 
-Budgeting is necessary for long training. A practical DGM layer maintains $N_t\le N_{\max}$, merges only compatible unprotected prototypes, and otherwise evicts or compresses low-score memories. These budget actions are maintenance operations, not learning operations in the formal refine-or-repair sense. The refine-or-repair theorems apply between maintenance events; merge, eviction, and compression may destroy information and must be evaluated as resource-management approximations.
+Budgeting is necessary for long training. A practical DGM layer maintains $N_t\le N_{\max}$, merges only compatible unprotected concepts, and otherwise evicts or compresses low-score memories. These budget actions are maintenance operations, not learning operations in the formal refine-or-repair sense. The refine-or-repair theorems apply between maintenance events; merge, eviction, and compression may destroy information and must be evaluated as resource-management approximations.
 
 \subsection{Closed-form local repair}
 
-DGM-Ridge is the main closed-form adapter used in our checks. Let $Z\in\R^{n\times d}$ be normalized support embeddings stored by a DGM memory and let $Y\in\R^{n\times C}$ be one-hot consequences. The adapter computes the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}
+Ridge memory is the main closed-form adapter used in our checks. Let $Z\in\R^{n\times d}$ be normalized support embeddings stored by a DGM memory and let $Y\in\R^{n\times C}$ be one-hot consequences. The adapter computes the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}
 \begin{align*}
 \Gamma=(ZZ^\top+\lambda I)^{-1}Y,
 \qquad
 \operatorname{logits}(z)=zZ^\top\Gamma.
 \end{align*}
-This is projection-style repair: it fits the local adapter in one linear solve rather than by iterated backpropagation. In a large model, the same idea can be applied per prototype, per document, or per retrieved shard after the relevant distinction structure has been fixed.
+This is projection-style repair: it fits the local adapter in one linear solve rather than by iterated backpropagation. In a large model, the same idea can be applied per concept, per document, or per retrieved shard after the relevant distinction structure has been fixed.

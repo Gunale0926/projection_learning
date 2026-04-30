@@ -1,7 +1,7 @@
 \section{Minimal Refinement}
 \label{sec:minimal-refinement}
 
-Once a contradiction shows that the current atom is too coarse, the next question is not how to grow the largest possible model. It is: what is the smallest legitimate information update? The primitive operation in this paper is minimal refinement. The learner has an information structure and receives evidence that a new event or variable must become observable. The correct update adds that observability and nothing else. The sigma-algebra language is standard measure-theoretic probability, while the finite partition language is the corresponding finite special case \citep{billingsley1995probability,kallenberg2002foundations}. This section states the finite theorem first because it is the clearest form of the idea: split only the atoms cut by the evidence.
+Once a contradiction shows that the current atom is too coarse, the next question is not how to grow the largest possible model. It is: what is the least information that must be added? The primitive operation in this paper is minimal refinement. The learner has an information structure and receives evidence that a new event or variable must become observable. The correct update adds that observability and nothing else. The sigma-algebra language is standard measure-theoretic probability, while the finite partition language is the corresponding finite special case \citep{billingsley1995probability,kallenberg2002foundations}. We state the finite theorem first because it is the clearest form of the idea: split exactly the atoms crossed by the evidence.
 
 \subsection{The finite refinement rule}
 
@@ -34,4 +34,4 @@ For general spaces, the same operation is the join of sigma-algebras. If the cur
 Let $\calF\subseteq\calA$ be a sigma-algebra and let $Z$ be a random variable. The join $\calF\vee\sigma(Z)$ is the smallest sigma-algebra $\calG$ such that $\calF\subseteq\calG$ and $Z$ is $\calG$-measurable.
 \end{theorem}
 
-Thus the same object governs finite decision-tree splits and measurable-space refinement. A distinction is not an auxiliary feature added after learning; it is a change in the sigma-algebra of what the learner can condition on. The contradiction theorem in Section~\ref{sec:preliminaries} says when such a change is necessary; minimal refinement says how little information needs to be added.
+Thus the same object governs finite decision-tree splits and measurable-space refinement. A distinction is not an auxiliary feature added after learning; it is a change in the sigma-algebra of what the learner may condition on. The contradiction theorem in Section~\ref{sec:preliminaries} says when such a change is necessary; minimal refinement says how little information needs to be added.

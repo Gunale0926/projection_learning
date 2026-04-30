@@ -7,163 +7,175 @@
 \citation{sun2020test,wang2021tent,sun2025learning}
 \citation{breiman1984classification,domingos2000mining}
 \citation{shazeer2017outrageously,fedus2022switch}
-\citation{carpenter1987massively,kohonen1990self,fritzke1995growing,snell2017prototypical}
+\citation{carpenter1987massively,carpenter1987art2,kohonen1990self,fritzke1995growing,snell2017prototypical}
+\citation{grave2017improving,khandelwal2020generalization}
+\citation{ba2016using,schlag2021linear}
+\citation{sun2020test,wang2021tent,sun2025learning}
+\citation{breiman1984classification,domingos2000mining}
+\citation{shazeer2017outrageously,fedus2022switch,lample2019large}
+\citation{carpenter1987massively,carpenter1987art2,kohonen1990self,fritzke1995growing,snell2017prototypical}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Runtime learning has two failure modes. Stale state should be repaired inside an adequate concept; incompatible consequences inside one atom require refinement.}}{1}{figure.caption.2}\protected@file@percent }
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
 \newlabel{fig:two-failure-modes}{{1}{1}{Runtime learning has two failure modes. Stale state should be repaired inside an adequate concept; incompatible consequences inside one atom require refinement}{figure.caption.2}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
 \newlabel{sec:intro}{{1}{1}{Introduction}{section.1}{}}
 \citation{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}
-\@writefile{toc}{\contentsline {paragraph}{Contributions.}{2}{section*.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Organization.}{2}{section*.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Representative runtime-learning mechanisms and the single dominant update they apply when surprised. DGM's claim is not that these mechanisms are absent from prior work, but that runtime learning needs an explicit decision between refining the information structure and repairing state inside it.}}{2}{table.caption.3}\protected@file@percent }
+\newlabel{tab:runtime-learning-comparison}{{1}{2}{Representative runtime-learning mechanisms and the single dominant update they apply when surprised. DGM's claim is not that these mechanisms are absent from prior work, but that runtime learning needs an explicit decision between refining the information structure and repairing state inside it}{table.caption.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Terminology.}{2}{section*.4}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces \textsc  {RefineOrRepairStep} (structural template)}}{3}{algorithm.1}\protected@file@percent }
+\newlabel{alg:refine-repair-template}{{1}{3}{\textsc {RefineOrRepairStep} (structural template)}{algorithm.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Contributions.}{3}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Scope of the formal claims.}{3}{section*.6}\protected@file@percent }
 \citation{blackwell1953equivalent,berger1985statistical}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Information Structures and Missing Distinctions}{3}{section.2}\protected@file@percent }
-\newlabel{sec:preliminaries}{{2}{3}{Information Structures and Missing Distinctions}{section.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Information as distinctions}{3}{subsection.2.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Measurable predictors}{3}{subsection.2.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Bayes risk under information}{3}{subsection.2.3}\protected@file@percent }
-\newlabel{eq:bayes-risk}{{1}{3}{Bayes risk under information}{equation.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Organization.}{4}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Information Structures and Missing Distinctions}{4}{section.2}\protected@file@percent }
+\newlabel{sec:preliminaries}{{2}{4}{Information Structures and Missing Distinctions}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Information as distinctions}{4}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Measurable predictors}{4}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Bayes risk under information}{4}{subsection.2.3}\protected@file@percent }
+\newlabel{eq:bayes-risk}{{1}{4}{Bayes risk under information}{equation.1}{}}
 \citation{billingsley1995probability,kallenberg2002foundations}
 \citation{penrose1955generalized}
 \citation{billingsley1995probability,kallenberg2002foundations}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Contradiction inside an atom}{4}{subsection.2.4}\protected@file@percent }
-\newlabel{thm:contradiction:informal}{{2.1}{4}{Contradiction requires distinction}{theorem.2.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Notation used later}{4}{subsection.2.5}\protected@file@percent }
-\newlabel{eq:cpm-innovation}{{2}{4}{Notation used later}{equation.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Minimal Refinement}{4}{section.3}\protected@file@percent }
-\newlabel{sec:minimal-refinement}{{3}{4}{Minimal Refinement}{section.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}The finite refinement rule}{4}{subsection.3.1}\protected@file@percent }
-\newlabel{eq:finite-refinement}{{3}{4}{The finite refinement rule}{equation.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Contradiction inside an atom}{5}{subsection.2.4}\protected@file@percent }
+\newlabel{thm:contradiction:informal}{{2.1}{5}{Contradiction requires distinction}{theorem.2.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Notation used later}{5}{subsection.2.5}\protected@file@percent }
+\newlabel{eq:cpm-innovation}{{2}{5}{Notation used later}{equation.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Minimal Refinement}{5}{section.3}\protected@file@percent }
+\newlabel{sec:minimal-refinement}{{3}{5}{Minimal Refinement}{section.3}{}}
 \citation{blackwell1953equivalent,berger1985statistical}
 \citation{blackwell1953equivalent}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}The finite refinement rule}{6}{subsection.3.1}\protected@file@percent }
+\newlabel{eq:finite-refinement}{{3}{6}{The finite refinement rule}{equation.3}{}}
+\newlabel{thm:minimal-refinement:informal}{{3.1}{6}{Minimal finite refinement}{theorem.3.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}The sigma-algebra form}{6}{subsection.3.2}\protected@file@percent }
+\newlabel{eq:join-update}{{4}{6}{The sigma-algebra form}{equation.4}{}}
+\newlabel{thm:sigma-refinement:informal}{{3.2}{6}{Minimal sigma-algebra refinement}{theorem.3.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}The Value of a Distinction}{6}{section.4}\protected@file@percent }
+\newlabel{sec:value}{{4}{6}{The Value of a Distinction}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Risk monotonicity}{6}{subsection.4.1}\protected@file@percent }
+\newlabel{thm:risk-monotonicity:informal}{{4.1}{6}{Bayes-risk monotonicity}{theorem.4.1}{}}
 \citation{cover2006elements,gneiting2007strictly}
-\newlabel{thm:minimal-refinement:informal}{{3.1}{5}{Minimal finite refinement}{theorem.3.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}The sigma-algebra form}{5}{subsection.3.2}\protected@file@percent }
-\newlabel{eq:join-update}{{4}{5}{The sigma-algebra form}{equation.4}{}}
-\newlabel{thm:sigma-refinement:informal}{{3.2}{5}{Minimal sigma-algebra refinement}{theorem.3.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}The Value of a Distinction}{5}{section.4}\protected@file@percent }
-\newlabel{sec:value}{{4}{5}{The Value of a Distinction}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Risk monotonicity}{5}{subsection.4.1}\protected@file@percent }
-\newlabel{thm:risk-monotonicity:informal}{{4.1}{5}{Bayes-risk monotonicity}{theorem.4.1}{}}
 \citation{billingsley1995probability,kallenberg2002foundations}
 \citation{breiman1984classification,domingos2000mining}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Log loss}{6}{subsection.4.2}\protected@file@percent }
-\newlabel{thm:log-value:informal}{{4.2}{6}{Log-loss value}{theorem.4.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Squared loss}{6}{subsection.4.3}\protected@file@percent }
-\newlabel{thm:squared-value:informal}{{4.3}{6}{Squared-loss value}{theorem.4.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Finite empirical scores}{6}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Log loss}{7}{subsection.4.2}\protected@file@percent }
+\newlabel{thm:log-value:informal}{{4.2}{7}{Log-loss value}{theorem.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Squared loss}{7}{subsection.4.3}\protected@file@percent }
+\newlabel{thm:squared-value:informal}{{4.3}{7}{Squared-loss value}{theorem.4.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Finite empirical scores}{7}{subsection.4.4}\protected@file@percent }
 \citation{billingsley1995probability,kallenberg2002foundations}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Distinction Graph Machines}{7}{section.5}\protected@file@percent }
-\newlabel{sec:algorithms}{{5}{7}{Distinction Graph Machines}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Why a graph, not a tree?}{7}{subsection.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}State: anchors, centroids, memories, and edges}{7}{subsection.5.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces DGM state. Anchors are stable concept identities, centroids are movable retrieval statistics, edges are distinction generators, and node memories are repaired after a concept is judged adequate.}}{8}{figure.caption.5}\protected@file@percent }
-\newlabel{fig:dgm-state}{{2}{8}{DGM state. Anchors are stable concept identities, centroids are movable retrieval statistics, edges are distinction generators, and node memories are repaired after a concept is judged adequate}{figure.caption.5}{}}
-\newlabel{thm:prototype-edge:informal}{{5.1}{8}{Prototype distinction separates its endpoints}{theorem.5.1}{}}
-\newlabel{thm:dgm-graph-partition:informal}{{5.2}{8}{DGM graph generates a finite information structure}{theorem.5.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Edge-gated prediction}{8}{subsection.5.3}\protected@file@percent }
-\newlabel{eq:edge-gated-routing}{{5}{9}{Edge-gated prediction}{equation.5}{}}
-\newlabel{thm:hard-dgm-measurable:informal}{{5.3}{9}{Anchor-DGM routing is graph-plus-anchor-order measurable}{theorem.5.3}{}}
-\newlabel{cond:candidate-recall}{{5.4}{9}{Candidate recall}{theorem.5.4}{}}
-\newlabel{thm:soft-routing-hard-limit:informal}{{5.5}{10}{Soft routing approaches hard routing}{theorem.5.5}{}}
-\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces \textsc  {Predict} for a Distinction Graph Machine}}{10}{algorithm.1}\protected@file@percent }
-\newlabel{alg:dgm-predict}{{1}{10}{\textsc {Predict} for a Distinction Graph Machine}{algorithm.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Refine or repair on a graph}{10}{subsection.5.4}\protected@file@percent }
-\newlabel{eq:guarded-repair}{{6}{11}{Refine or repair on a graph}{equation.6}{}}
-\newlabel{eq:refine-accept}{{7}{11}{Refine or repair on a graph}{equation.7}{}}
-\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces \textsc  {Observe} for a Distinction Graph Machine}}{12}{algorithm.2}\protected@file@percent }
-\newlabel{alg:dgm-observe}{{2}{12}{\textsc {Observe} for a Distinction Graph Machine}{algorithm.2}{}}
-\newlabel{def:monotone-repair}{{5.6}{12}{Guarded monotone local repair}{theorem.5.6}{}}
-\newlabel{thm:refine-repair-descent:informal}{{5.7}{12}{Refine-or-repair objective descent}{theorem.5.7}{}}
-\newlabel{thm:safe-refinement:informal}{{5.8}{13}{Statistically safe finite-class refinement}{theorem.5.8}{}}
-\newlabel{cor:lm-clipped-refinement:informal}{{5.9}{13}{Bounded language-model refinement score}{theorem.5.9}{}}
-\newlabel{thm:anchor-stable:informal}{{5.10}{13}{Anchor-stable DGM information structure}{theorem.5.10}{}}
-\newlabel{cor:finite-refinements:informal}{{5.11}{13}{Finite number of accepted refinements}{theorem.5.11}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Trees as a hard-routing special case}{13}{subsection.5.5}\protected@file@percent }
-\newlabel{prop:tree-as-dgm:informal}{{5.12}{13}{Trees as generalized hard-DGMs}{theorem.5.12}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Distinction Graph Machines}{8}{section.5}\protected@file@percent }
+\newlabel{sec:algorithms}{{5}{8}{Distinction Graph Machines}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Why a graph, not a tree?}{8}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}State: anchors, centroids, memories, and edges}{8}{subsection.5.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces DGM state. Anchors are stable concept identities, centroids are movable retrieval statistics, distinction edges generate the information structure, and concept memories are repaired after a concept is judged adequate.}}{9}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:dgm-state}{{2}{9}{DGM state. Anchors are stable concept identities, centroids are movable retrieval statistics, distinction edges generate the information structure, and concept memories are repaired after a concept is judged adequate}{figure.caption.8}{}}
+\newlabel{thm:anchor-edge:informal}{{5.1}{9}{Anchor distinction separates its endpoints}{theorem.5.1}{}}
+\newlabel{thm:dgm-graph-partition:informal}{{5.2}{10}{DGM graph generates a finite information structure}{theorem.5.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Edge-gated prediction}{10}{subsection.5.3}\protected@file@percent }
+\newlabel{eq:edge-gated-routing}{{5}{10}{Edge-gated prediction}{equation.5}{}}
+\newlabel{thm:hard-dgm-measurable:informal}{{5.3}{11}{Anchor-based hard routing is graph-plus-anchor-order measurable}{theorem.5.3}{}}
+\newlabel{cond:candidate-recall}{{5.4}{11}{Candidate recall}{theorem.5.4}{}}
+\newlabel{thm:soft-routing-hard-limit:informal}{{5.5}{11}{Soft routing approaches hard routing}{theorem.5.5}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces \textsc  {Predict} for a Distinction Graph Machine}}{11}{algorithm.2}\protected@file@percent }
+\newlabel{alg:dgm-predict}{{2}{11}{\textsc {Predict} for a Distinction Graph Machine}{algorithm.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Refine or repair on a graph}{12}{subsection.5.4}\protected@file@percent }
+\newlabel{eq:guarded-repair}{{6}{12}{Refine or repair on a graph}{equation.6}{}}
+\newlabel{eq:refine-accept}{{7}{13}{Refine or repair on a graph}{equation.7}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {3}{\ignorespaces \textsc  {Observe} for a Distinction Graph Machine}}{14}{algorithm.3}\protected@file@percent }
+\newlabel{alg:dgm-observe}{{3}{14}{\textsc {Observe} for a Distinction Graph Machine}{algorithm.3}{}}
+\newlabel{def:monotone-repair}{{5.6}{14}{Guarded monotone local repair}{theorem.5.6}{}}
+\newlabel{thm:refine-repair-descent:informal}{{5.7}{14}{Refine-or-repair objective descent}{theorem.5.7}{}}
+\newlabel{thm:safe-refinement:informal}{{5.8}{15}{Statistically safe finite-class refinement}{theorem.5.8}{}}
+\newlabel{cor:lm-clipped-refinement:informal}{{5.9}{15}{Bounded language-model refinement score}{theorem.5.9}{}}
+\newlabel{thm:anchor-stable:informal}{{5.10}{15}{Anchor-stable DGM information structure}{theorem.5.10}{}}
+\newlabel{cor:finite-refinements:informal}{{5.11}{15}{Finite number of accepted refinements}{theorem.5.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Trees as a hard-routing special case}{15}{subsection.5.5}\protected@file@percent }
+\newlabel{prop:tree-as-dgm:informal}{{5.12}{15}{Trees as generalized hard-DGMs}{theorem.5.12}{}}
 \citation{tikhonov1977solutions,hoerl1970ridge}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Canonical local memories}{14}{subsection.5.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{DGM-Mean.}{14}{section*.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{DGM-Ridge.}{14}{section*.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}From DGM to DGM-Embedding}{14}{subsection.5.7}\protected@file@percent }
-\newlabel{sec:language-dgm}{{5.7}{14}{From DGM to DGM-Embedding}{subsection.5.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Canonical local memories}{16}{subsection.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Mean memory.}{16}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Ridge memory.}{16}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}From DGM to DGM-Embedding}{16}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:language-dgm}{{5.7}{16}{From DGM to DGM-Embedding}{subsection.5.7}{}}
 \citation{indyk1998approximate,johnson2019billion}
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Complexity}{15}{subsection.5.8}\protected@file@percent }
-\newlabel{thm:dpm-complexity:informal}{{5.13}{15}{DGM data-structure bound}{theorem.5.13}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}DGM-Embedding: A Runtime Memory Layer for Language Models}{15}{section.6}\protected@file@percent }
-\newlabel{sec:large-model-training}{{6}{15}{DGM-Embedding: A Runtime Memory Layer for Language Models}{section.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Hidden-state concepts}{15}{subsection.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Logit correction}{16}{subsection.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Read before observe}{16}{subsection.6.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces DGM-Embedding sequence update. The layer reads before the next token is known, then uses the observed next token as evidence for repair or refinement.}}{17}{figure.caption.8}\protected@file@percent }
-\newlabel{fig:dgm-embedding-update}{{3}{17}{DGM-Embedding sequence update. The layer reads before the next token is known, then uses the observed next token as evidence for repair or refinement}{figure.caption.8}{}}
-\@writefile{loa}{\contentsline {algorithm}{\numberline {3}{\ignorespaces \textsc  {ObserveNextToken} for DGM-Embedding}}{17}{algorithm.3}\protected@file@percent }
-\newlabel{alg:dgm-lm}{{3}{17}{\textsc {ObserveNextToken} for DGM-Embedding}{algorithm.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Sequential detached training}{17}{subsection.6.4}\protected@file@percent }
-\@writefile{loa}{\contentsline {algorithm}{\numberline {4}{\ignorespaces \textsc  {SequentialDetachedTrainStep} for a DGM-Embedding Transformer layer}}{18}{algorithm.4}\protected@file@percent }
-\newlabel{alg:dgm-train-step}{{4}{18}{\textsc {SequentialDetachedTrainStep} for a DGM-Embedding Transformer layer}{algorithm.4}{}}
-\@writefile{toc}{\contentsline {paragraph}{Block-lagged approximation.}{18}{section*.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Training modes for representation drift}{18}{subsection.6.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Mode A: frozen encoder.}{18}{section*.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Mode B: EMA query encoder.}{18}{section*.11}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Mode C: periodic state rebuild.}{18}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Complexity}{17}{subsection.5.8}\protected@file@percent }
+\newlabel{thm:dgm-complexity:informal}{{5.13}{17}{DGM data-structure bound}{theorem.5.13}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}DGM-Embedding: A Runtime Memory Layer for Language Models}{17}{section.6}\protected@file@percent }
+\newlabel{sec:large-model-training}{{6}{17}{DGM-Embedding: A Runtime Memory Layer for Language Models}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Hidden-state concepts}{17}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Logit correction}{18}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Read before observe}{18}{subsection.6.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces DGM-Embedding sequence update. The layer reads before the next token is known, then uses the observed next token as evidence for repair or refinement.}}{19}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:dgm-embedding-update}{{3}{19}{DGM-Embedding sequence update. The layer reads before the next token is known, then uses the observed next token as evidence for repair or refinement}{figure.caption.11}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {4}{\ignorespaces \textsc  {ObserveNextToken} for DGM-Embedding}}{19}{algorithm.4}\protected@file@percent }
+\newlabel{alg:dgm-lm}{{4}{19}{\textsc {ObserveNextToken} for DGM-Embedding}{algorithm.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Sequential detached training}{19}{subsection.6.4}\protected@file@percent }
+\@writefile{loa}{\contentsline {algorithm}{\numberline {5}{\ignorespaces \textsc  {SequentialDetachedTrainStep} for a DGM-Embedding Transformer layer}}{20}{algorithm.5}\protected@file@percent }
+\newlabel{alg:dgm-train-step}{{5}{20}{\textsc {SequentialDetachedTrainStep} for a DGM-Embedding Transformer layer}{algorithm.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Block-lagged approximation.}{20}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Training modes for representation drift}{20}{subsection.6.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Mode A: frozen encoder.}{20}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Mode B: EMA query encoder.}{20}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Mode C: periodic state rebuild.}{20}{section*.15}\protected@file@percent }
 \citation{crammer2006online,vovk1997competitive,schlag2021linear}
 \citation{tikhonov1977solutions,hoerl1970ridge}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.6}Non-canonical adapter extension}{19}{subsection.6.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.7}Cost and systems notes}{19}{subsection.6.7}\protected@file@percent }
-\newlabel{thm:dgm-layer-cost:informal}{{6.1}{19}{DGM layer cost}{theorem.6.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.6}Non-canonical adapter extension}{21}{subsection.6.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.7}Cost and systems notes}{21}{subsection.6.7}\protected@file@percent }
+\newlabel{thm:dgm-layer-cost:informal}{{6.1}{21}{DGM layer cost}{theorem.6.1}{}}
 \citation{tikhonov1977solutions,hoerl1970ridge}
 \citation{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.8}Closed-form local repair}{20}{subsection.6.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Guarantees}{20}{section.7}\protected@file@percent }
-\newlabel{sec:technical-overview}{{7}{20}{Guarantees}{section.7}{}}
-\newlabel{thm:contradiction:sketch}{{7.1}{20}{Contradiction, proof sketch for Theorem~\ref {thm:contradiction:formal}}{theorem.7.1}{}}
-\newlabel{thm:minimal-refinement:sketch}{{7.2}{20}{Minimal finite refinement, proof sketch for Theorem~\ref {thm:minimal-refinement:formal}}{theorem.7.2}{}}
-\newlabel{thm:sigma-refinement:sketch}{{7.3}{21}{Minimal sigma-algebra refinement, proof sketch for Theorem~\ref {thm:sigma-refinement:formal}}{theorem.7.3}{}}
-\newlabel{thm:risk-monotonicity:sketch}{{7.4}{21}{Risk monotonicity, proof sketch for Theorem~\ref {thm:risk-monotonicity:formal}}{theorem.7.4}{}}
-\newlabel{thm:log-value:sketch}{{7.5}{21}{Log-loss value, proof sketch for Theorem~\ref {thm:log-value:formal}}{theorem.7.5}{}}
-\newlabel{thm:squared-value:sketch}{{7.6}{22}{Squared-loss value, proof sketch for Theorem~\ref {thm:squared-value:formal}}{theorem.7.6}{}}
-\newlabel{thm:prototype-edge:sketch}{{7.7}{22}{Prototype edge separation, proof sketch for Theorem~\ref {thm:prototype-edge:formal}}{theorem.7.7}{}}
-\newlabel{thm:dgm-graph-partition:sketch}{{7.8}{22}{DGM graph partition, proof sketch for Theorem~\ref {thm:dgm-graph-partition:formal}}{theorem.7.8}{}}
-\newlabel{thm:hard-dgm-measurable:sketch}{{7.9}{22}{Hard-DGM measurability, proof sketch for Theorem~\ref {thm:hard-dgm-measurable:formal}}{theorem.7.9}{}}
-\newlabel{thm:soft-routing-hard-limit:sketch}{{7.10}{22}{Soft routing hard limit, proof sketch for Theorem~\ref {thm:soft-routing-hard-limit:formal}}{theorem.7.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.8}Closed-form local repair}{22}{subsection.6.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Guarantees}{22}{section.7}\protected@file@percent }
+\newlabel{sec:technical-overview}{{7}{22}{Guarantees}{section.7}{}}
+\newlabel{thm:contradiction:sketch}{{7.1}{22}{Contradiction, proof sketch for Theorem~\ref {thm:contradiction:formal}}{theorem.7.1}{}}
+\newlabel{thm:minimal-refinement:sketch}{{7.2}{22}{Minimal finite refinement, proof sketch for Theorem~\ref {thm:minimal-refinement:formal}}{theorem.7.2}{}}
+\newlabel{thm:sigma-refinement:sketch}{{7.3}{23}{Minimal sigma-algebra refinement, proof sketch for Theorem~\ref {thm:sigma-refinement:formal}}{theorem.7.3}{}}
+\newlabel{thm:risk-monotonicity:sketch}{{7.4}{23}{Risk monotonicity, proof sketch for Theorem~\ref {thm:risk-monotonicity:formal}}{theorem.7.4}{}}
+\newlabel{thm:log-value:sketch}{{7.5}{23}{Log-loss value, proof sketch for Theorem~\ref {thm:log-value:formal}}{theorem.7.5}{}}
+\newlabel{thm:squared-value:sketch}{{7.6}{24}{Squared-loss value, proof sketch for Theorem~\ref {thm:squared-value:formal}}{theorem.7.6}{}}
+\newlabel{thm:anchor-edge:sketch}{{7.7}{24}{Anchor edge separation, proof sketch for Theorem~\ref {thm:anchor-edge:formal}}{theorem.7.7}{}}
+\newlabel{thm:dgm-graph-partition:sketch}{{7.8}{24}{DGM graph partition, proof sketch for Theorem~\ref {thm:dgm-graph-partition:formal}}{theorem.7.8}{}}
+\newlabel{thm:hard-dgm-measurable:sketch}{{7.9}{24}{Hard-route measurability, proof sketch for Theorem~\ref {thm:hard-dgm-measurable:formal}}{theorem.7.9}{}}
+\newlabel{thm:soft-routing-hard-limit:sketch}{{7.10}{24}{Soft routing hard limit, proof sketch for Theorem~\ref {thm:soft-routing-hard-limit:formal}}{theorem.7.10}{}}
 \citation{hoeffding1963probability}
 \citation{devroye1996probabilistic}
-\newlabel{thm:refine-repair-descent:sketch}{{7.11}{23}{Refine-or-repair descent, proof sketch for Theorem~\ref {thm:refine-repair-descent:formal}}{theorem.7.11}{}}
-\newlabel{thm:safe-refinement:sketch}{{7.12}{23}{Safe refinement, proof sketch for Theorem~\ref {thm:safe-refinement:formal}}{theorem.7.12}{}}
-\newlabel{cor:lm-clipped-refinement:sketch}{{7.13}{23}{Bounded LM score, proof sketch for Corollary~\ref {cor:lm-clipped-refinement:formal}}{theorem.7.13}{}}
-\newlabel{thm:anchor-stable:sketch}{{7.14}{23}{Anchor-stable DGM information structure, proof sketch for Theorem~\ref {thm:anchor-stable:formal}}{theorem.7.14}{}}
-\newlabel{cor:finite-refinements:sketch}{{7.15}{23}{Finite refinements, proof sketch for Corollary~\ref {cor:finite-refinements:formal}}{theorem.7.15}{}}
-\newlabel{prop:tree-as-dgm:sketch}{{7.16}{23}{Tree as generalized hard-DGM, proof sketch for Proposition~\ref {prop:tree-as-dgm:formal}}{theorem.7.16}{}}
-\newlabel{thm:dpm-complexity:sketch}{{7.17}{23}{DGM data structure, proof sketch for Theorem~\ref {thm:dpm-complexity:formal}}{theorem.7.17}{}}
-\newlabel{thm:dgm-layer-cost:sketch}{{7.18}{24}{DGM layer cost, proof sketch for Theorem~\ref {thm:dgm-layer-cost:formal}}{theorem.7.18}{}}
-\newlabel{thm:one-hot-measurable:sketch}{{7.19}{24}{One-hot memory, proof sketch for Theorem~\ref {thm:one-hot-measurable:formal}}{theorem.7.19}{}}
+\newlabel{thm:refine-repair-descent:sketch}{{7.11}{25}{Refine-or-repair descent, proof sketch for Theorem~\ref {thm:refine-repair-descent:formal}}{theorem.7.11}{}}
+\newlabel{thm:safe-refinement:sketch}{{7.12}{25}{Safe refinement, proof sketch for Theorem~\ref {thm:safe-refinement:formal}}{theorem.7.12}{}}
+\newlabel{cor:lm-clipped-refinement:sketch}{{7.13}{25}{Bounded LM score, proof sketch for Corollary~\ref {cor:lm-clipped-refinement:formal}}{theorem.7.13}{}}
+\newlabel{thm:anchor-stable:sketch}{{7.14}{25}{Anchor-stable DGM information structure, proof sketch for Theorem~\ref {thm:anchor-stable:formal}}{theorem.7.14}{}}
+\newlabel{cor:finite-refinements:sketch}{{7.15}{25}{Finite refinements, proof sketch for Corollary~\ref {cor:finite-refinements:formal}}{theorem.7.15}{}}
+\newlabel{prop:tree-as-dgm:sketch}{{7.16}{25}{Tree as generalized hard-DGM, proof sketch for Proposition~\ref {prop:tree-as-dgm:formal}}{theorem.7.16}{}}
+\newlabel{thm:dgm-complexity:sketch}{{7.17}{25}{DGM data structure, proof sketch for Theorem~\ref {thm:dgm-complexity:formal}}{theorem.7.17}{}}
+\newlabel{thm:dgm-layer-cost:sketch}{{7.18}{26}{DGM layer cost, proof sketch for Theorem~\ref {thm:dgm-layer-cost:formal}}{theorem.7.18}{}}
+\newlabel{thm:one-hot-measurable:sketch}{{7.19}{26}{One-hot memory, proof sketch for Theorem~\ref {thm:one-hot-measurable:formal}}{theorem.7.19}{}}
 \citation{bregman1967relaxation,crammer2006online,vovk1997competitive,ba2016using,schlag2021linear}
-\newlabel{thm:cpm-conflict-distinction:sketch}{{7.20}{25}{CPM conflict, proof sketch for Theorem~\ref {thm:cpm-conflict-distinction:formal}}{theorem.7.20}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}From Distinctions to Projection Memory}{25}{section.8}\protected@file@percent }
-\newlabel{sec:projection-bridge}{{8}{25}{From Distinctions to Projection Memory}{section.8}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}One-hot partition memory}{25}{subsection.8.1}\protected@file@percent }
-\newlabel{thm:one-hot-measurable:informal}{{8.1}{25}{One-hot memory is partition-measurable}{theorem.8.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}CPM conflict as missing distinction}{25}{subsection.8.2}\protected@file@percent }
-\newlabel{thm:cpm-conflict-distinction:informal}{{8.2}{25}{CPM conflict equals missing distinction}{theorem.8.2}{}}
+\newlabel{thm:cpm-conflict-distinction:sketch}{{7.20}{27}{CPM conflict, proof sketch for Theorem~\ref {thm:cpm-conflict-distinction:formal}}{theorem.7.20}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}From Distinctions to Projection Memory}{27}{section.8}\protected@file@percent }
+\newlabel{sec:projection-bridge}{{8}{27}{From Distinctions to Projection Memory}{section.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}One-hot partition memory}{27}{subsection.8.1}\protected@file@percent }
+\newlabel{thm:one-hot-measurable:informal}{{8.1}{27}{One-hot memory is partition-measurable}{theorem.8.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}CPM conflict as missing distinction}{27}{subsection.8.2}\protected@file@percent }
+\newlabel{thm:cpm-conflict-distinction:informal}{{8.2}{27}{CPM conflict equals missing distinction}{theorem.8.2}{}}
 \citation{rumelhart1986learning}
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces DGM-style distinction memory versus backpropagation on a limited online contextual-XOR stream. Offline backprop is a batch upper bound. The relevant runtime comparison is between online backpropagation and online distinction refinement. The distinction-memory run has monotone local scoring-objective decrease at accepted refinements in all runs.}}{26}{table.caption.13}\protected@file@percent }
-\newlabel{tab:dgm-check}{{1}{26}{DGM-style distinction memory versus backpropagation on a limited online contextual-XOR stream. Offline backprop is a batch upper bound. The relevant runtime comparison is between online backpropagation and online distinction refinement. The distinction-memory run has monotone local scoring-objective decrease at accepted refinements in all runs}{table.caption.13}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}The hierarchy}{26}{subsection.8.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {9}Experiments and Computational Checks}{26}{section.9}\protected@file@percent }
-\newlabel{sec:experiments}{{9}{26}{Experiments and Computational Checks}{section.9}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Single-run hard-routing ablation on XOR Gaussian clusters. This checks that local repair alone cannot solve a missing-distinction task, while accepted refinements decrease the local penalized objective and recover the required partition.}}{27}{table.caption.14}\protected@file@percent }
-\newlabel{tab:repair-refine-ablation}{{2}{27}{Single-run hard-routing ablation on XOR Gaussian clusters. This checks that local repair alone cannot solve a missing-distinction task, while accepted refinements decrease the local penalized objective and recover the required partition}{table.caption.14}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Hidden-regime online sequence prediction, averaged over five seeds. The useful operation is to create distinctions when identical tokens have regime-dependent consequences. The refine+repair run creates runtime concepts and had monotone local scoring-objective decrease at accepted refinements in all runs. Accuracy and log loss are both reported because the synthetic baselines differ in calibration.}}{27}{table.caption.15}\protected@file@percent }
-\newlabel{tab:hidden-regime-check}{{3}{27}{Hidden-regime online sequence prediction, averaged over five seeds. The useful operation is to create distinctions when identical tokens have regime-dependent consequences. The refine+repair run creates runtime concepts and had monotone local scoring-objective decrease at accepted refinements in all runs. Accuracy and log loss are both reported because the synthetic baselines differ in calibration}{table.caption.15}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Image-stream checks. The point is not to beat fully trained image models, but to compare one-pass runtime updates. Prototype/exemplar distinction memory beats one-step online backpropagation in both streams and is competitive with the small offline MLP on MNIST.}}{28}{table.caption.16}\protected@file@percent }
-\newlabel{tab:image-check}{{4}{28}{Image-stream checks. The point is not to beat fully trained image models, but to compare one-pass runtime updates. Prototype/exemplar distinction memory beats one-step online backpropagation in both streams and is competitive with the small offline MLP on MNIST}{table.caption.16}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Few-shot adapter benchmark on frozen embeddings. The kNN memory row is the nonparametric retrieval baseline on the same support examples. DGM-Ridge fits the adapter by a closed-form projection solve. It is substantially faster than the tuned backpropagation head and achieves higher accuracy in this local run.}}{28}{table.caption.17}\protected@file@percent }
-\newlabel{tab:adapter-benchmark}{{5}{28}{Few-shot adapter benchmark on frozen embeddings. The kNN memory row is the nonparametric retrieval baseline on the same support examples. DGM-Ridge fits the adapter by a closed-form projection solve. It is substantially faster than the tuned backpropagation head and achieves higher accuracy in this local run}{table.caption.17}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{28}{section.10}\protected@file@percent }
-\newlabel{sec:conclusion}{{10}{28}{Conclusion}{section.10}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Synthetic next-token stream. The task is designed to isolate runtime adaptation: the hidden context determines the token transition rule, so the useful operation is to remember a local prefix-to-token consequence after observing it. DGM-style memory approaches the offline batch MLP while one-step online backpropagation adapts slowly.}}{29}{table.caption.18}\protected@file@percent }
-\newlabel{tab:lm-check}{{6}{29}{Synthetic next-token stream. The task is designed to isolate runtime adaptation: the hidden context determines the token transition rule, so the useful operation is to remember a local prefix-to-token consequence after observing it. DGM-style memory approaches the offline batch MLP while one-step online backpropagation adapts slowly}{table.caption.18}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces DGM graph memory versus backpropagation on a limited online contextual-XOR stream. Offline backprop is a batch upper bound. The relevant runtime comparison is between online backpropagation and online distinction refinement. The DGM run has monotone local scoring-objective decrease at accepted refinements in all runs.}}{28}{table.caption.16}\protected@file@percent }
+\newlabel{tab:dgm-check}{{2}{28}{DGM graph memory versus backpropagation on a limited online contextual-XOR stream. Offline backprop is a batch upper bound. The relevant runtime comparison is between online backpropagation and online distinction refinement. The DGM run has monotone local scoring-objective decrease at accepted refinements in all runs}{table.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}The hierarchy}{28}{subsection.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Experiments and Computational Checks}{28}{section.9}\protected@file@percent }
+\newlabel{sec:experiments}{{9}{28}{Experiments and Computational Checks}{section.9}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Single-run hard-routing ablation on XOR Gaussian clusters. This checks that local repair alone cannot solve a missing-distinction task, while accepted refinements decrease the local penalized objective and recover the required partition.}}{29}{table.caption.17}\protected@file@percent }
+\newlabel{tab:repair-refine-ablation}{{3}{29}{Single-run hard-routing ablation on XOR Gaussian clusters. This checks that local repair alone cannot solve a missing-distinction task, while accepted refinements decrease the local penalized objective and recover the required partition}{table.caption.17}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Hidden-regime online sequence prediction, averaged over five seeds. The useful operation is to create distinctions when identical tokens have regime-dependent consequences. The refine+repair run creates runtime concepts and had monotone local scoring-objective decrease at accepted refinements in all runs. Accuracy and log loss are both reported because the synthetic baselines differ in calibration.}}{29}{table.caption.18}\protected@file@percent }
+\newlabel{tab:hidden-regime-check}{{4}{29}{Hidden-regime online sequence prediction, averaged over five seeds. The useful operation is to create distinctions when identical tokens have regime-dependent consequences. The refine+repair run creates runtime concepts and had monotone local scoring-objective decrease at accepted refinements in all runs. Accuracy and log loss are both reported because the synthetic baselines differ in calibration}{table.caption.18}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Image-stream checks. The point is not to beat fully trained image models, but to compare one-pass runtime updates. DGM memory beats one-step online backpropagation in both streams and is competitive with the small offline MLP on MNIST.}}{30}{table.caption.19}\protected@file@percent }
+\newlabel{tab:image-check}{{5}{30}{Image-stream checks. The point is not to beat fully trained image models, but to compare one-pass runtime updates. DGM memory beats one-step online backpropagation in both streams and is competitive with the small offline MLP on MNIST}{table.caption.19}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Few-shot adapter benchmark on frozen embeddings. The kNN memory row is the nonparametric retrieval baseline on the same support examples. Ridge memory fits the adapter by a closed-form projection solve. It is substantially faster than the tuned backpropagation head and achieves higher accuracy in this local run.}}{30}{table.caption.20}\protected@file@percent }
+\newlabel{tab:adapter-benchmark}{{6}{30}{Few-shot adapter benchmark on frozen embeddings. The kNN memory row is the nonparametric retrieval baseline on the same support examples. Ridge memory fits the adapter by a closed-form projection solve. It is substantially faster than the tuned backpropagation head and achieves higher accuracy in this local run}{table.caption.20}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{30}{section.10}\protected@file@percent }
+\newlabel{sec:conclusion}{{10}{30}{Conclusion}{section.10}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Synthetic next-token stream. The task is designed to isolate runtime adaptation: the hidden context determines the token transition rule, so the useful operation is to remember a local prefix-to-token consequence after observing it. DGM memory approaches the offline batch MLP while one-step online backpropagation adapts slowly.}}{31}{table.caption.21}\protected@file@percent }
+\newlabel{tab:lm-check}{{7}{31}{Synthetic next-token stream. The task is designed to isolate runtime adaptation: the hidden context determines the token transition rule, so the useful operation is to remember a local prefix-to-token consequence after observing it. DGM memory approaches the offline batch MLP while one-step online backpropagation adapts slowly}{table.caption.21}{}}
 \bibstyle{alpha}
 \bibdata{ref}
 \bibcite{berger1985statistical}{{Ber85}{}{{}}{{}}}
@@ -223,10 +235,10 @@
 \bibcite{wang2021tent}{{WSL{$^{+}$}21}{}{{}}{{}}}
 \bibcite{yoon2018lifelong}{{YYLH18}{}{{}}{{}}}
 \bibcite{zhang2022memo}{{ZLF22}{}{{}}{{}}}
-\@writefile{toc}{\contentsline {section}{\numberline {A}Appendix Roadmap}{35}{appendix.A}\protected@file@percent }
-\newlabel{app:roadmap}{{A}{35}{Appendix Roadmap}{appendix.A}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {B}Limitations}{35}{appendix.B}\protected@file@percent }
-\newlabel{app:limitations}{{B}{35}{Limitations}{appendix.B}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Appendix Roadmap}{37}{appendix.A}\protected@file@percent }
+\newlabel{app:roadmap}{{A}{37}{Appendix Roadmap}{appendix.A}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {B}Limitations}{37}{appendix.B}\protected@file@percent }
+\newlabel{app:limitations}{{B}{37}{Limitations}{appendix.B}{}}
 \citation{grave2017improving,khandelwal2020generalization}
 \citation{wu2022memorizing,borgeaud2022improving,lewis2020retrieval,rae2016scaling}
 \citation{ba2016using,katharopoulos2020transformers,schlag2021linear,crammer2006online,vovk1997competitive,bregman1967relaxation,tikhonov1977solutions,hoerl1970ridge}
@@ -234,10 +246,10 @@
 \citation{breiman1984classification,domingos2000mining,bifet2009adaptive,manapragada2018extremely,lakshminarayanan2014mondrian}
 \citation{carpenter1987massively,carpenter1987art2,grossberg2013adaptive}
 \citation{kohonen1990self,kohonen1995self,martinetz1991neural,fritzke1995growing,snell2017prototypical}
-\@writefile{toc}{\contentsline {section}{\numberline {C}Related Work}{36}{appendix.C}\protected@file@percent }
-\newlabel{app:related}{{C}{36}{Related Work}{appendix.C}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Methods that repair without refining}{36}{subsection.C.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Methods that refine without local repair}{36}{subsection.C.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Related Work}{38}{appendix.C}\protected@file@percent }
+\newlabel{app:related}{{C}{38}{Related Work}{appendix.C}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Methods that repair without refining}{38}{subsection.C.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Methods that refine without local repair}{38}{subsection.C.2}\protected@file@percent }
 \citation{koh2020concept,ganter1999formal}
 \citation{shazeer2017outrageously,fedus2022switch,lample2019large}
 \citation{weston2015memory,sukhbaatar2015end,graves2014neural,graves2016hybrid}
@@ -246,36 +258,36 @@
 \citation{blackwell1953equivalent,berger1985statistical}
 \citation{cover2006elements,gneiting2007strictly}
 \citation{billingsley1995probability,kallenberg2002foundations}
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Methods that route without runtime concept creation}{37}{subsection.C.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {C.4}DGM's position}{37}{subsection.C.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {D}Minimal Refinement Proofs}{37}{appendix.D}\protected@file@percent }
-\newlabel{app:refinement-proofs}{{D}{37}{Minimal Refinement Proofs}{appendix.D}{}}
-\newlabel{thm:minimal-refinement:formal}{{D.1}{37}{Minimal finite refinement, formal version of Theorem~\ref {thm:minimal-refinement:informal}}{theorem.D.1}{}}
-\newlabel{thm:sigma-refinement:formal}{{D.2}{38}{Minimal sigma-algebra refinement, formal version of Theorem~\ref {thm:sigma-refinement:informal}}{theorem.D.2}{}}
-\newlabel{thm:contradiction:formal}{{D.3}{38}{Contradiction requires distinction, formal version of Theorem~\ref {thm:contradiction:informal}}{theorem.D.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Methods that route without runtime concept creation}{39}{subsection.C.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.4}DGM's position}{39}{subsection.C.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {D}Minimal Refinement Proofs}{39}{appendix.D}\protected@file@percent }
+\newlabel{app:refinement-proofs}{{D}{39}{Minimal Refinement Proofs}{appendix.D}{}}
+\newlabel{thm:minimal-refinement:formal}{{D.1}{39}{Minimal finite refinement, formal version of Theorem~\ref {thm:minimal-refinement:informal}}{theorem.D.1}{}}
+\newlabel{thm:sigma-refinement:formal}{{D.2}{40}{Minimal sigma-algebra refinement, formal version of Theorem~\ref {thm:sigma-refinement:informal}}{theorem.D.2}{}}
+\newlabel{thm:contradiction:formal}{{D.3}{40}{Contradiction requires distinction, formal version of Theorem~\ref {thm:contradiction:informal}}{theorem.D.3}{}}
 \citation{blackwell1953equivalent,berger1985statistical,cover2006elements,gneiting2007strictly,billingsley1995probability,kallenberg2002foundations}
-\@writefile{toc}{\contentsline {section}{\numberline {E}Value of Distinction Proofs}{39}{appendix.E}\protected@file@percent }
-\newlabel{app:value-proofs}{{E}{39}{Value of Distinction Proofs}{appendix.E}{}}
-\newlabel{thm:risk-monotonicity:formal}{{E.1}{39}{Bayes-risk monotonicity, formal version of Theorem~\ref {thm:risk-monotonicity:informal}}{theorem.E.1}{}}
-\newlabel{thm:log-value:formal}{{E.2}{39}{Log-loss value, formal version of Theorem~\ref {thm:log-value:informal}}{theorem.E.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {E}Value of Distinction Proofs}{41}{appendix.E}\protected@file@percent }
+\newlabel{app:value-proofs}{{E}{41}{Value of Distinction Proofs}{appendix.E}{}}
+\newlabel{thm:risk-monotonicity:formal}{{E.1}{41}{Bayes-risk monotonicity, formal version of Theorem~\ref {thm:risk-monotonicity:informal}}{theorem.E.1}{}}
+\newlabel{thm:log-value:formal}{{E.2}{41}{Log-loss value, formal version of Theorem~\ref {thm:log-value:informal}}{theorem.E.2}{}}
 \citation{hoeffding1963probability,devroye1996probabilistic,indyk1998approximate,johnson2019billion,penrose1955generalized,tikhonov1977solutions,hoerl1970ridge}
-\newlabel{thm:squared-value:formal}{{E.3}{40}{Squared-loss value, formal version of Theorem~\ref {thm:squared-value:informal}}{theorem.E.3}{}}
-\newlabel{prop:sse-split:formal}{{E.4}{40}{Finite squared-loss split identity}{theorem.E.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {F}DGM Algorithm and Projection-Bridge Proofs}{41}{appendix.F}\protected@file@percent }
-\newlabel{app:algorithm-bridge-proofs}{{F}{41}{DGM Algorithm and Projection-Bridge Proofs}{appendix.F}{}}
-\newlabel{thm:prototype-edge:formal}{{F.1}{41}{Prototype edge separation, formal version of Theorem~\ref {thm:prototype-edge:informal}}{theorem.F.1}{}}
-\newlabel{thm:dgm-graph-partition:formal}{{F.2}{41}{DGM graph generates a finite information structure, formal version of Theorem~\ref {thm:dgm-graph-partition:informal}}{theorem.F.2}{}}
-\newlabel{thm:hard-dgm-measurable:formal}{{F.3}{42}{Anchor-DGM routing is graph-plus-anchor-order measurable, formal version of Theorem~\ref {thm:hard-dgm-measurable:informal}}{theorem.F.3}{}}
-\newlabel{thm:soft-routing-hard-limit:formal}{{F.4}{42}{Soft routing approaches hard routing, formal version of Theorem~\ref {thm:soft-routing-hard-limit:informal}}{theorem.F.4}{}}
-\newlabel{thm:refine-repair-descent:formal}{{F.5}{43}{Refine-or-repair objective descent, formal version of Theorem~\ref {thm:refine-repair-descent:informal}}{theorem.F.5}{}}
-\newlabel{thm:safe-refinement:formal}{{F.6}{44}{Statistically safe finite-class refinement, formal version of Theorem~\ref {thm:safe-refinement:informal}}{theorem.F.6}{}}
-\newlabel{cor:lm-clipped-refinement:formal}{{F.7}{44}{Bounded language-model refinement score, formal version of Corollary~\ref {cor:lm-clipped-refinement:informal}}{theorem.F.7}{}}
-\newlabel{thm:anchor-stable:formal}{{F.8}{45}{Anchor-stable DGM information structure, formal version of Theorem~\ref {thm:anchor-stable:informal}}{theorem.F.8}{}}
-\newlabel{cor:finite-refinements:formal}{{F.9}{45}{Finite number of accepted refinements, formal version of Corollary~\ref {cor:finite-refinements:informal}}{theorem.F.9}{}}
-\newlabel{prop:tree-as-dgm:formal}{{F.10}{45}{Trees as generalized hard-DGMs, formal version of Proposition~\ref {prop:tree-as-dgm:informal}}{theorem.F.10}{}}
-\newlabel{thm:dpm-complexity:formal}{{F.11}{46}{DGM data-structure bound, formal version of Theorem~\ref {thm:dpm-complexity:informal}}{theorem.F.11}{}}
-\newlabel{thm:dgm-layer-cost:formal}{{F.12}{46}{DGM layer cost, formal version of Theorem~\ref {thm:dgm-layer-cost:informal}}{theorem.F.12}{}}
-\newlabel{thm:one-hot-measurable:formal}{{F.13}{47}{One-hot memory is partition-measurable, formal version of Theorem~\ref {thm:one-hot-measurable:informal}}{theorem.F.13}{}}
+\newlabel{thm:squared-value:formal}{{E.3}{42}{Squared-loss value, formal version of Theorem~\ref {thm:squared-value:informal}}{theorem.E.3}{}}
+\newlabel{prop:sse-split:formal}{{E.4}{42}{Finite squared-loss split identity}{theorem.E.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {F}DGM Algorithm and Projection-Bridge Proofs}{43}{appendix.F}\protected@file@percent }
+\newlabel{app:algorithm-bridge-proofs}{{F}{43}{DGM Algorithm and Projection-Bridge Proofs}{appendix.F}{}}
+\newlabel{thm:anchor-edge:formal}{{F.1}{43}{Anchor edge separation, formal version of Theorem~\ref {thm:anchor-edge:informal}}{theorem.F.1}{}}
+\newlabel{thm:dgm-graph-partition:formal}{{F.2}{43}{DGM graph generates a finite information structure, formal version of Theorem~\ref {thm:dgm-graph-partition:informal}}{theorem.F.2}{}}
+\newlabel{thm:hard-dgm-measurable:formal}{{F.3}{44}{Anchor-based hard routing is graph-plus-anchor-order measurable, formal version of Theorem~\ref {thm:hard-dgm-measurable:informal}}{theorem.F.3}{}}
+\newlabel{thm:soft-routing-hard-limit:formal}{{F.4}{44}{Soft routing approaches hard routing, formal version of Theorem~\ref {thm:soft-routing-hard-limit:informal}}{theorem.F.4}{}}
+\newlabel{thm:refine-repair-descent:formal}{{F.5}{45}{Refine-or-repair objective descent, formal version of Theorem~\ref {thm:refine-repair-descent:informal}}{theorem.F.5}{}}
+\newlabel{thm:safe-refinement:formal}{{F.6}{46}{Statistically safe finite-class refinement, formal version of Theorem~\ref {thm:safe-refinement:informal}}{theorem.F.6}{}}
+\newlabel{cor:lm-clipped-refinement:formal}{{F.7}{46}{Bounded language-model refinement score, formal version of Corollary~\ref {cor:lm-clipped-refinement:informal}}{theorem.F.7}{}}
+\newlabel{thm:anchor-stable:formal}{{F.8}{47}{Anchor-stable DGM information structure, formal version of Theorem~\ref {thm:anchor-stable:informal}}{theorem.F.8}{}}
+\newlabel{cor:finite-refinements:formal}{{F.9}{47}{Finite number of accepted refinements, formal version of Corollary~\ref {cor:finite-refinements:informal}}{theorem.F.9}{}}
+\newlabel{prop:tree-as-dgm:formal}{{F.10}{47}{Trees as generalized hard-route DGMs, formal version of Proposition~\ref {prop:tree-as-dgm:informal}}{theorem.F.10}{}}
+\newlabel{thm:dgm-complexity:formal}{{F.11}{48}{DGM data-structure bound, formal version of Theorem~\ref {thm:dgm-complexity:informal}}{theorem.F.11}{}}
+\newlabel{thm:dgm-layer-cost:formal}{{F.12}{48}{DGM layer cost, formal version of Theorem~\ref {thm:dgm-layer-cost:informal}}{theorem.F.12}{}}
+\newlabel{thm:one-hot-measurable:formal}{{F.13}{49}{One-hot memory is partition-measurable, formal version of Theorem~\ref {thm:one-hot-measurable:informal}}{theorem.F.13}{}}
 \providecommand\NAT@force@numbers{}\NAT@force@numbers
-\newlabel{thm:cpm-conflict-distinction:formal}{{F.14}{48}{CPM conflict equals missing distinction, formal version of Theorem~\ref {thm:cpm-conflict-distinction:informal}}{theorem.F.14}{}}
-\gdef \@abspage@last{51}
+\newlabel{thm:cpm-conflict-distinction:formal}{{F.14}{50}{CPM conflict equals missing distinction, formal version of Theorem~\ref {thm:cpm-conflict-distinction:informal}}{theorem.F.14}{}}
+\gdef \@abspage@last{53}
