@@ -1,42 +1,11 @@
-\section{Experiments and Computational Checks}
+\section{Experiments: When Refinement Matters}
 \label{sec:experiments}
 
-The theory above is structural, but the model is meant to be executable. We include small reproducible checks organized around the paper's main claim: repair-only should fail when the stream hides a missing distinction, refine+repair should recover, edge-gated graph memory should help when local conflicts recur, and closed-form repair should be useful once the relevant concept is fixed. These checks are not meant to settle broad benchmark performance. They are designed to test whether the theorem-level separation has an observable algorithmic footprint. Stronger empirical claims would require a broader suite with online trees, LVQ, RLS, passive-aggressive updates, replay-buffer SGD, TTT-style adaptation, fast-weight or linear-attention memory, and stronger frozen-encoder baselines. The accompanying script is in the experiment directory and uses PyTorch for the backpropagation baselines and NumPy for the DGM memory methods.
+The experiments are designed to test the paper's central claim rather than broad benchmark performance. A useful task should contain both a repair gap, where local memory updates should help, and a refinement gap, where repair-only methods should collapse incompatible consequences into one state. All learners use a prequential protocol: predict first, observe the consequence, then update. Implementation details and additional sanity checks are in Appendix~\ref{app:additional-checks}.
 
-The first task is a two-context XOR stream. In the first context the label is XOR of two Gaussian cluster signs; in the second context the labels are flipped. The context coordinate is observable, but the learner must discover the relevant distinction. We compare three learners. The offline MLP is trained by ordinary backpropagation on the full stream for 500 epochs and should be read as a batch upper bound, not as a runtime learner. The online MLP predicts each example and then performs one backpropagation step on that example. The DGM graph memory uses the same online protocol: predict first, then observe and refine-or-repair. Results are averaged over five seeds with 100 examples per context.
+\subsection{Hidden-regime sequence prediction}
 
-\begin{table}[t]
-\centering
-\begin{tabular}{lccc}
-\toprule
-Model & Runtime update & Prequential accuracy & Test accuracy \\
-\midrule
-Backprop MLP, offline & batch backprop & $-$ & $0.993\pm0.002$ \\
-Backprop MLP, online & one backprop step & $0.569\pm0.065$ & $0.654\pm0.038$ \\
-DGM graph memory, online & refine-or-repair & $0.804\pm0.025$ & $0.944\pm0.026$ \\
-\bottomrule
-\end{tabular}
-\caption{DGM graph memory versus backpropagation on a limited online contextual-XOR stream. Offline backprop is a batch upper bound. The relevant runtime comparison is between online backpropagation and online distinction refinement. The DGM run has monotone local scoring-objective decrease at accepted refinements in all runs.}
-\label{tab:dgm-check}
-\end{table}
-
-As a minimal ablation of the refine step, we also run the same distinction-tree hard-routing special case on XOR Gaussian clusters with repair disabled from creating distinctions. The repair-only model has one leaf and cannot represent XOR, while refine+repair creates accepted distinctions with objective decrease.
-
-\begin{table}[t]
-\centering
-\begin{tabular}{lccc}
-\toprule
-Model & Accepted splits & Prequential accuracy & Test accuracy \\
-\midrule
-Repair only & 0 & $0.491$ & $0.501$ \\
-Refine+repair & 9 & $0.939$ & $0.967$ \\
-\bottomrule
-\end{tabular}
-\caption{Single-run hard-routing ablation on XOR Gaussian clusters. This checks that local repair alone cannot solve a missing-distinction task, while accepted refinements decrease the local penalized objective and recover the required partition.}
-\label{tab:repair-refine-ablation}
-\end{table}
-
-The most direct check of the runtime-learning claim is a hidden-regime online sequence task. A hidden regime chooses the next-token transition map. The learner is not given the regime label; it observes only a noisy continuous cue and the current token, predicts the next token, and then receives the next-token consequence. This setting separates cache-like repair from missing-distinction refinement: the same current token can require different next tokens in different regimes.
+The most direct check is a hidden-regime online sequence task. A hidden regime chooses the next-token transition map. The learner is not given the regime label; it observes only a noisy continuous cue and the current token, predicts the next token, and then receives the next-token consequence. The same current token can therefore require different next tokens in different regimes. A repair-only memory averages those consequences, while a refine+repair learner can create separate runtime concepts.
 
 \begin{table}[t]
 \centering
@@ -57,48 +26,46 @@ Backprop MLP, online & one backprop step & $0.292\pm0.020$ & $2.217\pm0.054$ & -
 \label{tab:hidden-regime-check}
 \end{table}
 
-Held-out accuracies for the same runs were $0.285\pm0.049$ for cache LM, $0.346\pm0.106$ for budgeted $k$NN-LM, $0.235\pm0.024$ for nearest-centroid memory, $0.055\pm0.015$ for repair-only DGM, $0.680\pm0.065$ for refine+repair DGM, and $0.282\pm0.086$ for online backpropagation.
+Held-out accuracies for the same runs were $0.285\pm0.049$ for cache LM, $0.346\pm0.106$ for budgeted $k$NN-LM, $0.235\pm0.024$ for nearest-centroid memory, $0.055\pm0.015$ for repair-only DGM, $0.680\pm0.065$ for refine+repair DGM, and $0.282\pm0.086$ for online backpropagation. The important comparison is not only that DGM is higher, but that the repair-only DGM is much worse: the task is constructed so that one local memory is the wrong information structure.
 
-We also run small online image-stream checks on MNIST and CIFAR-10 using cached local datasets. These are deliberately reported as sanity checks, not as evidence that DGM is a competitive image classifier. In these experiments the DGM memory uses exemplar repair. The online backpropagation baseline sees each example once and performs one gradient step. Offline backpropagation is again a batch upper bound.
+\subsection{Repair-only ablation}
 
-\begin{table}[t]
-\centering
-\begin{tabular}{lccc}
-\toprule
-Dataset & Offline backprop & Online backprop & Online DGM memory \\
-\midrule
-MNIST & $0.843\pm0.009$ & $0.682\pm0.038$ & $0.851\pm0.003$ \\
-CIFAR-10 & $0.273\pm0.003$ & $0.137\pm0.010$ & $0.243\pm0.008$ \\
-\bottomrule
-\end{tabular}
-\caption{Image-stream checks. The point is not to beat fully trained image models, but to compare one-pass runtime updates. DGM memory beats one-step online backpropagation in both streams and is competitive with the small offline MLP on MNIST.}
-\label{tab:image-check}
-\end{table}
-
-These experiments test a specific thesis rather than a broad benchmark claim. When the representation lacks a useful distinction, one gradient step on the current example is a weak runtime update. A DGM memory system can instead create or retrieve a local concept and then repair local state. With full offline access and many epochs, backpropagation remains strong, as expected. The image-stream results should mainly be read as implementation checks; the more relevant settings are context switching, few-shot adaptation with a frozen encoder, long-document memory, repeated syntax regimes, and hidden task identity.
-
-For a stronger adapter benchmark, we train a shared convolutional encoder and freeze it. The adaptation problem is then deliberately narrow: given only five labeled support examples per class, adapt the readout. We compare nearest-neighbor memory, ridge memory as a closed-form projection adapter from Section~\ref{sec:large-model-training}, a one-pass backpropagation head, and a 200-step backpropagation head on the same frozen embeddings. This isolates the large-model use case: a strong backbone already exists, and the question is whether runtime adaptation should be a gradient loop, a nonparametric memory, or a closed-form local repair.
+We also run a hard-routing special case on XOR Gaussian clusters. The repair-only model has one leaf and cannot represent XOR, while refine+repair creates accepted distinctions with objective decrease. This is the smallest test of the obstruction theorem: if incompatible labels lie inside one information cell, local repair has no representation in which to store the answer.
 
 \begin{table}[t]
 \centering
 \begin{tabular}{lccc}
 \toprule
-Dataset & Method & Accuracy & Adapter time \\
+Model & Accepted splits & Prequential accuracy & Test accuracy \\
 \midrule
-MNIST, 5-shot & one-pass backprop head & $0.100\pm0.000$ & $0.0002$s \\
-MNIST, 5-shot & 200-step backprop head & $0.332\pm0.009$ & $0.0320$s \\
-MNIST, 5-shot & kNN memory & $0.486\pm0.005$ & $0.0006$s \\
-MNIST, 5-shot & ridge memory & $\mathbf{0.623\pm0.003}$ & $0.0018$s \\
-\midrule
-CIFAR-10, 5-shot & one-pass backprop head & $0.115\pm0.014$ & $0.0003$s \\
-CIFAR-10, 5-shot & 200-step backprop head & $0.359\pm0.009$ & $0.0325$s \\
-CIFAR-10, 5-shot & kNN memory & $0.355\pm0.005$ & $0.0006$s \\
-CIFAR-10, 5-shot & ridge memory & $\mathbf{0.397\pm0.010}$ & $0.0004$s \\
+Repair only & 0 & $0.491$ & $0.501$ \\
+Refine+repair & 9 & $0.939$ & $0.967$ \\
 \bottomrule
 \end{tabular}
-\caption{Few-shot adapter benchmark on frozen embeddings. The kNN memory row is the nonparametric retrieval baseline on the same support examples. Ridge memory fits the adapter by a closed-form projection solve. It is substantially faster than the tuned backpropagation head and achieves higher accuracy in this local run.}
-\label{tab:adapter-benchmark}
+\caption{Single-run hard-routing ablation on XOR Gaussian clusters. Local repair alone cannot solve a missing-distinction task, while accepted refinements decrease the local penalized objective and recover the required partition.}
+\label{tab:repair-refine-ablation}
 \end{table}
+
+\subsection{Controlled contextual XOR}
+
+As a graph-memory check, we use a two-context XOR stream. In the first context the label is XOR of two Gaussian cluster signs; in the second context the labels are flipped. The context coordinate is observable, but the learner must discover how it changes the consequence. The offline MLP is a batch upper bound; the online MLP predicts each example and then performs one backpropagation step; DGM uses the same online protocol but can refine the concept graph before repairing local state.
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lccc}
+\toprule
+Model & Runtime update & Prequential accuracy & Test accuracy \\
+\midrule
+Backprop MLP, offline & batch backprop & $-$ & $0.993\pm0.002$ \\
+Backprop MLP, online & one backprop step & $0.569\pm0.065$ & $0.654\pm0.038$ \\
+DGM graph memory, online & refine-or-repair & $0.804\pm0.025$ & $0.944\pm0.026$ \\
+\bottomrule
+\end{tabular}
+\caption{DGM graph memory versus backpropagation on a limited online contextual-XOR stream. Offline backprop is a batch upper bound. The relevant runtime comparison is between online backpropagation and online distinction refinement. The DGM run has monotone local scoring-objective decrease at accepted refinements in all runs.}
+\label{tab:dgm-check}
+\end{table}
+
+\subsection{Synthetic next-token stream}
 
 Finally, we include a synthetic language-modeling stream. Each document context induces a different next-token transition map. The learner observes a prefix representation and must predict the next token before seeing it. After the next token is revealed, DGM memory stores the prefix type and next-token consequence; online backpropagation again receives one gradient step per token.
 
@@ -111,12 +78,8 @@ Task & Offline backprop & Online backprop & Online DGM memory \\
 Synthetic LM & $0.931\pm0.071$ & $0.125\pm0.021$ & $0.912\pm0.077$ \\
 \bottomrule
 \end{tabular}
-\caption{Synthetic next-token stream. The task is designed to isolate runtime adaptation: the hidden context determines the token transition rule, so the useful operation is to remember a local prefix-to-token consequence after observing it. DGM memory approaches the offline batch MLP while one-step online backpropagation adapts slowly.}
+\caption{Synthetic next-token stream. The task isolates runtime adaptation: the hidden context determines the token transition rule, so the useful operation is to remember a local prefix-to-token consequence after observing it. DGM memory approaches the offline batch MLP while one-step online backpropagation adapts slowly.}
 \label{tab:lm-check}
 \end{table}
 
-We also verify the projection-memory residual contraction identity used by local repair. For random $W,k,v$ and step size $\eta$, the soft Projection Memory update satisfies
-\begin{align*}
-v-W_{t+1}k=\frac{1}{1+\eta\norm{k}_2^2}(v-W_tk).
-\end{align*}
-Over 200 random trials, the maximum absolute error between the measured residual ratio and the formula was $3.33\cdot 10^{-16}$.
+These experiments do not claim that DGM is a finished competitive language-modeling system. They check the mechanism that the theory predicts: when the error is caused by a missing distinction, methods that only repair state are forced to mix incompatible consequences; a refine+repair learner can create the missing runtime concept and then repair it locally.

@@ -1,0 +1,57 @@
+\section{Additional Computational Checks}
+\label{app:additional-checks}
+
+This appendix reports secondary checks that are useful for debugging implementations but are not the main evidence for the refine-or-repair claim.
+
+\subsection{Online image streams}
+
+We run small online image-stream checks on MNIST and CIFAR-10 using cached local datasets. These are sanity checks, not evidence that DGM is a competitive image classifier. In these experiments the DGM memory uses exemplar repair. The online backpropagation baseline sees each example once and performs one gradient step. Offline backpropagation is a batch upper bound.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lccc}
+\toprule
+Dataset & Offline backprop & Online backprop & Online DGM memory \\
+\midrule
+MNIST & $0.843\pm0.009$ & $0.682\pm0.038$ & $0.851\pm0.003$ \\
+CIFAR-10 & $0.273\pm0.003$ & $0.137\pm0.010$ & $0.243\pm0.008$ \\
+\bottomrule
+\end{tabular}
+\caption{Image-stream sanity checks. The point is not to beat fully trained image models, but to compare one-pass runtime updates.}
+\label{tab:image-check}
+\end{table}
+
+The relevant future settings are context switching, few-shot adaptation with a frozen encoder, long-document memory, repeated syntax regimes, and hidden task identity.
+
+\subsection{Frozen-embedding adapter check}
+
+For a stronger adapter benchmark, we train a shared convolutional encoder and freeze it. The adaptation problem is deliberately narrow: given only five labeled support examples per class, adapt the readout. We compare nearest-neighbor memory, ridge memory as a closed-form projection adapter from Appendix~\ref{app:dgm-extensions}, a one-pass backpropagation head, and a 200-step backpropagation head on the same frozen embeddings.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lccc}
+\toprule
+Dataset & Method & Accuracy & Adapter time \\
+\midrule
+MNIST, 5-shot & one-pass backprop head & $0.100\pm0.000$ & $0.0002$s \\
+MNIST, 5-shot & 200-step backprop head & $0.332\pm0.009$ & $0.0320$s \\
+MNIST, 5-shot & kNN memory & $0.486\pm0.005$ & $0.0006$s \\
+MNIST, 5-shot & ridge memory & $\mathbf{0.623\pm0.003}$ & $0.0018$s \\
+\midrule
+CIFAR-10, 5-shot & one-pass backprop head & $0.115\pm0.014$ & $0.0003$s \\
+CIFAR-10, 5-shot & 200-step backprop head & $0.359\pm0.009$ & $0.0325$s \\
+CIFAR-10, 5-shot & kNN memory & $0.355\pm0.005$ & $0.0006$s \\
+CIFAR-10, 5-shot & ridge memory & $\mathbf{0.397\pm0.010}$ & $0.0004$s \\
+\bottomrule
+\end{tabular}
+\caption{Few-shot adapter check on frozen embeddings. Ridge memory fits the adapter by a closed-form projection solve.}
+\label{tab:adapter-benchmark}
+\end{table}
+
+\subsection{Projection-memory residual identity}
+
+We verify the projection-memory residual contraction identity used by local repair. For random $W,k,v$ and step size $\eta$, the soft Projection Memory update satisfies
+\begin{align*}
+v-W_{t+1}k=\frac{1}{1+\eta\norm{k}_2^2}(v-W_tk).
+\end{align*}
+Over 200 random trials, the maximum absolute error between the measured residual ratio and the formula was $3.33\cdot 10^{-16}$.

@@ -62,15 +62,15 @@ Since $\calG$ is a sigma-algebra,
 Thus $\calF\vee\sigma(Z)\subseteq\calG$.
 \end{proof}
 
-\begin{theorem}[Contradiction requires distinction, formal version of Theorem~\ref{thm:contradiction:informal}]
+\begin{theorem}[Contradiction requires distinction, formal version of Corollary~\ref{thm:contradiction:informal}]
 \label{thm:contradiction:formal}
-Let $\calP$ be a partition of $\Omega$ and let $y:\Omega\to A$ be a required output. Suppose there exist $\omega,\omega'\in B$ for some atom $B\in\calP$ such that $y(\omega)\ne y(\omega')$. Then no $\calP$-measurable $f:\Omega\to A$ satisfies both
+Let $I:\Omega\to\calZ$ be an information map and let $y:\Omega\to A$ be a required output. Suppose $I(\omega)=I(\omega')$ but $y(\omega)\ne y(\omega')$. Then no predictor $f=g\circ I$ satisfies both
 \begin{align*}
 f(\omega)=y(\omega),\qquad f(\omega')=y(\omega').
 \end{align*}
 \end{theorem}
 \begin{proof}
-Since $f$ is $\calP$-measurable and $\omega,\omega'\in B$,
+Since $f=g\circ I$ and $I(\omega)=I(\omega')$,
 \begin{align*}
 f(\omega)=f(\omega').
 \end{align*}

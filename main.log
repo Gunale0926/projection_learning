@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.22)  30 APR 2026 07:47
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.3.22)  30 APR 2026 08:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -954,40 +954,41 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
  [2]
 Package hyperref Info: Option `pageanchor' set `true' on input line 155.
- (./_2_body.tex (./01_intro.tex [1]
+ (./_2_body.tex (./01_intro.tex [1] [2]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 87.
- [2]
+put line 97.
+
 [3{/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc
-}]) (./02_preliminaries.tex [4]) (./03_main_results.tex [5]) (./04_method.tex
-[6] [7]) (./04_algorithms_complexity.tex [8] [9] [10] [11] [12] [13] [14]
-[15] [16]) (./04_large_model_training.tex [17] [18] [19] [20] [21])
-(./04_technical_overview.tex [22] [23] [24] [25] [26]) (./04_projection_cpm.tex
-[27]) (./04_experiments.tex [28] [29]) (./05_conclusion.tex [30])) [31]
-(./main.bbl [32
+}]) (./02_preliminaries.tex [4] [5]) (./03_main_results.tex [6])
+(./04_algorithms_complexity.tex [7] [8] [9] [10] [11] [12] [13] [14])
+(./04_large_model_training.tex [15] [16] [17]) (./04_guarantees.tex [18])
+(./04_experiments.tex [19]) (./06_related_work.tex [20] [21])
+(./05_conclusion.tex)) [22] (./main.bbl [23
 
-] [33] [34] [35]) [36] (./_3_app.tex (./40_appendix_roadmap.tex) (./41_limitati
-ons.tex [37
+] [24] [25] [26]) [27] (./_3_app.tex (./40_appendix_roadmap.tex) (./41_limitati
+ons.tex [28
 
-]) (./42_related_work.tex [38])
-(./50_projection_proofs.tex [39] [40]) (./51_memory_proofs.tex [41])
-(./52_ridge_bayesian_proofs.tex [42] [43] [44] [45] [46] [47] [48] [49]))
-[50] (./main.aux)
+]) (./42_related_work.tex [29]) (./43_dgm_extensions.tex [30] [31] [32]) (./44_
+additional_checks.tex
+[33]) (./04_method.tex [34] [35]) (./04_technical_overview.tex [36] [37]
+[38] [39] [40]) (./04_projection_cpm.tex [41]) (./50_projection_proofs.tex
+[42]) (./51_memory_proofs.tex [43] [44]) (./52_ridge_bayesian_proofs.tex
+[45] [46] [47] [48] [49] [50] [51] [52])) [53] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 76F4FE6A154AF99E3A1D50B14655631E;9397.
+(rerunfilecheck)             Checksum: 1CF70E69A3508E710C86C09EB4645D01;11614.
  ) 
 Here is how much of TeX's memory you used:
- 26034 strings out of 467525
- 482007 string characters out of 5418982
- 866264 words of memory out of 5000000
- 54201 multiletter control sequences out of 15000+600000
+ 26122 strings out of 467525
+ 483663 string characters out of 5418982
+ 867600 words of memory out of 5000000
+ 54247 multiletter control sequences out of 15000+600000
  643168 words of font info for 97 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 84i,14n,94p,1092b,879s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,15n,94p,1092b,879s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 ></usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
 </usr/local/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb>
@@ -1011,10 +1012,10 @@ dist/fonts/type1/public/amsfonts/cm/cmti8.pfb></usr/local/texlive/2026/texmf-di
 st/fonts/type1/public/amsfonts/cm/cmti9.pfb></usr/local/texlive/2026/texmf-dist
 /fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive/2026/texmf-
 dist/fonts/type1/public/cm-super/sfrm1095.pfb>
-Output written on main.pdf (53 pages, 501998 bytes).
+Output written on main.pdf (56 pages, 521232 bytes).
 PDF statistics:
- 1061 PDF objects out of 1200 (max. 8388607)
- 950 compressed objects within 10 object streams
- 255 named destinations out of 1000 (max. 500000)
- 413 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1210 PDF objects out of 1440 (max. 8388607)
+ 1095 compressed objects within 11 object streams
+ 285 named destinations out of 1000 (max. 500000)
+ 509 words of extra memory for PDF output out of 10000 (max. 10000000)
 

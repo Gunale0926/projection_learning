@@ -5,13 +5,17 @@ DGM uses refinement and repair in the same runtime object. Distinction learning 
 
 \subsection{One-hot partition memory}
 
-Let $\calP=\{B_1,\ldots,B_n\}$ and let $\phi_\calP$ be the one-hot feature map from Section~\ref{sec:preliminaries}. A memory matrix $W\in\R^{m\times n}$ defines a value map
+Let $\calP=\{B_1,\ldots,B_n\}$ be a finite partition and let $\phi_\calP:\Omega\to\R^n$ be its one-hot feature map:
+\begin{align*}
+\phi_\calP(\omega)=e_i\qquad \text{if}\qquad \omega\in B_i.
+\end{align*}
+A memory matrix $W\in\R^{m\times n}$ defines a value map
 \begin{align*}
 f_W(\omega)=W\phi_\calP(\omega).
 \end{align*}
 This is exactly a table over the atoms of $\calP$: every state inside the same atom receives the same value.
 
-\begin{theorem}[One-hot memory is partition-measurable]
+\begin{theorem}[One-hot partition memory]
 \label{thm:one-hot-measurable:informal}
 For every $W\in\R^{m\times n}$, the map $f_W(\omega)=W\phi_\calP(\omega)$ is $\calP$-measurable. Conversely, every $\calP$-measurable map $f:\Omega\to\R^m$ is represented by some $W$ through $f=f_W$.
 \end{theorem}
@@ -19,6 +23,12 @@ For every $W\in\R^{m\times n}$, the map $f_W(\omega)=W\phi_\calP(\omega)$ is $\c
 Thus a one-hot associative memory is not merely analogous to a partition. It is an exact finite representation of all vector-valued predictors measurable with respect to that partition.
 
 \subsection{CPM conflict as missing distinction}
+
+For old key matrices $K$, a new key $k$ has CPM innovation
+\begin{align}
+z=(I-KK^\dagger)k.
+\label{eq:cpm-innovation}
+\end{align}
 
 Conservative Projection Memory detects conflict when a new key has zero innovation but nonzero residual. In the one-hot finite representation, this diagnostic is exactly the statement that two world states have been placed in the same atom despite requiring different values.
 

@@ -1,0 +1,20 @@
+\section{Related Work}
+\label{sec:related}
+
+The relevant comparison is not whether DGM uses centers, memory, routing, or online updates. All of these ingredients have long histories. The comparison is whether a runtime learner separates two operations that are often collapsed: repairing state inside the current representation, and refining the representation when consequences reveal a missing distinction.
+
+\paragraph{Repair without refinement.}
+Cache language models and $k$NN-LMs store or retrieve context-token examples at inference time \citep{grave2017improving,khandelwal2020generalization}. Fast weights, linear attention memories, passive-aggressive updates, online ridge/RLS, and projection-style memories repair associative state inside a fixed geometry \citep{ba2016using,katharopoulos2020transformers,schlag2021linear,crammer2006online,vovk1997competitive,bregman1967relaxation,tikhonov1977solutions,hoerl1970ridge}. Test-time adaptation and test-time training update model state or parameters by optimizing an inference-time surrogate \citep{sun2020test,wang2021tent,niu2022eata,zhang2022memo,sun2025learning}. These methods address the repair-gap half of runtime learning; DGM asks the prior structural question of whether the error is repairable under the current distinctions.
+
+\paragraph{Refinement without local repair.}
+Decision trees, online trees, Hoeffding trees, adaptive trees, and Mondrian forests refine leaves using information gain, variance reduction, or streaming split tests \citep{breiman1984classification,domingos2000mining,bifet2009adaptive,manapragada2018extremely,lakshminarayanan2014mondrian}. Adaptive Resonance Theory and prototype methods create or move categories under mismatch \citep{carpenter1987massively,carpenter1987art2,grossberg2013adaptive,kohonen1990self,fritzke1995growing,snell2017prototypical}. DGM shares the refinement motivation, but stores distinctions as local graph edges between runtime concepts and attaches repairable memories to the concepts after they are created.
+
+\paragraph{Routing without runtime concept creation.}
+Mixture-of-experts, Switch Transformers, and Product-Key Memory route queries to sparse trained capacity \citep{shazeer2017outrageously,fedus2022switch,lample2019large}. Memory Networks, Neural Turing Machines, and Differentiable Neural Computers learn external memory controllers \citep{weston2015memory,sukhbaatar2015end,graves2014neural,graves2016hybrid}. DGM differs in write semantics: the routed objects are runtime-created concepts whose edges generate an information structure and whose memories are repaired locally.
+
+Appendix~\ref{app:related} gives the extended related-work discussion. The short version is that DGM combines refinement and repair but keeps their roles separate:
+\[
+\text{missing consequence distinction}\Rightarrow\text{refine},
+\qquad
+\text{repair gap}\Rightarrow\text{repair}.
+\]

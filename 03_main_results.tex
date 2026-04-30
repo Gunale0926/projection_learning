@@ -1,9 +1,9 @@
-\section{Minimal Refinement}
+\subsection{Minimal refinement}
 \label{sec:minimal-refinement}
 
 Once a contradiction shows that the current atom is too coarse, the next question is not how to grow the largest possible model. It is: what is the least information that must be added? The primitive operation in this paper is minimal refinement. The learner has an information structure and receives evidence that a new event or variable must become observable. The correct update adds that observability and nothing else. The sigma-algebra language is standard measure-theoretic probability, while the finite partition language is the corresponding finite special case \citep{billingsley1995probability,kallenberg2002foundations}. We state the finite theorem first because it is the clearest form of the idea: split exactly the atoms crossed by the evidence.
 
-\subsection{The finite refinement rule}
+\subsubsection{The finite refinement rule}
 
 Let $\calP$ be a finite partition and let $E\subseteq\Omega$ be a new binary distinction. Define
 \begin{align}
@@ -21,7 +21,7 @@ Let $\calP$ be a finite partition of $\Omega$ and let $E\subseteq\Omega$. The pa
 
 The theorem gives a canonical update. We do not search over all refined representations; the evidence itself determines the least one. An atom untouched by $E$ is left unchanged. An atom crossed by $E$ is split into the two pieces that the evidence can now distinguish. This is the formal version of ``create the missing distinction and nothing else.''
 
-\subsection{The sigma-algebra form}
+\subsubsection{The sigma-algebra form}
 
 For general spaces, the same operation is the join of sigma-algebras. If the current information is $\calF_t$ and the evidence is a variable $Z_t$, the minimal updated information is
 \begin{align}

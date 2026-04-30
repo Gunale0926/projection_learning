@@ -1,12 +1,18 @@
 \section{Introduction}
 \label{sec:intro}
 
-A deployed language model reads a long document. Early in the document, ``Jordan'' names a person; later, it names a country. A cache can store both observations, a nearest-neighbor memory can retrieve similar prefixes, and a test-time optimizer can move a hidden state. None of these operations fixes the structural error if the model has only one runtime concept for both cases. Every update is then forced to write incompatible consequences into the same cell. The missing object is not a better local update; it is the distinction that separates the two cells.
+At time $t$, a runtime learner has two objects: an information map $I_t:\Omega\to\calZ_t$, which determines what situations the learner can distinguish, and a predictor $f_t=g_t\circ I_t$, which determines what it currently does with those distinctions. Let $\calF_t=\sigma(I_t)$, and let $R^\star(\calF)$ be the Bayes risk achievable by predictors measurable with respect to $\calF$. For any candidate refinement $\calG\supseteq\calF_t$, runtime excess risk decomposes as
+\begin{align}
+R(f_t)-R^\star(\calG)
+=
+\underbrace{R(f_t)-R^\star(\calF_t)}_{\text{repair gap}}
++
+\underbrace{R^\star(\calF_t)-R^\star(\calG)}_{\text{refinement gap}}.
+\label{eq:intro-error-decomposition}
+\end{align}
+The repair gap is error that can be removed while preserving the current information. The refinement gap is error caused by information that is too coarse. DGM is built around estimating which gap is responsible before it writes new runtime state.
 
-This paper starts from the claim that runtime learning has two fundamentally different failure modes. In a \emph{state error}, the learner is already conditioning on the right concept, but the concept's local state is stale; the right operation is repair, such as updating a cache entry, sufficient statistic, ridge solution, fast-weight memory, or local adapter. In a \emph{representation error}, the concept itself is too coarse and identifies states whose consequences differ; the right operation is refinement, namely creating a new distinction before storing the new local state. The rule is:
-\begin{align*}
-\textit{if the atom is wrong, refine; if the local state is wrong, repair.}
-\end{align*}
+A deployed language model gives the intuition. Early in a document, ``Jordan'' names a person; later, it names a country. A cache can store both observations, a nearest-neighbor memory can retrieve similar prefixes, and a test-time optimizer can move a hidden state. None of these operations fixes the structural error if the current information map gives both cases the same runtime label, $I_t(\omega)=I_t(\omega')$, while their next-token consequences differ. The missing object is not a better local update; it is the distinction that separates the two fibers of $I_t$.
 
 \begin{figure}[t]
 \centering
@@ -16,13 +22,13 @@ This paper starts from the claim that runtime learning has two fundamentally dif
     title/.style={font=\small\bfseries},
     flow/.style={->,thick}
 }
-\node[title] at (1.8,1.65) {State error};
-\node[panel,fill=gray!12] (state0) at (1.8,0.72) {one adequate atom\\local statistic stale};
-\node[panel,fill=green!12] (state1) at (7.05,0.72) {same atom\\repaired memory};
+\node[title] at (1.8,1.65) {Repair gap};
+\node[panel,fill=gray!12] (state0) at (1.8,0.72) {adequate information\\local statistic stale};
+\node[panel,fill=green!12] (state1) at (7.05,0.72) {same cell\\repaired memory};
 \draw[flow] (state0.east) -- node[above,font=\scriptsize] {repair} (state1.west);
 
-\node[title] at (1.8,-0.78) {Representation error};
-\node[panel,fill=red!8] (repr0) at (1.8,-1.72) {one atom\\incompatible consequences};
+\node[title] at (1.8,-0.78) {Refinement gap};
+\node[panel,fill=red!8] (repr0) at (1.8,-1.72) {one cell\\incompatible consequences};
 \fill[red!70] (0.82,-1.47) circle (0.08);
 \fill[blue!70] (2.78,-1.47) circle (0.08);
 \node[panel,fill=white] (repr1) at (7.05,-1.72) {};
@@ -33,7 +39,7 @@ This paper starts from the claim that runtime learning has two fundamentally dif
 \node[font=\scriptsize,align=center,fill=white,inner sep=1pt] at (7.05,-1.72) {split\\then repair};
 \draw[flow] (repr0.east) -- node[above,font=\scriptsize] {refine} (repr1.west);
 \end{tikzpicture}
-\caption{Runtime learning has two failure modes. Stale state should be repaired inside an adequate concept; incompatible consequences inside one atom require refinement.}
+\caption{Runtime excess risk separates into a repair gap and a refinement gap. Stale state should be repaired under adequate information; incompatible consequences inside one information cell require refinement.}
 \label{fig:two-failure-modes}
 \end{figure}
 
@@ -69,13 +75,17 @@ ART, ART 2, and prototypes: \citep{carpenter1987massively,carpenter1987art2,koho
 \label{tab:runtime-learning-comparison}
 \end{table}
 
-The separation is structural. A learner's information state can be represented by a partition or sigma-algebra, and its admissible predictors are precisely the measurable functions with respect to that information. If two states lie in the same atom but require different outputs, no predictor over the current information can satisfy both. More computation inside the atom cannot remove the contradiction. This is the paper's central diagnosis: a contradiction inside an atom is not a failed optimization step; it is a certificate that the atom is too coarse.
+The separation is structural. A learner's information state can be represented by an information map, a partition, or a sigma-algebra, and its admissible predictors are precisely the measurable functions with respect to that information. If $I_t$ identifies situations that the consequence separates, no predictor over the current information can satisfy both. More computation inside the same fiber cannot remove the contradiction. This is the paper's central diagnosis: a positive refinement gap is not a failed optimization step; it is a certificate that the information is too coarse.
 
 The formal core is then minimal information refinement. In a finite space, adding a binary distinction cuts exactly the old atoms crossed by that distinction and leaves all other atoms unchanged. In a general measurable space, the same operation is the join
 \begin{align*}
 \calF_{t+1}=\calF_t\vee\sigma(Z_t).
 \end{align*}
-This is the smallest information update that makes the new evidence observable, using standard language from measure-theoretic probability and statistical decision theory \citep{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}. The value of the update is also exact: under log loss, refinement value is conditional mutual information; under squared loss, it is conditional variance reduction. Population information cannot hurt, but finite-sample estimation can. Thus a useful runtime learner should refine only when a statistically guarded gain test justifies the new distinction.
+This is the smallest information update that makes the new evidence observable, using standard language from measure-theoretic probability and statistical decision theory \citep{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}. Population information cannot hurt, but finite-sample estimation can. Thus a useful runtime learner should refine only when a statistically guarded gain test justifies the new distinction; value identities for log and squared losses are deferred to Appendix~\ref{sec:value}.
+
+\begin{align*}
+\boxed{\text{If the target separates states that the information map identifies, repair is impossible.}}
+\end{align*}
 
 Distinction Graph Machines implement this theorem-to-algorithm path as a data structure. If contradictions require distinctions, the learner needs runtime concepts. If concepts must remain stable, each concept needs a frozen anchor. If retrieval must adapt, each concept also needs a movable centroid. If distinctions are local, the structure should add pairwise graph edges rather than rewrite a global tree. If concepts have state, each node should carry a repairable memory. A DGM therefore maintains anchored concepts, movable retrieval centroids, local memories, and distinction edges. Edges are not metadata: they are binary generators that define observable distinctions and gate future routing. When a consequence arrives, DGM either repairs local memory under fixed anchors and edges, or creates a new anchored concept and edges after a guarded refinement test.
 
@@ -98,21 +108,22 @@ At one timestep, the whole mechanism has the structure in Algorithm~\ref{alg:ref
 \State \Return updated runtime state
 \end{algorithmic}
 \end{algorithm}
-The template deliberately omits retrieval rules, edge gates, scoring buffers, and memory forms. The algorithms in Section~\ref{sec:algorithms} fill in those choices. The theory supplies the two tests behind the template: the contradiction theorem says when repair is impossible under the current information, and the value identities plus sample-split guard say when a proposed distinction is worth paying for. Thus DGM is not a generic memory with a growth heuristic; it is a runtime implementation of a decision-theoretic question: is the error measurable under the current information?
+The template deliberately omits retrieval rules, edge gates, scoring buffers, and memory forms. The algorithms in Section~\ref{sec:algorithms} fill in those choices. The theory supplies the two quantities behind the template: the repair gap says how much can be gained under fixed information, and the refinement gap says how much is lost because the current information is too coarse. Thus DGM is not a generic memory with a growth heuristic; it is a runtime implementation of a decision-theoretic question: is this error a repair gap or a refinement gap?
 
-For language models, the canonical layer is DGM-Embedding. Hidden-state concepts store next-token embedding memories and produce sparse logit corrections. The read path is differentiable, so slow model parameters can learn to use DGM memory. The write path is detached and forward-only: after observing the next token, the layer repairs selected local memories or refines the concept graph without inference-time backpropagation. Projection Memory and Conservative Projection Memory (CPM) appear as local repair mechanisms once the relevant distinction structure has been fixed.
+For language models, the canonical layer is DGM-Embedding. Hidden-state concepts store next-token embedding memories and produce sparse logit corrections. The read path is differentiable, so slow model parameters can learn to use DGM memory. The write path is detached and forward-only: after observing the next token, the layer repairs selected local memories or refines the concept graph without inference-time backpropagation. Adapter variants, projection-style repair, and CPM are useful extensions, but they are not the main object and are deferred to the appendix.
 
 \paragraph{Contributions.}
-The contribution is a separation theorem and its algorithmic realization.
+The contribution is a method paper built around an error decomposition.
 \begin{itemize}
-    \item \textbf{Obstruction.} We prove that some runtime errors are structurally unrepairable: if incompatible consequences lie inside one atom of the current information structure, no measurable predictor can satisfy them.
-    \item \textbf{Canonical update.} We identify minimal refinement as the least information update that makes new evidence observable, and we quantify refinement value under log and squared losses.
-    \item \textbf{Runtime machine.} We introduce DGM, a graph-based learner whose edges generate distinctions, whose anchors stabilize those distinctions, and whose local memories support guarded repair.
-    \item \textbf{Language-model layer.} We instantiate DGM as DGM-Embedding, with differentiable sparse reads, detached forward-only writes, and an explicit bridge to projection-style repair.
+    \item \textbf{Error decomposition.} We decompose runtime excess risk into a repair gap at fixed information and a refinement gap from insufficient information.
+    \item \textbf{Missing-distinction obstruction.} We show that if consequences separate states identified by $I_t$, no repair update preserving $\sigma(I_t)$ can solve the error.
+    \item \textbf{Refine-or-repair algorithm.} We introduce DGM, a graph-based runtime learner whose nodes repair local memories and whose edges create consequence-forced distinctions.
+    \item \textbf{Language-model layer.} We instantiate DGM as DGM-Embedding, with differentiable sparse reads and detached forward-only writes for next-token memory.
+    \item \textbf{Controlled evidence.} We evaluate settings where the same surface state has regime-dependent consequences, showing the separation between repair-only and refine+repair behavior.
 \end{itemize}
 
 \paragraph{Scope of the formal claims.}
-The theorem-level question is not whether DGM is the globally optimal runtime architecture. It is: given a current information structure $\calF$, when is an error impossible to fix by any $\calF$-measurable repair, and what is the least information that must be added once a new distinction is required? Sections~\ref{sec:preliminaries}--\ref{sec:value} answer this question at the population level, and Section~\ref{sec:algorithms} gives finite-sample guarded versions for a finite candidate class. DGM and DGM-Embedding are algorithmic realizations of this refine-or-repair principle; optimization guarantees for deep nonconvex backbones and global search over all possible distinctions are outside the theorem statements.
+The theorem-level question is not whether DGM is the globally optimal runtime architecture. It is: given a current information structure $\calF$, what part of the error is repairable at fixed information, what part requires refinement, and what is the least information that must be added once a new distinction is required? Section~\ref{sec:preliminaries} answers this question as a short diagnostic theory, and Section~\ref{sec:algorithms} gives the finite-sample guarded algorithm. DGM and DGM-Embedding are algorithmic realizations of this refine-or-repair principle; optimization guarantees for deep nonconvex backbones and global search over all possible distinctions are outside the theorem statements.
 
 \paragraph{Organization.}
-Sections~\ref{sec:preliminaries}--\ref{sec:value} give the information-structure obstruction, the minimal refinement rule, and the value identities. Section~\ref{sec:algorithms} turns the theory into Distinction Graph Machines. Section~\ref{sec:large-model-training} gives DGM-Embedding for language models. Section~\ref{sec:technical-overview} summarizes the guarantees, Section~\ref{sec:projection-bridge} relates the repair side to Projection Memory and CPM, and Section~\ref{sec:experiments} gives computational checks.
+Section~\ref{sec:preliminaries} gives the repair/refinement gap decomposition, missing-distinction obstruction, and minimal refinement rule. Section~\ref{sec:algorithms} turns the diagnosis into Distinction Graph Machines. Section~\ref{sec:large-model-training} gives DGM-Embedding for language models. Section~\ref{sec:guarantees} states the core guarantees, Section~\ref{sec:experiments} evaluates when refinement matters, and Section~\ref{sec:related} positions DGM relative to prior runtime learners.

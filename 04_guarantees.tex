@@ -1,0 +1,34 @@
+\section{Guarantees}
+\label{sec:guarantees}
+
+The guarantees are intentionally narrow. They do not claim that DGM is globally optimal, or that a deep backbone can always find the right representation. They formalize the paper's decision rule: decompose runtime excess risk into repair and refinement gaps, repair only inside the current information structure, refine when the current information identifies states with incompatible consequences, and accept DGM updates only when they decrease a local penalized scoring objective. Full proof details are in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
+
+\paragraph{1. Error decomposes into two gaps.}
+Theorem~\ref{thm:error-decomposition} states that for current predictor $f_t$, current information $\calF_t$, and a candidate refinement $\calG\supseteq\calF_t$,
+\begin{align*}
+R_L(f_t)-R_L(\calG)
+=
+\operatorname{RepGap}_L(f_t,\calF_t)
++
+\operatorname{RefGap}_L(\calF_t,\calG).
+\end{align*}
+The first term is the best possible gain from repairing the predictor at fixed information. The second is the value of changing the information itself.
+
+\paragraph{2. Missing distinctions obstruct repair.}
+Corollary~\ref{thm:contradiction:informal} says that if two states have the same information-map value but require different consequences, no predictor measurable with respect to the current information can satisfy both. This is the main theoretical point of the paper:
+\begin{align*}
+\boxed{\text{if the target separates states that the information map identifies, repair is impossible.}}
+\end{align*}
+The result is architecture-independent; it applies to caches, adapters, local memories, and test-time optimizers whenever their update leaves the relevant information structure fixed.
+
+\paragraph{3. Refinement has a canonical minimal form.}
+Theorems~\ref{thm:minimal-refinement:informal} and \ref{thm:sigma-refinement:informal} identify the least information update that makes new evidence observable. In the finite case, a binary distinction splits exactly the atoms it crosses. In the sigma-algebra case, the update is
+\begin{align*}
+\calF_{t+1}=\calF_t\vee\sigma(Z_t).
+\end{align*}
+Appendix~\ref{sec:value} gives the standard value identities that explain when such a distinction is useful: conditional mutual information under log loss and conditional variance reduction under squared loss.
+
+\paragraph{4. Guarded DGM updates descend locally.}
+Theorem~\ref{thm:refine-repair-descent:informal} states the algorithmic guarantee. A guarded repair does not increase the scoring-buffer objective because anchors and edges remain fixed and only a non-worsening local-state candidate is committed. An accepted refinement adds one concept and $q$ edges only when its held-out penalized refinement gain beats the repair gain plus margin and statistical safety term. Thus DGM is not an unscored growth heuristic: it is a local refine-or-repair decision with an explicit gap comparison.
+
+These statements also define the boundary of the claim. The scoring buffer is local and changes over time, so the descent result is not a global training theorem. Approximate retrieval must satisfy candidate recall for edge gates to recover the formal hard route. Budgeting, merging, and eviction are systems approximations that may discard distinctions and must be measured separately.
