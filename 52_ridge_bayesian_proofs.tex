@@ -31,20 +31,20 @@ u^\top a_j-b&=u^\top a_j-\frac{1}{2}u^\top a_i-\frac{1}{2}u^\top a_j\\
 
 \begin{theorem}[DGM graph generates a finite information structure, formal version of Theorem~\ref{thm:dgm-graph-partition:informal}]
 \label{thm:dgm-graph-partition:formal}
-Let $E$ be a finite set of binary generators $g_e:\calH\to\{0,1\}$. Define
+Let $S$ be a finite set of binary generators $g_s:\mathsf H\to\{0,1\}$. Define
 \begin{align*}
-\sigma_E(h)=\big(g_e(h)\big)_{e\in E}.
+\sigma_S(h)=\big(g_s(h)\big)_{s\in S}.
 \end{align*}
-The relation $h\sim_E h'$ iff $\sigma_E(h)=\sigma_E(h')$ is an equivalence relation. Its nonempty equivalence classes form a finite partition $\calP_E^G$ of $\calH$. If a new generator $g$ is added, then
+The relation $h\sim_S h'$ iff $\sigma_S(h)=\sigma_S(h')$ is an equivalence relation. Its nonempty equivalence classes form a finite partition $\calP_S^G$ of $\mathsf H$. If a new generator $g$ is added, then
 \begin{align*}
-\calP_{E\cup\{g\}}^G=\calP_E^G\vee\sigma(g),
+\calP_{S\cup\{g\}}^G=\calP_S^G\vee\sigma(g),
 \end{align*}
-where the right side denotes cutting each atom of $\calP_E^G$ by $g^{-1}(1)$ and $g^{-1}(0)$ and keeping nonempty pieces.
+where the right side denotes cutting each atom of $\calP_S^G$ by $g^{-1}(1)$ and $g^{-1}(0)$ and keeping nonempty pieces.
 \end{theorem}
 \begin{proof}
-Equality of signatures is reflexive, symmetric, and transitive, so $\sim_E$ is an equivalence relation. Equivalence classes are disjoint, nonempty, and cover $\calH$, hence they form a partition. Since $E$ is finite, there are at most $2^{|E|}$ signatures, so the partition is finite.
+Equality of signatures is reflexive, symmetric, and transitive, so $\sim_S$ is an equivalence relation. Equivalence classes are disjoint, nonempty, and cover $\mathsf H$, hence they form a partition. Since $S$ is finite, there are at most $2^{\abs{S}}$ signatures, so the partition is finite.
 
-For the update, two points have the same signature under $E\cup\{g\}$ exactly when they have the same old $E$-signature and the same value of $g$. Therefore each new equivalence class is an old atom intersected with either $g^{-1}(1)$ or $g^{-1}(0)$, with empty intersections discarded. This is precisely $\calP_E^G\vee\sigma(g)$.
+For the update, two points have the same signature under $S\cup\{g\}$ exactly when they have the same old $S$-signature and the same value of $g$. Therefore each new equivalence class is an old atom intersected with either $g^{-1}(1)$ or $g^{-1}(0)$, with empty intersections discarded. This is precisely $\calP_S^G\vee\sigma(g)$.
 \end{proof}
 
 \begin{theorem}[Anchor-based hard routing is graph-plus-anchor-order measurable, formal version of Theorem~\ref{thm:hard-dgm-measurable:informal}]
@@ -64,7 +64,7 @@ For each concept $j$, eligibility is an intersection of finitely many edge-bit e
 \end{align*}
 depending on $j$'s recorded side of edge $e$. Hence the eligible set for $j$ is $\calF_t^{\mathrm{edge}}$-measurable.
 
-The anchor-order sigma-algebra determines the complete order of all anchors under the fixed tie-breaking rule. For any subset $A\subseteq\{1,\ldots,N_t\}$, the event that concept $j$ is the nearest anchor in $A$ is a finite intersection of pairwise anchor-comparison events, hence belongs to $\calF_t^{\mathrm{anchor\text{-}order}}$. The selected hard-route index is obtained by combining finitely many eligibility events with these nearest-in-subset events. Therefore the inverse image of each selected index is a finite union of intersections of sets from $\calF_t^{\mathrm{edge}}$ and $\calF_t^{\mathrm{anchor\text{-}order}}$, and belongs to their join.
+The anchor-order sigma-algebra determines the complete order of all anchors under the fixed tie-breaking rule. For any subset $R\subseteq\{1,\ldots,N_t\}$, the event that concept $j$ is the nearest anchor in $R$ is a finite intersection of pairwise anchor-comparison events, hence belongs to $\calF_t^{\mathrm{anchor\text{-}order}}$. The selected hard-route index is obtained by combining finitely many eligibility events with these nearest-in-subset events. Therefore the inverse image of each selected index is a finite union of intersections of sets from $\calF_t^{\mathrm{edge}}$ and $\calF_t^{\mathrm{anchor\text{-}order}}$, and belongs to their join.
 \end{proof}
 
 \begin{theorem}[Soft routing approaches hard routing, formal version of Theorem~\ref{thm:soft-routing-hard-limit:informal}]
@@ -76,7 +76,7 @@ Let $N$ be a finite candidate set and let
 If $j^\star_{\mathrm{hard}}\notin N$, where $j^\star_{\mathrm{hard}}$ is the exact hard-route selected concept, then this sparse soft read gives no guarantee for the omitted hard-route concept. Otherwise, assume $j^\star=j^\star_{\mathrm{hard}}\in N$.
 If $j^\star$ is the unique candidate with $d_j-d_{j^\star}\ge\delta>0$ for all $j\ne j^\star$ and $\chi_j=\chi_{j^\star}=1$, then
 \begin{align*}
-1-\alpha_{j^\star}\le (|N|-1)\exp(-\delta/T).
+1-\alpha_{j^\star}\le (\abs{N}-1)\exp(-\delta/T).
 \end{align*}
 Moreover, suppose $\log\chi_j$ contains a term
 \begin{align*}
@@ -85,9 +85,9 @@ Moreover, suppose $\log\chi_j$ contains a term
 \end{align*}
 with $\beta_e>0$ and finite $D_j\ge1$, and candidate $j$ violates that edge with $m_j\le-\delta_e<0$. Then $\chi_j\le \exp(-\beta_e\delta_e/(\sqrt{D_j}\tau_e))$.
 
-For a wrong-side set $A\subseteq N$, suppose every $j\in A$ violates some incident structural edge whose weight is at least $\beta_{\min}>0$, whose signed margin is at most $-\delta_e$, and whose incident degree is at most $D_{\max}$. If at least one eligible reference candidate $r$ has $\chi_r\ge\chi_{\min}>0$, and the distance score ratio between every $j\in A$ and $r$ is bounded by $C$, then the total wrong-side routing mass is at most
+For a wrong-side set $W\subseteq N$, suppose every $j\in W$ violates some incident structural edge whose weight is at least $\beta_{\min}>0$, whose signed margin is at most $-\delta_e$, and whose incident degree is at most $D_{\max}$. If at least one eligible reference candidate $r$ has $\chi_r\ge\chi_{\min}>0$, and the distance score ratio between every $j\in W$ and $r$ is bounded by $C$, then the total wrong-side routing mass is at most
 \begin{align*}
-\frac{C|N|}{\chi_{\min}}
+\frac{C\abs{N}}{\chi_{\min}}
 \exp\left(-\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}\right).
 \end{align*}
 \end{theorem}
@@ -99,7 +99,7 @@ For the nearest-reference statement,
 \frac{\sum_{j\ne j^\star}\exp(-d_j/T)}
 {\exp(-d_{j^\star}/T)}
 =\sum_{j\ne j^\star}\exp(-(d_j-d_{j^\star})/T)
-\le (|N|-1)\exp(-\delta/T).
+\le (\abs{N}-1)\exp(-\delta/T).
 \end{align*}
 Since
 \begin{align*}
@@ -113,17 +113,17 @@ For an edge violation, set $a=\delta_e/\tau_e>0$. Since
 \begin{align*}
 \operatorname{sigmoid}(-a)=\frac{1}{1+\exp(a)}\le \exp(-a),
 \end{align*}
-the corresponding log-compatibility contribution is at most $-\beta_e\delta_e/(\sqrt{D_j}\tau_e)$, and therefore $\chi_j\le \exp(-\beta_e\delta_e/(\sqrt{D_j}\tau_e))$. If $A$ is the wrong-side set and $r$ is an eligible candidate whose compatibility satisfies $\chi_r\ge\chi_{\min}$, the uniform wrong-side assumptions give, for every $j\in A$,
+the corresponding log-compatibility contribution is at most $-\beta_e\delta_e/(\sqrt{D_j}\tau_e)$, and therefore $\chi_j\le \exp(-\beta_e\delta_e/(\sqrt{D_j}\tau_e))$. If $W$ is the wrong-side set and $r$ is an eligible candidate whose compatibility satisfies $\chi_r\ge\chi_{\min}$, the uniform wrong-side assumptions give, for every $j\in W$,
 \begin{align*}
 \chi_j\le
 \exp\left(-\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}\right).
 \end{align*}
 Combining this with the assumed distance-score ratio bound gives
 \begin{align*}
-\sum_{j\in A}\alpha_j
-&\le \sum_{j\in A} \frac{C}{\chi_{\min}}
+\sum_{j\in W}\alpha_j
+&\le \sum_{j\in W} \frac{C}{\chi_{\min}}
 \exp\left(-\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}\right)\\
-&\le \frac{C|N|}{\chi_{\min}}
+&\le \frac{C\abs{N}}{\chi_{\min}}
 \exp\left(-\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}\right).
 \end{align*}
 \end{proof}
@@ -146,12 +146,12 @@ with nonnegative penalties on a fixed scoring buffer. If a repair step is commit
 \end{align*}
 and leaves anchors, edges, and concept count unchanged, then $J_{\calB_t^{\mathrm{score}}}$ does not increase. If a refinement creates one concept and $q$ edges and is accepted only when
 \begin{align*}
-\Delta_{\mathrm{refine}}>
+\widehat\Delta_{\mathrm{refine}}>
 \max\{\widehat\Delta_{\mathrm{repair}},0\}+\tau+2\epsilon_m,
 \end{align*}
 where $\widehat\Delta_{\mathrm{repair}}\ge0$ is the empirical repair gain and
 \begin{align*}
-\Delta_{\mathrm{refine}}
+\widehat\Delta_{\mathrm{refine}}
 =
 \widehat R(\calS_t;\calB_t^{\mathrm{score}})
 -
@@ -172,7 +172,7 @@ J_{\calB_t^{\mathrm{score}}}(\calS_t)
 In particular, $J_{\calB_t^{\mathrm{score}}}$ decreases by more than $\tau+2\epsilon_m$.
 \end{theorem}
 \begin{proof}
-For repair, $N_{\mathrm{concept}}$ and $|E|$ are unchanged. The empirical-risk term on $\calB_t^{\mathrm{score}}$ is no larger by the guard, so $J_{\calB_t^{\mathrm{score}}}$ does not increase. The identity candidate is always feasible, so the guarded rule can decline harmful centroid or memory movement instead of committing it.
+For repair, $N_{\mathrm{concept}}$ and $\abs{E}$ are unchanged. The empirical-risk term on $\calB_t^{\mathrm{score}}$ is no larger by the guard, so $J_{\calB_t^{\mathrm{score}}}$ does not increase. The identity candidate is always feasible, so the guarded rule can decline harmful centroid or memory movement instead of committing it.
 
 For refinement,
 \begin{align*}
@@ -180,7 +180,7 @@ J_{\calB_t^{\mathrm{score}}}(\calS_t)-J_{\calB_t^{\mathrm{score}}}(\calS_{t+1})
 &=\widehat R(\calS_t;\calB_t^{\mathrm{score}})
 -\widehat R(\calS_{t+1};\calB_t^{\mathrm{score}})
 -\lambda_{\mathrm{concept}}-\lambda_{\mathrm{edge}}q\\
-&=\Delta_{\mathrm{refine}}\\
+&=\widehat\Delta_{\mathrm{refine}}\\
 &>\widehat\Delta_{\mathrm{repair}}+\tau+2\epsilon_m.
 \end{align*}
 Rearranging gives the claim.
@@ -280,7 +280,7 @@ For any input $h$, the tree follows exactly one root-to-leaf path. The leaf reac
 
 \begin{theorem}[DGM data-structure bound, formal version of Theorem~\ref{thm:dgm-complexity:informal}]
 \label{thm:dgm-complexity:formal}
-Assume DGM has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}|I_t(j)|$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)+|N(h)|d+C_{\mathrm{local}})$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. If each concept stores an anchor, a centroid, and an embedding mean in $\R^{d_e}$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+d_e)+|E_t|d)$ memory.
+Assume DGM has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}})$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. If each concept stores an anchor, a centroid, and an embedding mean in $\R^{d_e}$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+d_e)+\abs{E_t}d)$ memory.
 \end{theorem}
 \begin{proof}
 A distance computation between $h\in\R^d$ and one concept center costs $O(d)$. Exact centroid and anchor retrieval over $N_t$ concepts therefore costs
@@ -289,11 +289,11 @@ O(N_td).
 \end{align*}
 Graph-neighbor expansion has cost proportional to the incident lists touched and is absorbed into selected edge-gate bookkeeping. After the candidate set $N(h)$ is selected, evaluating the incident edge gates costs $O(Q(h))$. Computing sparse routing weights, distances within the selected set, and evaluating selected local memories costs
 \begin{align*}
-O(|N(h)|d+C_{\mathrm{local}}).
+O(\abs{N(h)}d+C_{\mathrm{local}}).
 \end{align*}
 Thus prediction costs
 \begin{align*}
-O(N_td+Q(h)+|N(h)|d+C_{\mathrm{local}}).
+O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}}).
 \end{align*}
 Observation begins with the same retrieval computation. If it repairs a selected concept, it adds the cost of evaluating and scoring the proposed local repair candidates on the scoring buffer. If it creates a new anchor-centroid pair, storing the pair costs $O(d)$. For each new edge, computing and storing the linear distinction vector costs $O(d)$, so $q$ edges cost
 \begin{align*}
@@ -307,20 +307,20 @@ O(N_t(2d+d_e)).
 \end{align*}
 Each edge stores one distinction vector and threshold, giving
 \begin{align*}
-O(|E_t|d).
+O(\abs{E_t}d).
 \end{align*}
 Adding the two terms proves the claimed bound.
 \end{proof}
 
 \begin{theorem}[DGM layer cost, formal version of Theorem~\ref{thm:dgm-layer-cost:informal}]
 \label{thm:dgm-layer-cost:formal}
-Consider a DGM adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $|N|$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
+Consider a DGM adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $\abs{N}$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+|N|dr).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}dr).
 \end{align*}
 If the write path is detached and uses rank-one local repair, the write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+|N|(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
 \end{align*}
 For a block of length $L$, backpropagation through the slow parameters does not require storing the full DGM state history $\calS_1,\ldots,\calS_L$.
 \end{theorem}
@@ -335,15 +335,15 @@ For a selected concept $j$, the rank-$r$ adapter read is
 \begin{align*}
 W_jKh.
 \end{align*}
-Multiplying one selected $W_j\in\R^{d\times r}$ by a rank-$r$ key costs $O(dr)$. Therefore $|N|$ selected adapters cost
+Multiplying one selected $W_j\in\R^{d\times r}$ by a rank-$r$ key costs $O(dr)$. Therefore $\abs{N}$ selected adapters cost
 \begin{align*}
-O(|N|dr).
+O(\abs{N}dr).
 \end{align*}
 The routing weights add lower-order top-$k$ normalization cost, absorbed into the same bound. This proves the read overhead.
 
 The write path first computes the same query, retrieval, and edge gates. It then updates selected concept statistics and selected local memories. Concept bookkeeping costs $O(d_q)$ per selected concept. A rank-one local repair of a rank-$r$ or low-rank sufficient-statistic memory costs $O(dr)$ per selected memory. Hence the write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+|N|(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
 \end{align*}
 
 Finally, the update rule is applied as

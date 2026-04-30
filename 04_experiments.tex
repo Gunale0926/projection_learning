@@ -1,11 +1,11 @@
 \section{Experiments: When Refinement Matters}
 \label{sec:experiments}
 
-The experiments are designed to test the paper's central claim rather than broad benchmark performance. A useful task should contain both a repair gap, where local memory updates should help, and a refinement gap, where repair-only methods should collapse incompatible consequences into one state. All learners use a prequential protocol: predict first, observe the consequence, then update. Implementation details and additional sanity checks are in Appendix~\ref{app:additional-checks}.
+The experiments test the mechanism predicted by the theory rather than broad benchmark performance. A diagnostic task should contain both a repair component, where local memory updates help, and a refinement component, where repair-only methods collapse incompatible consequences into one state. All learners use a prequential protocol: predict first, observe the consequence, then update. Implementation details and additional sanity checks are in Appendix~\ref{app:additional-checks}.
 
 \subsection{Hidden-regime sequence prediction}
 
-The most direct check is a hidden-regime online sequence task. A hidden regime chooses the next-token transition map. The learner is not given the regime label; it observes only a noisy continuous cue and the current token, predicts the next token, and then receives the next-token consequence. The same current token can therefore require different next tokens in different regimes. A repair-only memory averages those consequences, while a refine+repair learner can create separate runtime concepts.
+The most direct check is a hidden-regime online sequence task. A hidden regime chooses the next-token transition map. The learner is not given the regime label; it observes only a noisy continuous cue and the current token, predicts the next token, and then receives the next-token consequence. The same current token can therefore require different next tokens in different regimes. A repair-only memory averages those consequences, while a refine-and-repair learner can create separate runtime concepts.
 
 \begin{table}[t]
 \centering
@@ -26,7 +26,7 @@ Backprop MLP, online & one backprop step & $0.292\pm0.020$ & $2.217\pm0.054$ & -
 \label{tab:hidden-regime-check}
 \end{table}
 
-Held-out accuracies for the same runs were $0.285\pm0.049$ for cache LM, $0.346\pm0.106$ for budgeted $k$NN-LM, $0.235\pm0.024$ for nearest-centroid memory, $0.055\pm0.015$ for repair-only DGM, $0.680\pm0.065$ for refine+repair DGM, and $0.282\pm0.086$ for online backpropagation. The important comparison is not only that DGM is higher, but that the repair-only DGM is much worse: the task is constructed so that one local memory is the wrong information structure.
+Held-out accuracies for the same runs were $0.285\pm0.049$ for cache LM, $0.346\pm0.106$ for budgeted $k$NN-LM, $0.235\pm0.024$ for nearest-centroid memory, $0.055\pm0.015$ for repair-only DGM, $0.680\pm0.065$ for refine+repair DGM, and $0.282\pm0.086$ for online backpropagation. The important comparison is structural: repair-only DGM fails because the task is constructed so that one local memory is the wrong information structure.
 
 \subsection{Repair-only ablation}
 
@@ -48,7 +48,7 @@ Refine+repair & 9 & $0.939$ & $0.967$ \\
 
 \subsection{Controlled contextual XOR}
 
-As a graph-memory check, we use a two-context XOR stream. In the first context the label is XOR of two Gaussian cluster signs; in the second context the labels are flipped. The context coordinate is observable, but the learner must discover how it changes the consequence. The offline MLP is a batch upper bound; the online MLP predicts each example and then performs one backpropagation step; DGM uses the same online protocol but can refine the concept graph before repairing local state.
+As a graph-memory check, we use a two-context XOR stream. In the first context the label is XOR of two Gaussian cluster signs; in the second context the labels are flipped. The context coordinate is observable, but the learner must discover how it changes the consequence. The offline MLP is a batch upper bound; the online MLP predicts each example and then performs one backpropagation step; DGM uses the same online protocol but may refine the concept graph before repairing local state.
 
 \begin{table}[t]
 \centering
@@ -82,4 +82,4 @@ Synthetic LM & $0.931\pm0.071$ & $0.125\pm0.021$ & $0.912\pm0.077$ \\
 \label{tab:lm-check}
 \end{table}
 
-These experiments do not claim that DGM is a finished competitive language-modeling system. They check the mechanism that the theory predicts: when the error is caused by a missing distinction, methods that only repair state are forced to mix incompatible consequences; a refine+repair learner can create the missing runtime concept and then repair it locally.
+These experiments do not claim that DGM is a finished competitive language-modeling system. They check the mechanism predicted by the theory: when error is caused by a missing distinction, methods that only repair state are forced to mix incompatible consequences; a refine-and-repair learner can create the missing runtime concept and then repair it locally.

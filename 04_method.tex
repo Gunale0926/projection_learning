@@ -9,7 +9,7 @@ The first fact is purely order-theoretic. If $\calG$ contains all events in $\ca
 
 \begin{theorem}[Bayes-risk monotonicity]
 \label{thm:risk-monotonicity:informal}
-If $\calF\subseteq\calG$, then for every loss $L$,
+If $\calF\subseteq\calG$, then for every loss $L$ for which both risks are well-defined,
 \begin{align*}
 R_L(\calG)\le R_L(\calF).
 \end{align*}
@@ -29,7 +29,7 @@ R_{\log}(\calF)-R_{\log}(\calG)=I(Y;\calG\mid\calF).
 \end{align*}
 \end{theorem}
 
-Thus, for classification and language modeling, a refinement is useful exactly to the extent that it carries conditional mutual information about the consequence beyond what the learner already knows. If the new bit does not tell us anything about the next consequence beyond the old information, it is a gratuitous distinction, even if it separates inputs.
+Here $I(Y;\calG\mid\calF)$ denotes $H(Y\mid\calF)-H(Y\mid\calG)$. Thus, for classification and language modeling, a refinement is useful exactly to the extent that it carries conditional mutual information about the consequence beyond what the learner already knows. If the new bit does not tell us anything about the next consequence beyond the old information, it is a gratuitous distinction, even if it separates inputs.
 
 \subsection{Squared loss}
 
@@ -51,16 +51,16 @@ The population identities lead directly to standard empirical split scores: info
 
 For classification, let $\hat p_B$, $\hat p_{B_0}$, and $\hat p_{B_1}$ be empirical label distributions. The empirical log-loss improvement is
 \begin{align*}
-\Delta_{\log}(B,g)=|B|H(\hat p_B)-|B_0|H(\hat p_{B_0})-|B_1|H(\hat p_{B_1}).
+\Delta_{\log}(B,g)=\abs{B}H(\hat p_B)-\abs{B_0}H(\hat p_{B_0})-\abs{B_1}H(\hat p_{B_1}).
 \end{align*}
 Equivalently,
 \begin{align*}
-\Delta_{\log}(B,g)=|B|\widehat I(Y;g\mid B).
+\Delta_{\log}(B,g)=\abs{B}\widehat I(Y;g\mid B).
 \end{align*}
 
 For regression, define
 \begin{align*}
-\hat\mu_B=\frac{1}{|B|}\sum_{j\in B}y_j,\qquad \operatorname{SSE}(B)=\sum_{j\in B}\norm{y_j-\hat\mu_B}_2^2.
+\hat\mu_B=\frac{1}{\abs{B}}\sum_{j\in B}y_j,\qquad \operatorname{SSE}(B)=\sum_{j\in B}\norm{y_j-\hat\mu_B}_2^2.
 \end{align*}
 The empirical squared-loss improvement is
 \begin{align*}
@@ -68,7 +68,7 @@ The empirical squared-loss improvement is
 \end{align*}
 It also has the between-cell form
 \begin{align*}
-\Delta_2(B,g)=|B_0|\norm{\hat\mu_{B_0}-\hat\mu_B}_2^2+|B_1|\norm{\hat\mu_{B_1}-\hat\mu_B}_2^2.
+\Delta_2(B,g)=\abs{B_0}\norm{\hat\mu_{B_0}-\hat\mu_B}_2^2+\abs{B_1}\norm{\hat\mu_{B_1}-\hat\mu_B}_2^2.
 \end{align*}
 
 These scores implement the same principle as the population theory: split only when the proposed distinction has measurable consequence value. The DGM algorithm below turns this population rule into a guarded empirical decision.

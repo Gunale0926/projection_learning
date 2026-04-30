@@ -5,7 +5,7 @@ The proofs below use standard tools from statistical decision theory, informatio
 
 \begin{theorem}[Bayes-risk monotonicity, formal version of Theorem~\ref{thm:risk-monotonicity:informal}]
 \label{thm:risk-monotonicity:formal}
-Let $Y$ be a target random variable, let $A$ be an action space, and let $L$ be an integrable loss. If $\calF\subseteq\calG$, then
+Let $Y$ be a target random variable, let $\mathsf A$ be an action space, and let $L$ be an integrable loss. If $\calF\subseteq\calG$, then
 \begin{align*}
 R_L(\calG)\le R_L(\calF).
 \end{align*}
@@ -13,7 +13,7 @@ R_L(\calG)\le R_L(\calF).
 \begin{proof}
 Define
 \begin{align*}
-\calD_\calF=\{a:\Omega\to A:a\text{ is }\calF\text{-measurable}\},\qquad \calD_\calG=\{a:\Omega\to A:a\text{ is }\calG\text{-measurable}\}.
+\calD_\calF=\{a:\Omega\to\mathsf A:a\text{ is }\calF\text{-measurable}\},\qquad \calD_\calG=\{a:\Omega\to\mathsf A:a\text{ is }\calG\text{-measurable}\}.
 \end{align*}
 Since $\calF\subseteq\calG$,
 \begin{align*}
@@ -66,20 +66,20 @@ R_2(\calF)-R_2(\calG)=\E\left[\norm{\E[Y\mid\calG]-\E[Y\mid\calF]}_2^2\right].
 \begin{proof}
 The optimal $\calF$-measurable predictor is $\E[Y\mid\calF]$, and the optimal $\calG$-measurable predictor is $\E[Y\mid\calG]$. Let
 \begin{align*}
-U=Y-\E[Y\mid\calG],\qquad V=\E[Y\mid\calG]-\E[Y\mid\calF].
+\varepsilon=Y-\E[Y\mid\calG],\qquad \delta=\E[Y\mid\calG]-\E[Y\mid\calF].
 \end{align*}
 Then
 \begin{align*}
-Y-\E[Y\mid\calF]=U+V.
+Y-\E[Y\mid\calF]=\varepsilon+\delta.
 \end{align*}
-Since $V$ is $\calG$-measurable and $\E[U\mid\calG]=0$,
+Since $\delta$ is $\calG$-measurable and $\E[\varepsilon\mid\calG]=0$,
 \begin{align*}
-\E[\ip{U}{V}\mid\calG]=\ip{\E[U\mid\calG]}{V}=0.
+\E[\ip{\varepsilon}{\delta}\mid\calG]=\ip{\E[\varepsilon\mid\calG]}{\delta}=0.
 \end{align*}
 Thus
 \begin{align*}
-\E\norm{Y-\E[Y\mid\calF]}_2^2&=\E\norm{U+V}_2^2\\
-&=\E\norm{U}_2^2+\E\norm{V}_2^2\\
+\E\norm{Y-\E[Y\mid\calF]}_2^2&=\E\norm{\varepsilon+\delta}_2^2\\
+&=\E\norm{\varepsilon}_2^2+\E\norm{\delta}_2^2\\
 &=R_2(\calG)+\E\left[\norm{\E[Y\mid\calG]-\E[Y\mid\calF]}_2^2\right].
 \end{align*}
 Rearranging proves the identity.
@@ -89,14 +89,14 @@ Rearranging proves the identity.
 \label{prop:sse-split:formal}
 Let $B=B_0\cup B_1$ be a disjoint split of a finite sample set. With empirical means $\hat\mu_B,\hat\mu_{B_0},\hat\mu_{B_1}$ and $\operatorname{SSE}$ as in Section~\ref{sec:value},
 \begin{align*}
-\operatorname{SSE}(B)-\operatorname{SSE}(B_0)-\operatorname{SSE}(B_1)=|B_0|\norm{\hat\mu_{B_0}-\hat\mu_B}_2^2+|B_1|\norm{\hat\mu_{B_1}-\hat\mu_B}_2^2.
+\operatorname{SSE}(B)-\operatorname{SSE}(B_0)-\operatorname{SSE}(B_1)=\abs{B_0}\norm{\hat\mu_{B_0}-\hat\mu_B}_2^2+\abs{B_1}\norm{\hat\mu_{B_1}-\hat\mu_B}_2^2.
 \end{align*}
 \end{proposition}
 \begin{proof}
 For each child $B_b$,
 \begin{align*}
 \sum_{j\in B_b}\norm{y_j-\hat\mu_B}_2^2&=\sum_{j\in B_b}\norm{y_j-\hat\mu_{B_b}+\hat\mu_{B_b}-\hat\mu_B}_2^2\\
-&=\sum_{j\in B_b}\norm{y_j-\hat\mu_{B_b}}_2^2+|B_b|\norm{\hat\mu_{B_b}-\hat\mu_B}_2^2,
+&=\sum_{j\in B_b}\norm{y_j-\hat\mu_{B_b}}_2^2+\abs{B_b}\norm{\hat\mu_{B_b}-\hat\mu_B}_2^2,
 \end{align*}
 because
 \begin{align*}

@@ -1,7 +1,7 @@
 \section{Proof Sketches}
 \label{sec:technical-overview}
 
-This section collects the main proof ideas in the order used by the paper: runtime excess risk decomposes into repair and refinement gaps; contradictions require distinctions; minimal refinement adds the missing distinction and nothing else; useful distinctions have exact value under standard losses; and guarded DGM updates decrease the local penalized objective. The measure-theoretic notation, conditional-expectation facts, and decision-theoretic Bayes-risk framing are standard \citep{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}. Full formal versions appear in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
+This section collects the main proof ideas in the order used by the paper: runtime excess risk decomposes into $\Delta_{\mathrm{repair}}$ and $\Delta_{\mathrm{refine}}$; contradictions require distinctions; minimal refinement adds the missing distinction and nothing else; useful distinctions have exact value under standard losses; and guarded DGM updates decrease the local penalized objective. The measure-theoretic notation, conditional-expectation facts, and decision-theoretic Bayes-risk framing are standard \citep{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}. Full formal versions appear in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
 
 \begin{theorem}[Runtime error decomposition, proof sketch for Theorem~\ref{thm:error-decomposition}]
 \label{thm:error-decomposition:sketch}
@@ -12,9 +12,9 @@ Add and subtract the Bayes risk under the current information:
 \begin{align*}
 R_L(f_t)-R_L(\calG)
 =
-\big(R_L(f_t)-R_L(\calF_t)\big)
+\Delta_{\mathrm{repair}}(f_t,\calF_t)
 +
-\big(R_L(\calF_t)-R_L(\calG)\big).
+\Delta_{\mathrm{refine}}(\calF_t,\calG).
 \end{align*}
 The first term is nonnegative because $f_t$ is one of the $\calF_t$-measurable predictors over which $R_L(\calF_t)$ optimizes. The second is nonnegative because $\calG\supseteq\calF_t$ enlarges the admissible predictor class.
 \end{proof}
@@ -40,19 +40,19 @@ contradicting the hypothesis.
 The statement is Theorem~\ref{thm:minimal-refinement:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Every atom of $\calP_E$ lies inside an atom of $\calP$, so $\calP_E$ refines $\calP$. Also
+Every atom of $\calP_D$ lies inside an atom of $\calP$, so $\calP_D$ refines $\calP$. Also
 \begin{align*}
-E=\bigcup_{B\in\calP}(B\cap E),
+D=\bigcup_{B\in\calP}(B\cap D),
 \end{align*}
-so $E$ is $\calP_E$-measurable. If $\calQ$ refines $\calP$ and makes $E$ measurable, then every atom $Q\in\calQ$ satisfies
+so $D$ is $\calP_D$-measurable. If $\calQ$ refines $\calP$ and makes $D$ measurable, then every atom $Q\in\calQ$ satisfies
 \begin{align*}
 Q\subseteq B
 \end{align*}
-for some $B\in\calP$, and also either $Q\subseteq E$ or $Q\subseteq E^c$. Hence
+for some $B\in\calP$, and also either $Q\subseteq D$ or $Q\subseteq D^c$. Hence
 \begin{align*}
-Q\subseteq B\cap E\qquad \text{or}\qquad Q\subseteq B\cap E^c.
+Q\subseteq B\cap D\qquad \text{or}\qquad Q\subseteq B\cap D^c.
 \end{align*}
-Thus $\calQ$ refines $\calP_E$.
+Thus $\calQ$ refines $\calP_D$.
 \end{proof}
 \begin{theorem}[Minimal sigma-algebra refinement, proof sketch for Theorem~\ref{thm:sigma-refinement:formal}]
 \label{thm:sigma-refinement:sketch}
@@ -61,15 +61,15 @@ The statement is Theorem~\ref{thm:sigma-refinement:informal}.
 \begin{proof}[Proof sketch]
 By definition,
 \begin{align*}
-\calF\vee\sigma(Z)=\sigma(\calF\cup\sigma(Z)).
+\calF\vee\sigma(U)=\sigma(\calF\cup\sigma(U)).
 \end{align*}
-This sigma-algebra contains $\calF$ and makes $Z$ measurable. If $\calG$ also contains $\calF$ and makes $Z$ measurable, then
+This sigma-algebra contains $\calF$ and makes $U$ measurable. If $\calG$ also contains $\calF$ and makes $U$ measurable, then
 \begin{align*}
-\calF\cup\sigma(Z)\subseteq\calG.
+\calF\cup\sigma(U)\subseteq\calG.
 \end{align*}
 Since $\calG$ is a sigma-algebra,
 \begin{align*}
-\sigma(\calF\cup\sigma(Z))\subseteq\calG.
+\sigma(\calF\cup\sigma(U))\subseteq\calG.
 \end{align*}
 \end{proof}
 
@@ -189,7 +189,7 @@ Every edge generator $g_e(h)=\one\{u_e^\top h>b_e\}$ is a deterministic function
 The statement is Corollary~\ref{cor:finite-refinements:informal}.
 \end{corollary}
 \begin{proof}[Proof sketch]
-After $m$ accepted refinements a common potential $\Phi$ has decreased by at least $m\tau$. Since the potential is nonnegative, $m\tau\le \Phi(\calS_0)$. This argument requires a common potential; changing local scoring buffers do not by themselves give a global finiteness bound.
+After $m$ accepted refinements a common potential $\Phi$ has decreased by at least $m\tau$. Since the potential is nonnegative, $m\tau\le \Phi(\calS_0)$. This argument requires a common potential; changing local scoring buffers do not by themselves define a global finiteness bound.
 \end{proof}
 
 \begin{proposition}[Tree as generalized hard-DGM, proof sketch for Proposition~\ref{prop:tree-as-dgm:formal}]
@@ -209,13 +209,13 @@ A prediction computes centroid and anchor distances from $h$ to $N_t$ concepts i
 \begin{align*}
 O(N_td).
 \end{align*}
-It then evaluates $Q(h)$ selected incident edge gates and $|N(h)|$ selected local memories, costing $O(Q(h)+|N(h)|d+C_{\mathrm{local}})$ including sparse routing weights. Guarded repair adds the cost of scoring proposed local candidates. Creating one anchor-centroid pair stores two vectors in $\R^d$, still $O(d)$. Adding $q$ distinction edges stores $q$ vectors and thresholds, costing
+It then evaluates $Q(h)$ selected incident edge gates and $\abs{N(h)}$ selected local memories, costing $O(Q(h)+\abs{N(h)}d+C_{\mathrm{local}})$ including sparse routing weights. Guarded repair adds the cost of scoring proposed local candidates. Creating one anchor-centroid pair stores two vectors in $\R^d$, still $O(d)$. Adding $q$ distinction edges stores $q$ vectors and thresholds, costing
 \begin{align*}
 O(qd).
 \end{align*}
 For mean memories, each concept stores $a_j,c_j\in\R^d$ and $r_j\in\R^{d_e}$, while each edge stores one distinction vector in $\R^d$. Hence memory is
 \begin{align*}
-O(N_t(2d+d_e)+|E_t|d).
+O(N_t(2d+d_e)+\abs{E_t}d).
 \end{align*}
 \end{proof}
 
@@ -228,13 +228,13 @@ Computing $q=Qh$ costs $O(dd_q)$. Retrieval costs $C_{\mathrm{ret}}(N_t,d_q)$ by
 \begin{align*}
 W_jKh.
 \end{align*}
-The matrix-vector product with one local adapter costs $O(dr)$, so $|N|$ selected adapters cost
+The matrix-vector product with one local adapter costs $O(dr)$, so $\abs{N}$ selected adapters cost
 \begin{align*}
-O(|N|dr).
+O(\abs{N}dr).
 \end{align*}
 The detached write path repeats query, retrieval, and edge-gate evaluation, then updates only selected local states. A rank-one local repair or low-rank sufficient-statistic update costs $O(dr)$ per selected memory, with $O(d_q)$ additional concept bookkeeping. Hence write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+|N|(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
 \end{align*}
 Because the write path is detached, backpropagation does not need intermediate copies of $\calS_t$ for all $t$. It stores the selected read computation used in the forward loss.
 \end{proof}

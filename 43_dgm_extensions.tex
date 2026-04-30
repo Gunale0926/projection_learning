@@ -18,7 +18,7 @@ Thus the distinction-graph view contains trees after allowing arbitrary concept-
 
 Let
 \begin{align*}
-Q(h)=\sum_{j\in N(h)}\abs{I_t(j)}
+Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}
 \end{align*}
 be the number of incident edge gates evaluated for the selected candidates. With exact nearest-neighbor search, prediction costs
 \begin{align*}
@@ -26,21 +26,21 @@ O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}}),
 \end{align*}
 where $C_{\mathrm{local}}$ is the cost of evaluating the selected local memories. With approximate nearest-neighbor indexing, the $N_td$ term can be replaced by the query cost of the index \citep{indyk1998approximate,johnson2019billion}. Creating an anchor-centroid pair costs $O(d)$ plus the cost of initializing its memory. Adding $q$ distinction edges costs $O(qd)$. If each concept stores an embedding mean in $\R^{d_e}$, runtime memory is
 \begin{align*}
-O(N_t(2d+d_e)+|E_t|d).
+O(N_t(2d+d_e)+\abs{E_t}d).
 \end{align*}
 
 \begin{theorem}[DGM data-structure bound]
 \label{thm:dgm-complexity:informal}
-For exact search over $N_t$ centroids in $\R^d$, one edge-gated DGM prediction costs $O(N_td+Q+\abs{N}d+C_{\mathrm{local}})$, where $N=N(h)$ and $Q=Q(h)$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. With embedding-mean memories, the runtime state uses $O(N_t(2d+d_e)+|E_t|d)$ memory.
+For exact search over $N_t$ centroids in $\R^d$, one edge-gated DGM prediction costs $O(N_td+Q+\abs{N}d+C_{\mathrm{local}})$, where $N=N(h)$ and $Q=Q(h)$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. With embedding-mean memories, the runtime state uses $O(N_t(2d+d_e)+\abs{E_t}d)$ memory.
 \end{theorem}
 
 \subsection{Ridge local memory}
 
-For few-shot adaptation or local readout repair, a memory stores a small support set $Z\in\R^{n\times d}$ and labels $Y\in\R^{n\times C}$. The closed-form adapter is the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}:
+For few-shot adaptation or local readout repair, a memory stores support embeddings $X_{\mathrm{sup}}\in\R^{n\times d}$ and labels $Y\in\R^{n\times C}$. The closed-form adapter is the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}:
 \begin{align*}
-\Gamma=(ZZ^\top+\lambda I)^{-1}Y,
+\Gamma=(X_{\mathrm{sup}}X_{\mathrm{sup}}^\top+\lambda I)^{-1}Y,
 \qquad
-\operatorname{logits}(z)=zZ^\top\Gamma.
+\operatorname{logits}(z)=zX_{\mathrm{sup}}^\top\Gamma.
 \end{align*}
 Projection Memory and CPM are advanced repair rules inside $M_j$ after the graph has fixed the relevant local concept; Appendix~\ref{sec:projection-bridge} treats that relation directly.
 
@@ -75,7 +75,7 @@ Let $K:\R^d\to\R^r$ be a learned or fixed key projection and set $k_t=Kh_t$. The
 \qquad
 \tilde h_t=h_t+\gamma_\theta(h_t)\Delta h_t.
 \end{align*}
-Here $W_jk_t$ is a hidden-space residual, so the write rule requires an explicit residual target $v_t\in\R^d$. Natural choices include a token-embedding target $P E[x_{t+1}]$, a teacher-forced output-error target $P(E[x_{t+1}]-\hat e_t)$, or a distillation target $h_t^{\mathrm{teacher}}-h_t$. Without such a target, the adapter is only an architectural extension.
+Here $W_jk_t$ is a hidden-space residual, so the write rule requires an explicit residual target $v_t\in\R^d$. Let $P_{\mathrm{emb}\to h}:\R^{d_e}\to\R^d$ be a chosen projection from output-embedding space to hidden-residual space. Natural choices include a token-embedding target $P_{\mathrm{emb}\to h}e_{x_{t+1}}$, a teacher-forced output-error target $P_{\mathrm{emb}\to h}(e_{x_{t+1}}-\hat e_t)$, or a distillation target $h_t^{\mathrm{teacher}}-h_t$. Without such a target, the adapter is only an architectural extension.
 
 Given a local residual target, the projected rank-one repair for a selected concept is the same residual-correction pattern that appears in passive-aggressive updates, RLS/ridge-style online least squares, and delta-rule fast-weight memories \citep{crammer2006online,vovk1997competitive,schlag2021linear}:
 \begin{align*}
@@ -95,15 +95,15 @@ During sequential detached training, backpropagation sees the selected read comp
 
 \begin{theorem}[DGM layer cost]
 \label{thm:dgm-layer-cost:informal}
-Consider a DGM adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $|N|$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
+Consider a DGM adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $\abs{N}$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+|N|dr).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}dr).
 \end{align*}
 If the write path is detached and uses rank-one local repair, the write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+|N|(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
 \end{align*}
-For a block of length $L$, the DGM state history need not be stored for backpropagation; the additional activation memory is the selected read computation, not the full sequence of memory states. The DGM-Embedding layer replaces the $|N|dr$ adapter term by the selected embedding-logit cost.
+For a block of length $L$, the DGM state history need not be stored for backpropagation; the additional activation memory is the selected read computation, not the full sequence of memory states. The DGM-Embedding layer replaces the $\abs{N}dr$ adapter term by the selected embedding-logit cost.
 \end{theorem}
 
 The concept bank can be sharded by the same principle used in retrieval and sparse expert systems. Each device owns a subset of concepts. A query is routed to a small set of shards, each shard returns local top-$k$ candidates, and a final top-$k$ merge selects the memories used by the read path. Only selected memories receive gradients. Detached writes are sent back to the owning shards.
@@ -112,10 +112,10 @@ Budgeting is necessary for long training. A practical DGM layer maintains $N_t\l
 
 \subsection{Closed-form local repair}
 
-Ridge memory is the main closed-form adapter used in our checks. Let $Z\in\R^{n\times d}$ be normalized support embeddings stored by a DGM memory and let $Y\in\R^{n\times C}$ be one-hot consequences. The adapter computes the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}
+Ridge memory is the main closed-form adapter used in our checks. Let $X_{\mathrm{sup}}\in\R^{n\times d}$ be normalized support embeddings stored by a DGM memory and let $Y\in\R^{n\times C}$ be one-hot consequences. The adapter computes the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}
 \begin{align*}
-\Gamma=(ZZ^\top+\lambda I)^{-1}Y,
+\Gamma=(X_{\mathrm{sup}}X_{\mathrm{sup}}^\top+\lambda I)^{-1}Y,
 \qquad
-\operatorname{logits}(z)=zZ^\top\Gamma.
+\operatorname{logits}(z)=zX_{\mathrm{sup}}^\top\Gamma.
 \end{align*}
 This is projection-style repair: it fits the local adapter in one linear solve rather than by iterated backpropagation. In a large model, the same idea can be applied per concept, per document, or per retrieved shard after the relevant distinction structure has been fixed.

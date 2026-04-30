@@ -5,66 +5,66 @@ The statements in this appendix use standard facts about finite partitions, gene
 
 \begin{theorem}[Minimal finite refinement, formal version of Theorem~\ref{thm:minimal-refinement:informal}]
 \label{thm:minimal-refinement:formal}
-Let $\Omega$ be finite, let $\calP$ be a partition of $\Omega$, and let $E\subseteq\Omega$. Define
+Let $\Omega$ be finite, let $\calP$ be a partition of $\Omega$, and let $D\subseteq\Omega$. Define
 \begin{align*}
-\calP_E=\{B\cap E:B\in\calP, B\cap E\ne\varnothing\}\cup\{B\cap E^c:B\in\calP, B\cap E^c\ne\varnothing\}.
+\calP_D=\{B\cap D:B\in\calP, B\cap D\ne\varnothing\}\cup\{B\cap D^c:B\in\calP, B\cap D^c\ne\varnothing\}.
 \end{align*}
 Then:
 \begin{itemize}
-\item {\bf Part 1.} $\calP_E$ is a partition of $\Omega$.
-\item {\bf Part 2.} $\calP_E$ refines $\calP$.
-\item {\bf Part 3.} $E$ is $\calP_E$-measurable.
-\item {\bf Part 4.} If $\calQ$ refines $\calP$ and $E$ is $\calQ$-measurable, then $\calQ$ refines $\calP_E$.
+\item {\bf Part 1.} $\calP_D$ is a partition of $\Omega$.
+\item {\bf Part 2.} $\calP_D$ refines $\calP$.
+\item {\bf Part 3.} $D$ is $\calP_D$-measurable.
+\item {\bf Part 4.} If $\calQ$ refines $\calP$ and $D$ is $\calQ$-measurable, then $\calQ$ refines $\calP_D$.
 \end{itemize}
-Consequently, $\calP_E$ is the unique minimal refinement of $\calP$ making $E$ measurable.
+Consequently, $\calP_D$ is the unique minimal refinement of $\calP$ making $D$ measurable.
 \end{theorem}
 \begin{proof}
-For each $B\in\calP$, the nonempty sets among $B\cap E$ and $B\cap E^c$ are disjoint and have union $B$. Since the atoms of $\calP$ are disjoint and cover $\Omega$, the atoms of $\calP_E$ are disjoint and cover $\Omega$. Thus Part 1 holds.
+For each $B\in\calP$, the nonempty sets among $B\cap D$ and $B\cap D^c$ are disjoint and have union $B$. Since the atoms of $\calP$ are disjoint and cover $\Omega$, the atoms of $\calP_D$ are disjoint and cover $\Omega$. Thus Part 1 holds.
 
-Every atom of $\calP_E$ is contained in some $B\in\calP$, so Part 2 holds. Also
+Every atom of $\calP_D$ is contained in some $B\in\calP$, so Part 2 holds. Also
 \begin{align*}
-E=\bigcup_{B\in\calP}(B\cap E),
+D=\bigcup_{B\in\calP}(B\cap D),
 \end{align*}
-where empty intersections are ignored. Hence $E$ is a union of atoms of $\calP_E$, proving Part 3.
+where empty intersections are ignored. Hence $D$ is a union of atoms of $\calP_D$, proving Part 3.
 
-Let $\calQ$ refine $\calP$ and make $E$ measurable. For any atom $Q\in\calQ$, there exists $B\in\calP$ with
+Let $\calQ$ refine $\calP$ and make $D$ measurable. For any atom $Q\in\calQ$, there exists $B\in\calP$ with
 \begin{align*}
 Q\subseteq B.
 \end{align*}
-Since $E$ is $\calQ$-measurable, each atom of $\calQ$ is either contained in $E$ or disjoint from $E$. Hence
+Since $D$ is $\calQ$-measurable, each atom of $\calQ$ is either contained in $D$ or disjoint from $D$. Hence
 \begin{align*}
-Q\subseteq B\cap E\qquad \text{or}\qquad Q\subseteq B\cap E^c.
+Q\subseteq B\cap D\qquad \text{or}\qquad Q\subseteq B\cap D^c.
 \end{align*}
-Thus each atom of $\calQ$ is contained in an atom of $\calP_E$, so $\calQ$ refines $\calP_E$. This proves Part 4.
+Thus each atom of $\calQ$ is contained in an atom of $\calP_D$, so $\calQ$ refines $\calP_D$. This proves Part 4.
 
-If another partition has the same minimal property, it refines $\calP_E$ and is refined by $\calP_E$, so the two partitions have the same atoms.
+If another partition has the same minimal property, it refines $\calP_D$ and is refined by $\calP_D$, so the two partitions have the same atoms.
 \end{proof}
 
 \begin{theorem}[Minimal sigma-algebra refinement, formal version of Theorem~\ref{thm:sigma-refinement:informal}]
 \label{thm:sigma-refinement:formal}
-Let $(\Omega,\calA)$ be a measurable space, let $\calF\subseteq\calA$ be a sigma-algebra, and let $Z:\Omega\to\calZ$ be a measurable map into a measurable space $(\calZ,\calB)$. The join $\calF\vee\sigma(Z)$ is the smallest sigma-algebra $\calG\subseteq\calA$ such that $\calF\subseteq\calG$ and $Z$ is $\calG$-measurable.
+Let $(\Omega,\calE)$ be a measurable space, let $\calF\subseteq\calE$ be a sigma-algebra, and let $U:\Omega\to\calU$ be a measurable map into a measurable space $(\calU,\Sigma_{\calU})$. The join $\calF\vee\sigma(U)$ is the smallest sigma-algebra $\calG\subseteq\calE$ such that $\calF\subseteq\calG$ and $U$ is $\calG$-measurable.
 \end{theorem}
 \begin{proof}
 By definition,
 \begin{align*}
-\calF\vee\sigma(Z)=\sigma(\calF\cup\sigma(Z)).
+\calF\vee\sigma(U)=\sigma(\calF\cup\sigma(U)).
 \end{align*}
-Therefore $\calF\subseteq\calF\vee\sigma(Z)$ and $\sigma(Z)\subseteq\calF\vee\sigma(Z)$, so $Z$ is measurable with respect to $\calF\vee\sigma(Z)$.
+Therefore $\calF\subseteq\calF\vee\sigma(U)$ and $\sigma(U)\subseteq\calF\vee\sigma(U)$, so $U$ is measurable with respect to $\calF\vee\sigma(U)$.
 
-Let $\calG$ be any sigma-algebra such that $\calF\subseteq\calG$ and $Z$ is $\calG$-measurable. The latter condition means $\sigma(Z)\subseteq\calG$. Hence
+Let $\calG$ be any sigma-algebra such that $\calF\subseteq\calG$ and $U$ is $\calG$-measurable. The latter condition means $\sigma(U)\subseteq\calG$. Hence
 \begin{align*}
-\calF\cup\sigma(Z)\subseteq\calG.
+\calF\cup\sigma(U)\subseteq\calG.
 \end{align*}
 Since $\calG$ is a sigma-algebra,
 \begin{align*}
-\sigma(\calF\cup\sigma(Z))\subseteq\calG.
+\sigma(\calF\cup\sigma(U))\subseteq\calG.
 \end{align*}
-Thus $\calF\vee\sigma(Z)\subseteq\calG$.
+Thus $\calF\vee\sigma(U)\subseteq\calG$.
 \end{proof}
 
 \begin{theorem}[Contradiction requires distinction, formal version of Corollary~\ref{thm:contradiction:informal}]
 \label{thm:contradiction:formal}
-Let $I:\Omega\to\calZ$ be an information map and let $y:\Omega\to A$ be a required output. Suppose $I(\omega)=I(\omega')$ but $y(\omega)\ne y(\omega')$. Then no predictor $f=g\circ I$ satisfies both
+Let $I:\Omega\to\calZ$ be an information map and let $y:\Omega\to\mathsf A$ be a required output. Suppose $I(\omega)=I(\omega')$ but $y(\omega)\ne y(\omega')$. Then no predictor $f=g\circ I$ satisfies both
 \begin{align*}
 f(\omega)=y(\omega),\qquad f(\omega')=y(\omega').
 \end{align*}

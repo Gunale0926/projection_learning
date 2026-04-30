@@ -1,7 +1,7 @@
 \section{Related Work}
 \label{app:related}
 
-The relevant comparison is not whether DGM uses centers, memory, routing, or online updates. All of these ingredients have long histories. The question is whether a runtime learner distinguishes two operations that are often collapsed: repairing state inside the current representation, and refining the representation when consequences reveal a missing distinction.
+The relevant comparison is not whether DGM uses centers, memory, routing, or online updates. All of these ingredients have long histories. The question is whether a runtime learner distinguishes two operations that are often collapsed: repairing state inside the current representation and refining the representation when consequences reveal a missing distinction.
 
 \subsection{Methods that repair without refining}
 
@@ -11,7 +11,7 @@ Fast weights, linear attention memories, delta-rule updates, passive-aggressive 
 
 Test-time adaptation and test-time training update model state or parameters by optimizing an inference-time objective \citep{sun2020test,wang2021tent,niu2022eata,zhang2022memo,sun2025learning}. These methods ask what surrogate loss should be optimized at test time. DGM asks a prior structural question: is the error repairable under the current distinctions, or does it reveal a missing distinction?
 
-These methods are not wrong. They solve the repair-gap half of runtime learning. They do not, by themselves, provide an explicit consequence-forced refinement operation.
+These methods solve the repair-gap side of runtime learning. They do not, by themselves, provide an explicit consequence-forced refinement operation.
 
 \subsection{Methods that refine without local repair}
 
@@ -19,7 +19,7 @@ Decision trees, online trees, Hoeffding trees, adaptive trees, extremely fast de
 
 Adaptive Resonance Theory, including ART 1 for binary patterns and ART 2 for analog input patterns, addresses stable incremental category creation under mismatch and vigilance \citep{carpenter1987massively,carpenter1987art2,grossberg2013adaptive}. Prototype methods, LVQ, SOMs, neural gas, growing neural gas, and Prototypical Networks represent regions or classes by stored centers or exemplars \citep{kohonen1990self,kohonen1995self,martinetz1991neural,fritzke1995growing,snell2017prototypical}. DGM shares the vocabulary of category creation and prototypes, but its concepts are operational hidden-state concepts whose edges are consequence-forced binary generators. The node is not only a region; it is a place where local memory can be repaired after the distinction is accepted.
 
-Concept Bottleneck Models and Formal Concept Analysis emphasize explicit concept structures \citep{koh2020concept,ganter1999formal}. DGM should not be read as claiming human-interpretable concepts by default. Its concepts are runtime concepts: hidden-state anchors, centroids, local memories, and pairwise distinctions created from prediction consequences.
+Concept Bottleneck Models and Formal Concept Analysis emphasize explicit concept structures \citep{koh2020concept,ganter1999formal}. DGM does not claim human-interpretable concepts by default. Its concepts are runtime concepts: hidden-state anchors, centroids, local memories, and pairwise distinctions created from prediction consequences.
 
 These methods solve the refinement half in various forms. They typically do not pair refinement with graph-gated neural local memories that continue to be repaired after the split.
 
@@ -27,14 +27,14 @@ These methods solve the refinement half in various forms. They typically do not 
 
 Mixture-of-experts, Switch Transformers, and Product-Key Memory route tokens or queries to sparse trained capacity \citep{shazeer2017outrageously,fedus2022switch,lample2019large}. Memory Networks, End-to-End Memory Networks, Neural Turing Machines, and Differentiable Neural Computers learn external read/write controllers \citep{weston2015memory,sukhbaatar2015end,graves2014neural,graves2016hybrid}. These systems are important precedents for sparse reads and external memory. DGM differs in write semantics: the routed objects are runtime-created concepts whose edges generate an information structure and whose memories are repaired locally.
 
-Continual learning studies forgetting, replay, regularization, and capacity growth across task sequences \citep{kirkpatrick2017overcoming,lopezpaz2017gradient,rusu2016progressive,yoon2018lifelong}. DGM is complementary. It is an instance-level runtime data structure for local concept growth and memory repair, not a complete task-sequence continual learning system.
+Continual learning studies forgetting, replay, regularization, and capacity growth across task sequences \citep{kirkpatrick2017overcoming,lopezpaz2017gradient,rusu2016progressive,yoon2018lifelong}. DGM is complementary: it is an instance-level runtime data structure for local concept growth and memory repair, not a complete task-sequence continual learning system.
 
 \subsection{DGM's position}
 
 DGM combines refinement and repair but keeps them distinct:
 \[
-\text{missing consequence distinction}\Rightarrow\text{refine},
+\Delta_{\mathrm{refine}}\text{ dominates}\Rightarrow\text{refine},
 \qquad
-\text{repair gap}\Rightarrow\text{repair}.
+\Delta_{\mathrm{repair}}\text{ dominates}\Rightarrow\text{repair}.
 \]
-The measure-theoretic formalism follows standard sigma-algebra and conditional-expectation language \citep{billingsley1995probability,kallenberg2002foundations}. The Bayes-risk order is related to Blackwell comparison and statistical decision theory \citep{blackwell1953equivalent,berger1985statistical}. The log-loss and squared-loss value identities are standard information-theoretic and Hilbert-space facts \citep{cover2006elements,gneiting2007strictly}. The contribution is to place these facts inside a runtime-learning model: not every error is a gradient, and some errors are missing distinctions.
+The measure-theoretic formalism follows standard sigma-algebra and conditional-expectation language \citep{billingsley1995probability,kallenberg2002foundations}. The Bayes-risk order is related to Blackwell comparison and statistical decision theory \citep{blackwell1953equivalent,berger1985statistical}. The log-loss and squared-loss value identities are standard information-theoretic and Hilbert-space facts \citep{cover2006elements,gneiting2007strictly}. The contribution is to place these facts inside a runtime-learning model in which some errors are repair signals and others are evidence of missing distinctions.
