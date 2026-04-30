@@ -192,11 +192,11 @@ If this condition fails, the soft read has no guarantee of selecting the hard ro
 
 \begin{theorem}[Soft routing approaches hard routing]
 \label{thm:soft-routing-hard-limit:informal}
-Assume candidate recall holds for $h$. If the hard-route selected concept is unique within $N(h)$ with distance margin $\delta>0$, then its soft routing weight tends to one exponentially as $T\to0$. If every wrong-side candidate violates some incident structural edge with weight at least $\beta_{\min}>0$, signed margin at least $\delta_e>0$, and degree at most $D_{\max}$, then each wrong-side compatibility decays uniformly after degree normalization. The hard-route limit is an ordered or controlled joint limit: edge temperature must suppress wrong-side candidates before distance temperature makes nearest-neighbor selection decisive. Equivalently, either the wrong-side/reference distance-score ratios remain uniformly bounded, or for distance advantage $\Delta_d$ of wrong-side candidates over an eligible reference,
+Assume candidate recall holds for $h$, and let $j^\star$ be the recalled hard-route concept. Split the remaining candidates into eligible competitors, which satisfy the hard structural constraints, and wrong-side competitors, which violate at least one structural edge. Eligible competitors are removed by distance: if $j^\star$ has distance margin $\delta>0$ over every eligible competitor and the eligible/reference compatibility ratios are uniformly bounded, their total soft mass decays exponentially as $T\to0$. Wrong-side competitors are removed by edge gates: if every wrong-side candidate violates some incident structural edge with weight at least $\beta_{\min}>0$, signed margin at least $\delta_e>0$, and degree at most $D_{\max}$, then its compatibility decays uniformly after degree normalization. The hard-route limit is therefore an ordered or controlled joint limit: edge temperature must suppress wrong-side candidates before distance temperature makes nearest-neighbor selection decisive. Equivalently, either the wrong-side/reference distance-score ratios remain uniformly bounded, or for distance advantage $\Delta_d$ of wrong-side candidates over an eligible reference,
 \begin{align*}
 \frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}-\frac{\Delta_d}{T}\to+\infty.
 \end{align*}
-Under either condition, total wrong-side routing mass vanishes. Without candidate recall, the theorem gives no correctness guarantee for an omitted hard-route concept.
+Under either condition, total wrong-side routing mass vanishes. Together with the distance margin for eligible competitors, this gives convergence to the hard route. Without candidate recall, the theorem gives no correctness guarantee for an omitted hard-route concept.
 \end{theorem}
 
 \begin{algorithm}[H]
@@ -454,9 +454,9 @@ Assume $N_t$ concepts in $\R^d$, candidate set size $\abs{N(h)}=k$, selected inc
 \begin{align*}
 \operatorname{Query}(h)
 =
-O(C_{\mathrm{ret}}(N_t,d)+Q(h)+kd+C_{\mathrm{mem}}).
+O(C_{\mathrm{ret}}(N_t,d)+Q(h)d+kd+C_{\mathrm{mem}}).
 \end{align*}
-A repair adds the cost of scoring the proposed local-memory candidates on the scoring buffer. A refinement creating one anchor-centroid pair and $q$ guarded linear distinction edges adds $O(d+qd)$ state-update time, plus the indexing or comparison bookkeeping used to maintain anchor-order queries. With sparse categorical memories of average support $\bar s$, the state uses
+Here $Q(h)$ is an edge count and each dense linear edge gate costs $O(d)$ to evaluate. A repair adds the cost of scoring the proposed local-memory candidates on the scoring buffer. A refinement creating one anchor-centroid pair and $q$ guarded linear distinction edges adds $O(d+qd)$ state-update time, plus the indexing or comparison bookkeeping used to maintain anchor-order queries. With sparse categorical memories of average support $\bar s$, the state uses
 \begin{align*}
 O(N_t(2d+\bar s)+\abs{E_t}d)
 \end{align*}
@@ -497,7 +497,7 @@ This keeps the read path a valid probability distribution. It also gives the sim
 \le
 -\log p_0(y\mid h)-\log(1-\lambda_t)
 \end{align*}
-whenever $\lambda_t<1$. In experiments where log loss is central, $\lambda_t$ should be selected online by a validation rule or by Hedge over a small grid of trust weights.
+whenever $\lambda_t<1$. In experiments where log loss is central, $\lambda_t$ should be selected online by a validation rule or, under bounded or clipped validation losses, by Hedge over a small grid of trust weights.
 
 Because $p_0(y\mid h)$, $M_j(h)$, and the soft weights can depend on the hidden state, the practical predictor need not be constant on atoms of the edge partition alone. The formal interpretation is the base-information convention from Section~\ref{sec:preliminaries}: let
 \begin{align*}

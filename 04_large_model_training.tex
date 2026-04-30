@@ -45,7 +45,7 @@ p_{\mathrm{final}}(y\mid x_{\le t})
 +\lambda_t p_{\mathrm{mem}}(y\mid x_{\le t}),
 \qquad \lambda_t\in[0,1].
 \end{align*}
-The mixture is normalized without storing full-vocabulary counts at each concept. A learned or online-selected trust weight $\lambda_t$ controls how much the memory layer can move the backbone distribution; for example, Hedge over a small grid of $\lambda$ values gives regret to the best fixed trust weight in hindsight.
+The mixture is normalized without storing full-vocabulary counts at each concept. A learned or online-selected trust weight $\lambda_t$ controls how much the memory layer can move the backbone distribution; under bounded or clipped validation losses, Hedge over a small grid of $\lambda$ values gives regret to the best fixed trust weight in hindsight.
 
 \subsection{Read before observe}
 
@@ -124,7 +124,7 @@ In sequential detached training, the model trains slow parameters through the re
 \caption{\textsc{SequentialDetachedTrainStep} for a DGM-Embedding Transformer layer}
 \label{alg:dgm-train-step}
 \begin{algorithmic}[1]
-\State \textbf{Input:} token block $x_{1:L}$, slow parameters $\Theta$, DGM state $\calS$
+\State \textbf{Input:} token block $x_{1:L+1}$, slow parameters $\Theta$, DGM state $\calS$
 \State $\calL\gets0$
 \For{$t=1,\ldots,L$}
 \State compute hidden state $h_t$ using the backbone

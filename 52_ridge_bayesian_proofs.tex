@@ -76,9 +76,9 @@ Let $N$ be a finite candidate set and let
 \alpha_j=\frac{\exp(-d_j/T)\chi_j}{\sum_{r\in N}\exp(-d_r/T)\chi_r}.
 \end{align*}
 If $j^\star_{\mathrm{hard}}\notin N$, where $j^\star_{\mathrm{hard}}$ is the exact hard-route selected concept, then this sparse soft read gives no guarantee for the omitted hard-route concept. Otherwise, assume $j^\star=j^\star_{\mathrm{hard}}\in N$.
-If $j^\star$ is the unique candidate with $d_j-d_{j^\star}\ge\delta>0$ for all $j\ne j^\star$ and $\chi_j=\chi_{j^\star}=1$, then
+For an eligible competitor set $E\subseteq N\setminus\{j^\star\}$, if $d_j-d_{j^\star}\ge\delta>0$ and $\chi_j/\chi_{j^\star}\le C_E<\infty$ for all $j\in E$, then
 \begin{align*}
-1-\alpha_{j^\star}\le (\abs{N}-1)\exp(-\delta/T).
+\sum_{j\in E}\alpha_j\le C_E\abs{E}\exp(-\delta/T).
 \end{align*}
 Moreover, suppose $\log\chi_j$ contains a term
 \begin{align*}
@@ -109,24 +109,21 @@ and therefore vanishes along any joint limit satisfying
 \begin{align*}
 \frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}-\frac{\Delta_d}{T}\to+\infty.
 \end{align*}
+Consequently, if $N\setminus\{j^\star\}$ is covered by eligible competitors satisfying the distance-margin and compatibility-ratio bounds and wrong-side competitors satisfying either wrong-side bound above, then $\alpha_{j^\star}\to1$ under the corresponding temperature limit.
 \end{theorem}
 \begin{proof}
 If $j^\star_{\mathrm{hard}}\notin N$, then the soft normalization assigns weight only to candidates in $N$ and the omitted hard-route concept has no route to receive weight. This is the candidate-recall caveat.
 
-For the nearest-reference statement,
+For the eligible-competitor statement, the denominator is at least $\exp(-d_{j^\star}/T)\chi_{j^\star}$, so
 \begin{align*}
-\frac{\sum_{j\ne j^\star}\exp(-d_j/T)}
-{\exp(-d_{j^\star}/T)}
-=\sum_{j\ne j^\star}\exp(-(d_j-d_{j^\star})/T)
-\le (\abs{N}-1)\exp(-\delta/T).
+\sum_{j\in E}\alpha_j
+&\le
+\sum_{j\in E}
+\frac{\exp(-d_j/T)\chi_j}
+{\exp(-d_{j^\star}/T)\chi_{j^\star}}\\
+&\le C_E\sum_{j\in E}\exp(-(d_j-d_{j^\star})/T)
+\le C_E\abs{E}\exp(-\delta/T).
 \end{align*}
-Since
-\begin{align*}
-1-\alpha_{j^\star}
-=\frac{\sum_{j\ne j^\star}\exp(-d_j/T)}
-{\exp(-d_{j^\star}/T)+\sum_{j\ne j^\star}\exp(-d_j/T)},
-\end{align*}
-the same upper bound follows.
 
 For an edge violation, set $a=\delta_e/\tau_e>0$. Since
 \begin{align*}
@@ -313,20 +310,20 @@ For any input $h$, the tree follows exactly one root-to-leaf path. The leaf reac
 
 \begin{theorem}[DGM data-structure bound, formal version of Theorem~\ref{thm:dgm-complexity:informal}]
 \label{thm:dgm-complexity:formal}
-Assume DGM has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}})$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ guarded distinction edges costs an additional $O(d+qd)$ plus anchor-order query bookkeeping. If each concept stores an anchor, a centroid, and a sparse categorical memory with average support $\bar s$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
+Assume DGM has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)d+\abs{N(h)}d+C_{\mathrm{local}})$ for dense linear edge gates. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ guarded distinction edges costs an additional $O(d+qd)$ plus anchor-order query bookkeeping. If each concept stores an anchor, a centroid, and a sparse categorical memory with average support $\bar s$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
 \end{theorem}
 \begin{proof}
 A distance computation between $h\in\R^d$ and one concept center costs $O(d)$. Exact centroid and anchor retrieval over $N_t$ concepts therefore costs
 \begin{align*}
 O(N_td).
 \end{align*}
-Graph-neighbor expansion has cost proportional to the incident lists touched and is absorbed into selected edge-gate bookkeeping. After the candidate set $N(h)$ is selected, evaluating the incident edge gates costs $O(Q(h))$. Computing sparse routing weights, distances within the selected set, and evaluating selected local memories costs
+Graph-neighbor expansion has cost proportional to the incident lists touched and is lower order relative to dense edge-gate evaluation. After the candidate set $N(h)$ is selected, evaluating the incident linear edge gates costs $O(Q(h)d)$. Computing sparse routing weights, distances within the selected set, and evaluating selected local memories costs
 \begin{align*}
 O(\abs{N(h)}d+C_{\mathrm{local}}).
 \end{align*}
 Thus prediction costs
 \begin{align*}
-O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}}).
+O(N_td+Q(h)d+\abs{N(h)}d+C_{\mathrm{local}}).
 \end{align*}
 Observation begins with the same retrieval computation. If it repairs a selected concept, it adds the cost of evaluating and scoring the proposed local repair candidates on the scoring buffer. If it creates a new anchor-centroid pair, storing the pair costs $O(d)$. For each new edge, computing and storing the linear distinction vector costs $O(d)$, so $q$ edges cost
 \begin{align*}
@@ -349,11 +346,11 @@ Adding the two terms proves the claimed bound.
 \label{thm:dgm-layer-cost:formal}
 Consider a DGM adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $\abs{N}$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}dr).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}dr).
 \end{align*}
 If the write path is detached and uses rank-one local repair, the write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}(d_q+dr)).
 \end{align*}
 For a block of length $L$, backpropagation through the slow parameters does not require storing the full DGM state history $\calS_1,\ldots,\calS_L$.
 \end{theorem}
@@ -362,7 +359,7 @@ For a token hidden state $h\in\R^d$, the query computation
 \begin{align*}
 q=Qh
 \end{align*}
-costs $O(dd_q)$. The retrieval cost is $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Evaluating selected incident edge gates costs $O(Q_N)$.
+costs $O(dd_q)$. The retrieval cost is $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Evaluating selected incident dense edge gates costs $O(Q_N d_q)$.
 
 For a selected concept $j$, the rank-$r$ adapter read is
 \begin{align*}
@@ -376,7 +373,7 @@ The routing weights add lower-order top-$k$ normalization cost, absorbed into th
 
 The write path first computes the same query, retrieval, and edge gates. It then updates selected concept statistics and selected local memories. Concept bookkeeping costs $O(d_q)$ per selected concept. A rank-one local repair of a rank-$r$ or low-rank sufficient-statistic memory costs $O(dr)$ per selected memory. Hence the write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}(d_q+dr)).
 \end{align*}
 
 Finally, the update rule is applied as
