@@ -88,7 +88,7 @@ Minimal refinement in Section~\ref{sec:minimal-refinement} adds the least inform
 
 \begin{theorem}[Minimal loss-sufficient refinement]
 \label{thm:minimal-loss-sufficient:informal}
-Let $\calF\subseteq\calG$ and assume the $\calG$-Bayes action $a_\calG^\star$ exists and is almost surely unique. Up to null sets, the smallest sigma-algebra $\calH$ satisfying
+Let $\calF\subseteq\calG$ and assume the $\calG$-Bayes action $a_\calG^\star$ exists and is almost surely unique. Also assume the Bayes infimum is attained for every intermediate sigma-algebra $\calH$ with $\calF\subseteq\calH\subseteq\calG$ that is considered below. Up to null sets, the smallest sigma-algebra $\calH$ satisfying
 \begin{align*}
 \calF\subseteq\calH\subseteq\calG,
 \qquad
@@ -185,7 +185,7 @@ where the risks are conditional on $\omega\in B$. Under log loss, $V_{\log}(B,U)
 
 \begin{theorem}[Greedy recovery under target-respecting splits]
 \label{thm:greedy-recovery:informal}
-Let $\Pi^\star$ have $K$ atoms and suppose the current partition $\Pi_0$ is initially a coarsening of $\Pi^\star$, with $m_0=\abs{\Pi_0}$. Assume that every positive-mass impure current atom $B$ admits a $\Pi^\star$-respecting distinction $U\in\calU$ such that $U$ splits $\Pi^\star|_B$ into two nonempty groups and
+Let $\Pi^\star$ have $K$ atoms and suppose the current partition $\Pi_0$ is initially a coarsening of $\Pi^\star$, with $m_0=\abs{\Pi_0}$. Assume that every positive-mass impure current atom $B$ admits a $\Pi^\star$-respecting distinction $U\in\calU$ such that $U$ splits $\Pi^\star|_B$ into two groups whose unions both have positive conditional probability under $P(\cdot\mid B)$ and
 \begin{align*}
 V_L(B,U)\ge\gamma.
 \end{align*}
@@ -197,7 +197,7 @@ for all candidates it scores. If the algorithm accepts a split whenever $\wideha
 \end{theorem}
 
 \begin{proof}
-Because every accepted split is $\Pi^\star$-respecting, the current partition remains a coarsening of $\Pi^\star$ after each accepted refinement. A candidate with true value at least $\gamma$ has empirical value at least $3\gamma/4$, so it exceeds the $\gamma/2$ threshold and is accepted when proposed. Since the candidate also splits $\Pi^\star|_B$ into two nonempty groups, it replaces one current atom by two nonempty unions of target atoms and increases the number of represented current atoms by one. The algorithm keeps selecting impure positive-mass atoms until none remain. Starting from $m_0$ atoms and ending with at most $K$ positive-mass target atoms, at most $K-m_0\le K-1$ accepted splits are needed.
+Because every accepted split is $\Pi^\star$-respecting, the current partition remains a coarsening of $\Pi^\star$ after each accepted refinement. A candidate with true value at least $\gamma$ has empirical value at least $3\gamma/4$, so it exceeds the $\gamma/2$ threshold and is accepted when proposed. Since the candidate also splits $\Pi^\star|_B$ into two groups with positive conditional mass, it replaces one positive-mass current atom by two positive-mass unions of target atoms and increases the number of represented positive-mass current atoms by one. The algorithm keeps selecting impure positive-mass atoms until none remain. Starting from $m_0$ atoms and ending with at most $K$ positive-mass target atoms, at most $K-m_0\le K-1$ accepted splits are needed.
 \end{proof}
 
 For finite $\calU$ and bounded loss, the event in Theorem~\ref{thm:greedy-recovery:informal} follows from a standard held-out concentration bound. It suffices to score each accepted split with

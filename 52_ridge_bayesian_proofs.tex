@@ -92,6 +92,23 @@ For a wrong-side set $W\subseteq N$, suppose every $j\in W$ violates some incide
 \frac{C\abs{N}}{\chi_{\min}}
 \exp\left(-\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}\right).
 \end{align*}
+More generally, if
+\begin{align*}
+\Delta_d=\max_{j\in W}(d_r-d_j)_+,
+\end{align*}
+then the same mass is at most
+\begin{align*}
+\frac{\abs{N}}{\chi_{\min}}
+\exp\left(
+\frac{\Delta_d}{T}
+-
+\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}
+\right),
+\end{align*}
+and therefore vanishes along any joint limit satisfying
+\begin{align*}
+\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}-\frac{\Delta_d}{T}\to+\infty.
+\end{align*}
 \end{theorem}
 \begin{proof}
 If $j^\star_{\mathrm{hard}}\notin N$, then the soft normalization assigns weight only to candidates in $N$ and the omitted hard-route concept has no route to receive weight. This is the candidate-recall caveat.
@@ -128,6 +145,15 @@ Combining this with the assumed distance-score ratio bound gives
 &\le \frac{C\abs{N}}{\chi_{\min}}
 \exp\left(-\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}\right).
 \end{align*}
+Without a uniform distance-score ratio, use
+\begin{align*}
+\frac{\exp(-d_j/T)}{\exp(-d_r/T)}
+=
+\exp\left(\frac{d_r-d_j}{T}\right)
+\le
+\exp(\Delta_d/T),
+\end{align*}
+which gives the joint-limit bound and the stated convergence condition.
 \end{proof}
 
 \begin{theorem}[Refine-or-repair objective descent, formal version of Theorem~\ref{thm:refine-repair-descent:informal}]
@@ -146,7 +172,7 @@ with nonnegative penalties on a fixed scoring buffer, where $\lambda_{\mathrm{co
 \le
 \widehat R(\calS_t;\calB_t^{\mathrm{score}}),
 \end{align*}
-and leaves anchors, edges, and concept count unchanged, then $J_{\calB_t^{\mathrm{score}}}$ does not increase. If a refinement creates one concept and $q$ edges and is accepted only when
+and leaves anchors, edges, and concept count unchanged, then $J_{\calB_t^{\mathrm{score}}}$ does not increase. If a refinement creates one concept and actual edge set $E_{\mathrm{new}}$ and is accepted only when
 \begin{align*}
 \widehat\Delta_{\mathrm{refine}}>
 \max\{\widehat\Delta_{\mathrm{repair}},0\}+\tau+2\epsilon_m,
@@ -161,7 +187,7 @@ where $\widehat\Delta_{\mathrm{repair}}\ge0$ is the empirical repair gain and
 -
 \lambda_{\mathrm{concept}}
 -
-\lambda_{\mathrm{edge}}q,
+\lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}},
 \end{align*}
 then
 \begin{align*}
@@ -181,7 +207,7 @@ For refinement,
 J_{\calB_t^{\mathrm{score}}}(\calS_t)-J_{\calB_t^{\mathrm{score}}}(\calS_{t+1})
 &=\widehat R(\calS_t;\calB_t^{\mathrm{score}})
 -\widehat R(\calS_{t+1};\calB_t^{\mathrm{score}})
--\lambda_{\mathrm{concept}}-\lambda_{\mathrm{edge}}q\\
+-\lambda_{\mathrm{concept}}-\lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}}\\
 &=\widehat\Delta_{\mathrm{refine}}\\
 &>\widehat\Delta_{\mathrm{repair}}+\tau+2\epsilon_m.
 \end{align*}
@@ -287,7 +313,7 @@ For any input $h$, the tree follows exactly one root-to-leaf path. The leaf reac
 
 \begin{theorem}[DGM data-structure bound, formal version of Theorem~\ref{thm:dgm-complexity:informal}]
 \label{thm:dgm-complexity:formal}
-Assume DGM has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}})$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. If each concept stores an anchor, a centroid, and a sparse categorical memory with average support $\bar s$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
+Assume DGM has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}})$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ guarded distinction edges costs an additional $O(d+qd)$ plus anchor-order query bookkeeping. If each concept stores an anchor, a centroid, and a sparse categorical memory with average support $\bar s$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
 \end{theorem}
 \begin{proof}
 A distance computation between $h\in\R^d$ and one concept center costs $O(d)$. Exact centroid and anchor retrieval over $N_t$ concepts therefore costs
@@ -306,7 +332,7 @@ Observation begins with the same retrieval computation. If it repairs a selected
 \begin{align*}
 O(qd).
 \end{align*}
-The total additional cost for refinement is therefore $O(d+qd)$.
+The total additional vector-update cost for refinement is therefore $O(d+qd)$, plus whatever indexing or comparison bookkeeping is used to support anchor-order queries.
 
 For memory, each concept stores $a_j,c_j\in\R^d$ and a sparse categorical memory of average support $\bar s$, giving
 \begin{align*}
@@ -355,9 +381,13 @@ O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
 
 Finally, the update rule is applied as
 \begin{align*}
-\operatorname{stopgrad}(\calS_{t+1})=\operatorname{DGMObserve}(\operatorname{stopgrad}(\calS_t),h_t,x_{t+1}).
+\calS_{t+1}
+=
+\operatorname{stopgrad}\!\left(
+\operatorname{DGMObserve}(\operatorname{stopgrad}(\calS_t),\operatorname{stopgrad}(h_t),x_{t+1})
+\right).
 \end{align*}
-Thus the computational graph for the loss contains the selected read computation, but not the chain of state-update maps from $\calS_1$ through $\calS_L$. Therefore full DGM state history is not required for backpropagation through the slow parameters.
+Thus the computational graph for the loss contains the selected read computation, but not the chain of state-update maps from $\calS_1$ through $\calS_L$ or the write-time hidden states used to mutate the fast state. Therefore full DGM state history is not required for backpropagation through the slow parameters.
 \end{proof}
 
 \begin{theorem}[One-hot memory is partition-measurable, formal version of Theorem~\ref{thm:one-hot-measurable:informal}]
@@ -390,6 +420,7 @@ W\phi_\calP(\omega)=We_i=w_i=f(\omega).
 Let $\calP=\{B_1,\ldots,B_n\}$ and let $\omega,\omega'\in B_i$. Suppose $v(\omega)\ne v(\omega')$. Let $k=\phi_\calP(\omega)=\phi_\calP(\omega')=e_i$. If a memory $W$ has already committed $We_i=v(\omega)$, then the evidence $We_i=v(\omega')$ has innovation $z=0$ relative to the old key span and residual $e\ne0$.
 \end{theorem}
 \begin{proof}
+Here the stored-key matrix $K$ is oriented with stored keys as columns, so $KK^\dagger$ is the orthogonal projector onto their column span.
 Since $\omega,\omega'\in B_i$,
 \begin{align*}
 \phi_\calP(\omega)=\phi_\calP(\omega')=e_i.
