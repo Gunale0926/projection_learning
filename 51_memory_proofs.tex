@@ -3,6 +3,22 @@
 
 The proofs below use standard tools from statistical decision theory, information theory, proper scoring rules, and conditional expectation: Bayes risk under constrained information, log-loss optimality of the conditional law, and the $L^2$ projection identity for conditional expectation \citep{blackwell1953equivalent,berger1985statistical,cover2006elements,gneiting2007strictly,billingsley1995probability,kallenberg2002foundations}.
 
+\begin{theorem}[Loss-relevant refinement, formal version of Theorem~\ref{thm:loss-relevant-refinement:informal}]
+\label{thm:loss-relevant-refinement:formal}
+Let $\calF\subseteq\calG\subseteq\calE$. Assume Bayes actions exist under $\calF$ and $\calG$, and that the $\calG$-Bayes action is almost surely unique. Then
+\begin{align*}
+R_L(\calF)-R_L(\calG)=0
+\end{align*}
+if and only if $a_\calG^\star$ has an $\calF$-measurable version.
+\end{theorem}
+\begin{proof}
+If $a_\calG^\star$ is $\calF$-measurable, then it is feasible for $R_L(\calF)$, so
+\begin{align*}
+R_L(\calF)\le\E[L(Y,a_\calG^\star)]=R_L(\calG).
+\end{align*}
+The inclusion $\calF\subseteq\calG$ gives $R_L(\calG)\le R_L(\calF)$, so the risks are equal. Conversely, if the risks are equal, let $a_\calF^\star$ be an $\calF$-Bayes action. It is also $\calG$-measurable and achieves $R_L(\calG)$. By almost sure uniqueness of $a_\calG^\star$, $a_\calF^\star=a_\calG^\star$ almost surely. Hence $a_\calG^\star$ has an $\calF$-measurable version.
+\end{proof}
+
 \begin{theorem}[Bayes-risk monotonicity, formal version of Theorem~\ref{thm:risk-monotonicity:informal}]
 \label{thm:risk-monotonicity:formal}
 Let $Y$ be a target random variable, let $\mathsf A$ be an action space, and let $L$ be an integrable loss. If $\calF\subseteq\calG$, then
@@ -31,7 +47,17 @@ R_L(\calG)&=\inf_{a\in\calD_\calG}\E[L(Y,a)]\\
 \label{thm:log-value:formal}
 Let $Y$ be finite and let $\calF\subseteq\calG$. Under log loss, an admissible action is a measurable conditional distribution $q(\cdot)$ on the range of $Y$, and the loss is $-\log q(Y)$. Then
 \begin{align*}
-R_{\log}(\calF)-R_{\log}(\calG)=I(Y;\calG\mid\calF).
+R_{\log}(\calF)-R_{\log}(\calG)
+=
+I(Y;\calG\mid\calF)
+=
+\E\left[
+D_{\mathrm{KL}}\!\left(
+\mathbb P(Y\in\cdot\mid\calG)
+\middle\|
+\mathbb P(Y\in\cdot\mid\calF)
+\right)
+\right].
 \end{align*}
 \end{theorem}
 \begin{proof}
@@ -53,7 +79,54 @@ By definition of conditional mutual information between $Y$ and the additional i
 \begin{align*}
 I(Y;\calG\mid\calF)=H(Y\mid\calF)-H(Y\mid\calG).
 \end{align*}
+The conditional-KL form follows from the tower property:
+\begin{align*}
+&\E\left[
+D_{\mathrm{KL}}\!\left(
+\mathbb P(Y\in\cdot\mid\calG)
+\middle\|
+\mathbb P(Y\in\cdot\mid\calF)
+\right)
+\right]\\
+&\qquad=
+\E\left[
+\sum_y p_\calG(y)\log p_\calG(y)
+-
+\sum_y p_\calG(y)\log p_\calF(y)
+\right]\\
+&\qquad=
+-H(Y\mid\calG)
+-
+\E\left[
+\sum_y p_\calF(y)\log p_\calF(y)
+\right]\\
+&\qquad=
+H(Y\mid\calF)-H(Y\mid\calG).
+\end{align*}
 Combining proves the claim.
+\end{proof}
+
+\begin{corollary}[Binary distinction value, formal version of Corollary~\ref{cor:binary-distinction-value:informal}]
+\label{cor:binary-distinction-value:formal}
+Let $U\in\{0,1\}$ and $\calG=\calF\vee\sigma(U)$. Under log loss,
+\begin{align*}
+R_{\log}(\calF)-R_{\log}(\calG)
+\!&=
+I(Y;U\mid\calF)\\
+&=
+\E\!\left[
+\sum_{u\in\{0,1\}}
+\mathbb P(U=u\mid\calF)
+D_{\mathrm{KL}}\!\left(
+\mathbb P(Y\in\cdot\mid\calF,U=u)
+\middle\|
+\mathbb P(Y\in\cdot\mid\calF)
+\right)
+\right].
+\end{align*}
+\end{corollary}
+\begin{proof}
+Apply Theorem~\ref{thm:log-value:formal} with $\calG=\calF\vee\sigma(U)$. Conditioning on $\calF\vee\sigma(U)$ is the same as conditioning on $\calF$ and the binary value of $U$, yielding the displayed expansion over $u\in\{0,1\}$.
 \end{proof}
 
 \begin{theorem}[Squared-loss value, formal version of Theorem~\ref{thm:squared-value:informal}]
@@ -83,6 +156,24 @@ Thus
 &=R_2(\calG)+\E\left[\norm{\E[Y\mid\calG]-\E[Y\mid\calF]}_2^2\right].
 \end{align*}
 Rearranging proves the identity.
+\end{proof}
+
+\begin{theorem}[Minimal loss-sufficient refinement, formal version of Theorem~\ref{thm:minimal-loss-sufficient:informal}]
+\label{thm:minimal-loss-sufficient:formal}
+Let $\calF\subseteq\calG$ and assume the $\calG$-Bayes action $a_\calG^\star$ exists and is almost surely unique. Up to null sets, the smallest sigma-algebra $\calH$ satisfying
+\begin{align*}
+\calF\subseteq\calH\subseteq\calG,
+\qquad
+R_L(\calH)=R_L(\calG)
+\end{align*}
+is $\calF\vee\sigma(a_\calG^\star)$. For finite $Y$ under log loss, the corresponding smallest sufficient refinement is $\calF\vee\sigma(p_\calG)$, where $p_\calG(\cdot)=\mathbb P(Y\in\cdot\mid\calG)$.
+\end{theorem}
+\begin{proof}
+The action $a_\calG^\star$ is measurable with respect to $\calF\vee\sigma(a_\calG^\star)$, so this refinement attains $R_L(\calG)$. Let $\calH$ be any intermediate sigma-algebra with $R_L(\calH)=R_L(\calG)$. Since $\calH\subseteq\calG$ and the $\calG$-Bayes action is almost surely unique, Theorem~\ref{thm:loss-relevant-refinement:formal} implies that $a_\calG^\star$ has an $\calH$-measurable version. Therefore $\sigma(a_\calG^\star)\subseteq\calH$ up to null sets, and because $\calF\subseteq\calH$,
+\begin{align*}
+\calF\vee\sigma(a_\calG^\star)\subseteq\calH
+\end{align*}
+up to null sets. Under log loss, the Bayes action is the conditional law $p_\calG$, giving the stated form.
 \end{proof}
 
 \begin{proposition}[Finite squared-loss split identity]

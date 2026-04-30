@@ -1,34 +1,57 @@
 \section{Guarantees}
 \label{sec:guarantees}
 
-The guarantees are deliberately scoped. They do not assert global optimality of DGM, nor do they assert that a deep backbone can always discover the right representation. They formalize the paper's decision rule: decompose runtime excess risk into $\Delta_{\mathrm{repair}}$ and $\Delta_{\mathrm{refine}}$; repair only inside the current information structure; refine when the current information identifies states with incompatible consequences; and accept DGM updates only when they decrease a local penalized scoring objective. Full proof details are in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
+The guarantees are deliberately scoped. They do not assert global optimality of DGM, nor do they assert that a deep backbone can always discover the right representation. They formalize the paper's decision rule: repair-only learners are limited by the Bayes risk of their current partition; useful refinements change the Bayes action; statistically guarded refinement accepts only distinctions whose held-out consequence value clears complexity and concentration margins; and DGM implements this operation as a dynamic graph data structure. Full proof details are in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
 
 \paragraph{1. Error decomposes into two gaps.}
-Theorem~\ref{thm:error-decomposition} states that for current predictor $f_t$, current information $\calF_t$, and a candidate refinement $\calG\supseteq\calF_t$,
+Theorem~\ref{thm:error-decomposition} states that for current predictor $f_t$, current partition $\Pi_t$, and candidate refined partition $\Pi^\star$,
 \begin{align*}
-R_L(f_t)-R_L(\calG)
+R_L(f_t)-R_L(\Pi^\star)
 =
-\Delta_{\mathrm{repair}}(f_t,\calF_t)
+\Delta_{\mathrm{repair}}(f_t,\Pi_t)
 +
-\Delta_{\mathrm{refine}}(\calF_t,\calG).
+\Delta_{\mathrm{refine}}(\Pi_t,\Pi^\star).
 \end{align*}
 The first term is the best possible gain from repairing the predictor at fixed information. The second is the value of changing the information structure.
 
-\paragraph{2. Missing distinctions obstruct repair.}
+\paragraph{2. Repair-only learners have linear regret.}
+Theorem~\ref{thm:repair-only-regret} states that any learner whose predictions remain measurable with respect to a fixed partition $\Pi$ has expected regret at least
+\begin{align*}
+T\left(R_L(\Pi)-R_L(\Pi^\star)\right)
+\end{align*}
+against a refined oracle $\Pi^\star$. Thus a positive refinement gap is not just a pointwise contradiction; it is a sequential lower bound.
+
+\paragraph{3. Useful refinements change the Bayes action.}
+Theorem~\ref{thm:loss-relevant-refinement:informal} states that, under uniqueness of the refined Bayes action, a refinement has zero value exactly when the refined action is already measurable under the old information. For finite $Y$ under log loss, Theorem~\ref{thm:log-value:informal} sharpens this to
+\begin{align*}
+R_{\log}(\calF)-R_{\log}(\calG)
+=
+\E D_{\mathrm{KL}}\!\left(
+\mathbb P(Y\in\cdot\mid\calG)
+\middle\|
+\mathbb P(Y\in\cdot\mid\calF)
+\right).
+\end{align*}
+Thus stochastic conflict, not only hard-label contradiction, is enough to make refinement valuable.
+
+\paragraph{4. Missing distinctions obstruct repair.}
 Corollary~\ref{thm:contradiction:informal} says that if two states have the same information-map value but require different consequences, no predictor measurable with respect to the current information can satisfy both. This is the main theoretical point of the paper:
 \begin{align*}
 \boxed{\text{if the target separates states that the information map identifies, repair is impossible.}}
 \end{align*}
 The result is architecture-independent; it applies to caches, adapters, local memories, and test-time optimizers whenever their update leaves the relevant information structure fixed.
 
-\paragraph{3. Refinement has a canonical minimal form.}
+\paragraph{5. Refinement has a canonical minimal form.}
 Theorems~\ref{thm:minimal-refinement:informal} and \ref{thm:sigma-refinement:informal} identify the least information update that makes new evidence observable. In the finite case, a binary distinction splits exactly the atoms it crosses. In the sigma-algebra case, the update is
 \begin{align*}
 \calF_{t+1}=\calF_t\vee\sigma(U_t).
 \end{align*}
-Appendix~\ref{sec:value} gives the standard value identities that explain when such a distinction is useful: conditional mutual information under log loss and conditional variance reduction under squared loss.
+Section~\ref{sec:value} gives the standard value identities that explain when such a distinction is useful: conditional mutual information under log loss and conditional variance reduction under squared loss. Theorem~\ref{thm:minimal-loss-sufficient:informal} further identifies the smallest refinement needed to express the refined Bayes action.
 
-\paragraph{4. Guarded DGM updates descend locally.}
+\paragraph{6. Greedy refinement has finite-class guarantees.}
+Theorem~\ref{thm:greedy-recovery:informal} gives a realizable recovery guarantee: if every impure target atom admits a target-respecting distinction with value at least $\gamma$, and split values are estimated accurately enough, greedy refinement recovers the target partition after at most $K-1$ accepted splits. Theorem~\ref{thm:oracle-refinement:informal} gives a finite-class oracle inequality over partitions reachable by at most $B$ distinctions.
+
+\paragraph{7. Guarded DGM updates descend locally.}
 Theorem~\ref{thm:refine-repair-descent:informal} states the algorithmic guarantee. A guarded repair does not increase the scoring-buffer objective because anchors and edges remain fixed and only a non-worsening local-state candidate is committed. An accepted refinement adds one concept and $q$ edges only when its held-out penalized refinement gain beats the repair gain plus a margin and statistical safety term. Thus DGM is not an unscored growth heuristic: it is a local refine-or-repair decision with an explicit gap comparison.
 
-These statements also define the boundary of the claim. The scoring buffer is local and changes over time, so the descent result is not a global training theorem. Approximate retrieval must satisfy candidate recall for edge gates to recover the formal hard route. Budgeting, merging, and eviction are systems approximations that may discard distinctions and must be evaluated separately.
+These statements also define the boundary of the claim. The scoring buffer is local and changes over time, so the descent result is not a global training theorem. Approximate retrieval must satisfy candidate recall for Soft-DGM edge gates to recover the formal Hard-DGM route. Budgeting, merging, and eviction are systems approximations that may discard distinctions and must be evaluated separately.

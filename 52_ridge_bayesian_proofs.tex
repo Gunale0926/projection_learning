@@ -1,7 +1,7 @@
 \section{DGM Algorithm and Projection-Bridge Proofs}
 \label{app:algorithm-bridge-proofs}
 
-This appendix combines elementary finite graph/partition arguments with standard concentration and linear-algebra tools: Hoeffding finite-class validation bounds, nearest-neighbor indexing costs, Moore-Penrose projections, and ridge/Tikhonov least squares \citep{hoeffding1963probability,devroye1996probabilistic,indyk1998approximate,johnson2019billion,penrose1955generalized,tikhonov1977solutions,hoerl1970ridge}.
+This appendix combines elementary finite graph/partition arguments with standard concentration and linear-algebra tools: Hoeffding sample-split validation bounds, nearest-neighbor indexing costs, Moore-Penrose projections, and ridge/Tikhonov least squares \citep{hoeffding1963probability,devroye1996probabilistic,indyk1998approximate,johnson2019billion,penrose1955generalized,tikhonov1977solutions,hoerl1970ridge}.
 
 \begin{theorem}[Anchor edge separation, formal version of Theorem~\ref{thm:anchor-edge:informal}]
 \label{thm:anchor-edge:formal}
@@ -188,35 +188,40 @@ Rearranging gives the claim.
 
 The theorem is local to the fixed scoring buffer used in its statement. If the scoring buffer changes over time, these inequalities alone do not define a common global descent potential.
 
-\begin{theorem}[Statistically safe finite-class refinement, formal version of Theorem~\ref{thm:safe-refinement:informal}]
+\begin{theorem}[Statistically safe adaptive refinement, formal version of Theorem~\ref{thm:safe-refinement:informal}]
 \label{thm:safe-refinement:formal}
-Assume losses lie in $[0,1]$. Let $\calH$ be a finite class of candidate refinements fixed before scoring, or generated from a proposal buffer independent of a scoring buffer $\calB^{\mathrm{score}}$ containing $m$ independent samples. For candidate $g$, let $\widehat\Delta(g)$ be the empirical gain on $\calB^{\mathrm{score}}$ and let $\Delta(g)$ be the corresponding population gain. Then, with probability at least $1-\delta$, every $g\in\calH$ satisfies
+Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing the past stream, current DGM state, and all proposal-buffer information available before scoring at time $t$. Let $\calC_t$ be a finite candidate class predictable with respect to $\mathfrak H_t$, and let $\calB_t^{\mathrm{score}}$ contain $m_t$ samples independent of $\mathfrak H_t$ conditional on the current scoring distribution. For candidate $g$, let $\widehat\Delta_t(g)$ be the empirical gain on $\calB_t^{\mathrm{score}}$ and let $\Delta_t(g)$ be the corresponding population gain. Define
 \begin{align*}
-\abs{\widehat\Delta(g)-\Delta(g)}
+\epsilon_t=
+\sqrt{
+\frac{\log(4t^2(\abs{\calC_t}+1)/\delta)}
+{2m_t}
+}.
+\end{align*}
+Then, with probability at least $1-\delta$, every time $t$ and candidate $g\in\calC_t$ satisfy
+\begin{align*}
+\abs{\widehat\Delta_t(g)-\Delta_t(g)}
 \le
-2\epsilon_m,
-\qquad
-\epsilon_m=
-\sqrt{\frac{\log(2(\abs{\calH}+1)/\delta)}{2m}}.
+2\epsilon_t.
 \end{align*}
 Consequently, if
 \begin{align*}
-\widehat\Delta(g)>
-\lambda\operatorname{cost}(g)+\tau+2\epsilon_m,
+\widehat\Delta_t(g)>
+\lambda\operatorname{cost}(g)+\tau+2\epsilon_t,
 \end{align*}
 then on the same event
 \begin{align*}
-\Delta(g)>
+\Delta_t(g)>
 \lambda\operatorname{cost}(g)+\tau.
 \end{align*}
 \end{theorem}
 \begin{proof}
-Apply Hoeffding's inequality to the empirical risk of the old state and to the empirical risk of each candidate-refined state. For any fixed state in this finite collection,
+Condition on $\mathfrak H_t$. The candidate class is then fixed, and the scoring buffer is independent of the proposal mechanism by assumption. Apply Hoeffding's inequality to the empirical risk of the old state and to the empirical risk of each candidate-refined state. For any fixed state in this finite collection,
 \begin{align*}
 \mathbb P\left(\abs{\widehat R-R}>\epsilon\right)
 \le 2\exp(-2m\epsilon^2).
 \end{align*}
-Because $\calH$ is fixed before scoring or generated from data independent of $\calB^{\mathrm{score}}$, Hoeffding's inequality applies conditionally on $\calH$. Taking a union bound over the old state and the $\abs{\calH}$ candidate states gives the displayed $\epsilon_m$. On this event, each gain is a difference of two risks, so empirical and population gain differ by at most $2\epsilon_m$. The implication follows by subtracting this deviation from the empirical gain lower bound.
+With $m=m_t$ and $\epsilon=\epsilon_t$, the failure probability at time $t$ is at most $\delta/(2t^2)$ after a union bound over the old state and the $\abs{\calC_t}$ candidate states. Since $\sum_{t\ge1}t^{-2}<2$, the displayed constant $4t^2$ gives total failure probability at most $\delta$ over all times. On this event, each gain is a difference of two risks, so empirical and population gain differ by at most $2\epsilon_t$. The implication follows by subtracting this deviation from the empirical gain lower bound.
 \end{proof}
 
 \begin{corollary}[Bounded language-model refinement score, formal version of Corollary~\ref{cor:lm-clipped-refinement:informal}]
@@ -280,7 +285,7 @@ For any input $h$, the tree follows exactly one root-to-leaf path. The leaf reac
 
 \begin{theorem}[DGM data-structure bound, formal version of Theorem~\ref{thm:dgm-complexity:informal}]
 \label{thm:dgm-complexity:formal}
-Assume DGM has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}})$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. If each concept stores an anchor, a centroid, and an embedding mean in $\R^{d_e}$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+d_e)+\abs{E_t}d)$ memory.
+Assume DGM has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}})$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. If each concept stores an anchor, a centroid, and a sparse categorical memory with average support $\bar s$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
 \end{theorem}
 \begin{proof}
 A distance computation between $h\in\R^d$ and one concept center costs $O(d)$. Exact centroid and anchor retrieval over $N_t$ concepts therefore costs
@@ -301,9 +306,9 @@ O(qd).
 \end{align*}
 The total additional cost for refinement is therefore $O(d+qd)$.
 
-For memory, each concept stores $a_j,c_j\in\R^d$ and $r_j\in\R^{d_e}$, giving
+For memory, each concept stores $a_j,c_j\in\R^d$ and a sparse categorical memory of average support $\bar s$, giving
 \begin{align*}
-O(N_t(2d+d_e)).
+O(N_t(2d+\bar s)).
 \end{align*}
 Each edge stores one distinction vector and threshold, giving
 \begin{align*}

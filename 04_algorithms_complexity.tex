@@ -1,19 +1,19 @@
 \section{DGM: Nodes Repair, Edges Distinguish}
 \label{sec:algorithms}
 
-The theory so far gives a diagnostic: decide whether an observed error is better explained by $\Delta_{\mathrm{repair}}$ at fixed information or by $\Delta_{\mathrm{refine}}$ from missing distinctions. A runtime implementation therefore needs a state representation that can both repair local statistics and add distinctions. Trees are a useful finite special case, but a rooted hierarchy is restrictive for neural hidden states: many conflicts are local, and a new concept may need to be separated from a few confused neighbors without rewriting a global path structure.
+The theory so far gives a diagnostic: decide whether an observed error is better explained by $\Delta_{\mathrm{repair}}$ at fixed information or by $\Delta_{\mathrm{refine}}$ from missing distinctions. A runtime implementation therefore needs a state representation that can both repair local statistics and add distinctions. DGM is the data-structure realization of the abstract refinable-partition model.
 
 \subsection{Why a graph, not a tree?}
 
-DGM uses a graph of runtime concepts. Local memories live at nodes, and distinctions live on edges between concepts that have been confused. The central object is
+DGM uses a graph of runtime concepts. A DGM concept is a data-structure representative of a graph-generated state equipped with a local memory; it is not claimed to be a human-interpretable semantic concept. Local memories live at nodes, and distinctions live on edges between concepts that have been confused. The central object is
 \begin{align*}
 \text{DGM}=\text{graph-generated information structure}+\text{local memory repair}.
 \end{align*}
 The graph is not metadata: its edges generate a finite information structure and gate the read path. The partition and generated-sigma-algebra language follows standard finite measurable-space constructions \citep{billingsley1995probability,kallenberg2002foundations}. The main-text statements below give the operational theorem forms; full proofs are in Appendix~\ref{app:algorithm-bridge-proofs}.
 
-The minimal DGM loop has four moving parts. First, anchors and edges define what the machine can distinguish. Second, centroids retrieve a small candidate set. Third, local memories predict through edge-gated routing. Fourth, after observing the consequence, the machine commits either a guarded repair that leaves anchors and edges fixed, or a guarded refinement that adds a new anchor and distinction edges. The rest of the section only makes these four operations precise.
+We separate two objects. \emph{Hard-DGM} is the formal algorithm: fixed anchors and accepted binary edges generate a partition; a repair changes only local actions or memories; a refinement adds a binary generator, so the partition is joined with that generator. \emph{Soft-DGM} is the practical relaxation used for sparse neural hidden states: movable centroids retrieve candidates, smooth edge gates approximate hard eligibility, and routing weights mix local memories. The formal guarantees apply to Hard-DGM directly and to Soft-DGM only under the candidate-recall and margin conditions in Theorem~\ref{thm:soft-routing-hard-limit:informal}.
 
-\subsection{State: anchors, centroids, memories, and edges}
+\subsection{Hard-DGM state and invariants}
 
 Let $\phi_\theta:\calX\to\R^d$ be an encoder, write $h=\phi_\theta(x)$, and let $\mathsf H\subseteq\R^d$ denote the hidden-state space on which the runtime structure is evaluated. A Distinction Graph Machine has runtime state
 \begin{align*}
@@ -21,7 +21,7 @@ Let $\phi_\theta:\calX\to\R^d$ be an encoder, write $h=\phi_\theta(x)$, and let 
 \qquad
 G_t=(V_t,E_t),\qquad V_t=\{1,\ldots,N_t\}.
 \end{align*}
-Each component has a role forced by the refine-or-repair split. A runtime concept needs a stable identity, so $a_j\in\R^d$ is a frozen distinction anchor. Retrieval must adapt as examples arrive, so $c_j\in\R^d$ is a movable centroid. State inside an adequate concept must be repairable, so $M_j$ is a local memory and $n_j$ is a usage count. If a concept is created because it was confused with existing concepts, that conflict becomes an edge in $E_t$. A new concept is initialized with $a_j=c_j=h$. Subsequent repair may move $c_j$, but anchors remain fixed once created, so old distinctions keep their semantics.
+Each component has a role forced by the refine-or-repair split. A runtime concept needs a stable identity, so $a_j\in\R^d$ is a frozen distinction anchor. Retrieval may adapt as examples arrive, so $c_j\in\R^d$ is a movable centroid used only by the soft implementation. State inside an adequate concept must be repairable, so $M_j$ is a local memory and $n_j$ is a usage count. If a concept is created because it was confused with existing concepts, that conflict becomes an edge in $E_t$. A new concept is initialized with $a_j=c_j=h$. Subsequent repair may move $c_j$, but anchors remain fixed once created, so the hard information structure is unchanged by centroid repair.
 
 An edge $e=(i,j)$ stores a linear distinction
 \begin{align*}
@@ -44,7 +44,7 @@ form a finite partition $\calP_t^G$ of hidden-state space, and the generated sig
 \begin{align*}
 \calP_{t+1}^G=\calP_t^G\vee\sigma(g_e).
 \end{align*}
-Anchors generate the distinction skeleton. Centroids and local memories are adaptive statistics attached to cells or sparse neighborhoods of this graph-generated partition.
+Anchors and edges generate the hard distinction skeleton. Centroids and local memories are adaptive statistics attached to states or sparse neighborhoods of this graph-generated partition.
 
 \begin{figure}[t]
 \centering
@@ -101,9 +101,9 @@ Thus each edge distinction separates the two anchors that caused it.
 For any finite edge set $E_t$, equality of signatures $\sigma_t^G(h)$ is an equivalence relation whose classes form a finite partition $\calP_t^G$. Adding one edge $g$ refines the partition by $\calP_t^G\vee\sigma(g)$.
 \end{theorem}
 
-\subsection{Edge-gated prediction}
+\subsection{Soft-DGM edge-gated prediction}
 
-Given $h$, the soft implementation computes retrieval distances $d_j(h)=\norm{h-c_j}_2^2$ to movable centroids. A centroid-only top-$k$ set is not sufficient for the formal hard-route guarantee: if the hard eligible anchor never enters the candidate set, edge gates cannot recover it. We therefore use a recall-oriented candidate set
+The hard route selects the nearest eligible anchor using fixed anchors and accepted edges, so repairs that change only memories and centroids do not change the hard partition. Given $h$, Soft-DGM instead computes retrieval distances $d_j(h)=\norm{h-c_j}_2^2$ to movable centroids. A centroid-only top-$k$ set is not sufficient for the formal hard-route guarantee: if the hard eligible anchor never enters the candidate set, edge gates cannot recover it. We therefore use a recall-oriented candidate set
 \begin{align*}
 N(h)=
 N_{k_c}^{\mathrm{centroid}}(h)
@@ -299,7 +299,7 @@ The candidate is accepted only if it beats the repair gain by a safety margin:
 D_t>\tau_{\mathrm{disagree}}.
 \label{eq:refine-accept}
 \end{align}
-Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m=\abs{\calB_t^{\mathrm{score}}}$; it can be set to zero for a purely empirical implementation, or to the finite-class bound in Theorem~\ref{thm:safe-refinement:informal}. If the refinement test fails, DGM commits the guarded repair candidate in \eqref{eq:guarded-repair}. This makes refinement a statistically guarded gap comparison rather than an unscored growth heuristic.
+Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m=\abs{\calB_t^{\mathrm{score}}}$; it can be set to zero for a purely empirical implementation, or to the adaptive validation margin in Theorem~\ref{thm:safe-refinement:informal}. If the refinement test fails, DGM commits the guarded repair candidate in \eqref{eq:guarded-repair}. This makes refinement a statistically guarded gap comparison rather than an unscored growth heuristic.
 
 \begin{algorithm}[H]
 \caption{\textsc{Observe} for a Distinction Graph Machine}
@@ -356,18 +356,28 @@ If repair is committed by the guarded rule \eqref{eq:guarded-repair}, then $J_{\
 
 This is a local-buffer statement. It does not imply monotone descent of a global objective when the scoring buffer changes over time; a global finiteness claim requires a common potential or validation objective.
 
-\begin{theorem}[Statistically safe finite-class refinement]
+\begin{theorem}[Statistically safe adaptive refinement]
 \label{thm:safe-refinement:informal}
-Assume losses lie in $[0,1]$, the scoring buffer has $m$ independent samples, and the finite candidate refinement class $\calH$ is fixed before scoring, or is generated from $\calB_t^{\mathrm{prop}}$ and the current observation, independent of $\calB_t^{\mathrm{score}}$. With probability at least $1-\delta$, empirical and population risks are uniformly within
+Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing the past stream, the current DGM state, and all proposal-buffer information available before scoring at time $t$. Let $\calC_t$ be a finite candidate class that is predictable with respect to $\mathfrak H_t$, and let $\calB_t^{\mathrm{score}}$ contain $m_t$ samples independent of $\mathfrak H_t$ conditional on the current scoring distribution. Define
 \begin{align*}
-\epsilon_m=\sqrt{\frac{\log(2(\abs{\calH}+1)/\delta)}{2m}}.
+\epsilon_t=
+\sqrt{
+\frac{\log(4t^2(\abs{\calC_t}+1)/\delta)}
+{2m_t}
+}.
 \end{align*}
-Consequently every empirical gain $\widehat\Delta(g)$ differs from its population gain $\Delta(g)$ by at most $2\epsilon_m$. Hence an accepted refinement satisfying
+Then, with probability at least $1-\delta$, for every time $t$ and every $g\in\calC_t$,
 \begin{align*}
-\widehat\Delta(g)>
-\lambda\operatorname{cost}(g)+\tau+2\epsilon_m
+\abs{\widehat\Delta_t(g)-\Delta_t(g)}
+\le
+2\epsilon_t.
 \end{align*}
-has positive population gain after paying complexity cost and margin $\tau$.
+Hence an accepted refinement satisfying
+\begin{align*}
+\widehat\Delta_t(g)>
+\lambda\operatorname{cost}(g)+\tau+2\epsilon_t
+\end{align*}
+has positive population gain after paying complexity cost and margin $\tau$, uniformly over all accepted times.
 \end{theorem}
 
 \begin{corollary}[Bounded language-model refinement score]
@@ -400,27 +410,82 @@ If a repair step changes only retrieval centroids $c_j$, local memories $M_j$, a
 If there is a common nonnegative potential $\Phi(\calS)$ and every accepted refinement decreases $\Phi$ by at least $\tau>0$, then the number of accepted refinements is at most $\Phi(\calS_0)/\tau$. In particular, this applies to a fixed scoring buffer or validation objective. The local-buffer descent theorem alone should not be read as a global finiteness result when the scoring buffer changes over time.
 \end{corollary}
 
+\subsection{Data-structure operations}
+
+Viewed as a dynamic partition data structure, DGM implements four operations:
+\begin{align*}
+\operatorname{Query}(h),\qquad
+\operatorname{Repair}(h,y),\qquad
+\operatorname{Refine}(h,y,g),\qquad
+\operatorname{Score}(g,\calB).
+\end{align*}
+The maintained invariant is
+\begin{align*}
+\operatorname{Repair}\quad&\Longrightarrow\quad \calP^G(\calS_{t+1})=\calP^G(\calS_t),\\
+\operatorname{Refine}(g)\quad&\Longrightarrow\quad \calP^G(\calS_{t+1})=\calP^G(\calS_t)\vee\sigma(g),
+\end{align*}
+where $\calP^G(\calS_t)$ is the edge-generated hard partition. Thus repair modifies payloads on the current structure, while refinement changes the structure.
+
+\begin{theorem}[DGM data-structure cost]
+\label{thm:dgm-data-structure-main}
+Assume $N_t$ concepts in $\R^d$, candidate set size $\abs{N(h)}=k$, selected incident edge count $Q(h)$, retrieval cost $C_{\mathrm{ret}}(N_t,d)$, and selected local-memory evaluation cost $C_{\mathrm{mem}}$. Then
+\begin{align*}
+\operatorname{Query}(h)
+=
+O(C_{\mathrm{ret}}(N_t,d)+Q(h)+kd+C_{\mathrm{mem}}).
+\end{align*}
+A repair adds the cost of scoring the proposed local-memory candidates on the scoring buffer. A refinement creating one anchor-centroid pair and $q$ linear distinction edges adds $O(d+qd)$ state-update time. With sparse categorical memories of average support $\bar s$, the state uses
+\begin{align*}
+O(N_t(2d+\bar s)+\abs{E_t}d)
+\end{align*}
+memory, up to indexing overhead.
+\end{theorem}
+
+The theorem is an implementation bound rather than a statistical guarantee. It says that DGM realizes the abstract operation $\Pi\mapsto\Pi\vee U$ with local graph updates and sparse routing, provided the candidate retrieval layer supplies the relevant hard-route concepts.
+
 \subsection{Canonical local memory}
 
-The local memory $M_j$ is the repair mechanism inside an already chosen concept. To keep the main method fixed, the canonical language-model memory is an embedding mean. Other local memories, including ridge and projection-style repair, are implementation extensions in Appendix~\ref{app:dgm-extensions}.
-
-For classification or language modeling with output embeddings $e_y\in\R^{d_e}$, concept $j$ stores
-\begin{align*}
-r_j=\frac{1}{n_j}\sum_{s\in C_j}e_{y_s}.
-\end{align*}
-It contributes the score
-\begin{align*}
-\ell_{\mathrm{DGM}}(y\mid h)=\sum_{j\in N(h)}\alpha_j(h)e_y^\top r_j.
-\end{align*}
-Repair is the sufficient-statistic update, applied for every selected $j\in N(h)$ with all unselected memories unchanged:
-\begin{align*}
-r_j^+=\frac{n_jr_j+\alpha_j(h)e_y}{n_j+\alpha_j(h)},
+The local memory $M_j$ is the repair mechanism inside an already chosen concept. For classification and language modeling, the main-text canonical memory is a calibrated categorical memory rather than an unconstrained embedding score. Concept $j$ stores token or label counts $n_{j,y}$ and $n_j=\sum_y n_{j,y}$. Given a backbone distribution $p_0(y\mid h)$ and smoothing strength $\alpha_0>0$, define
+\begin{align}
+p_j(y\mid h)
+=
+\frac{n_{j,y}+\alpha_0 p_0(y\mid h)}
+{n_j+\alpha_0}.
+\label{eq:concept-categorical-memory}
+\end{align}
+The routed memory distribution is
+\begin{align}
+p_{\mathrm{mem}}(y\mid h)
+=
+\sum_{j\in N(h)}\alpha_j(h)p_j(y\mid h),
+\label{eq:routed-memory-distribution}
+\end{align}
+and the final prediction is the convex mixture
+\begin{align}
+p_{\mathrm{DGM}}(y\mid h)
+=
+(1-\lambda_t)p_0(y\mid h)+\lambda_t p_{\mathrm{mem}}(y\mid h),
 \qquad
-n_j^+=n_j+\alpha_j(h).
+\lambda_t\in[0,1].
+\label{eq:calibrated-dgm-mixture}
+\end{align}
+This keeps the read path a valid probability distribution. It also gives the simple safety bound
+\begin{align*}
+-\log p_{\mathrm{DGM}}(y\mid h)
+\le
+-\log p_0(y\mid h)-\log(1-\lambda_t)
 \end{align*}
-The low-cost hard-update variant is recovered by setting $\alpha_{j^\star}=1$ for the highest-weight concept and $\alpha_j=0$ for all $j\ne j^\star$.
+whenever $\lambda_t<1$. In experiments where log loss is central, $\lambda_t$ should be selected online by a validation rule or by Hedge over a small grid of trust weights.
+
+Repair is the sufficient-statistic update. For every selected concept $j\in N(h)$,
+\begin{align*}
+n_{j,y}^+=n_{j,y}+\alpha_j(h),
+\qquad
+n_j^+=n_j+\alpha_j(h),
+\end{align*}
+with all unselected counts unchanged. The low-cost hard-update variant is recovered by setting $\alpha_{j^\star}=1$ for the highest-weight concept and $\alpha_j=0$ for all $j\ne j^\star$. Embedding-mean memories and ridge or projection-style local repair are useful implementation variants, but they should be evaluated with calibration metrics before being used for log-loss claims.
 
 \subsection{From DGM to DGM-Embedding}
 \label{sec:language-dgm}
 
-The generic DGM object above can be attached to many local memories. For sequence models, the canonical instantiation is DGM-Embedding: hidden-state concepts store next-token embedding memories, the read path produces a sparse logit correction, and the observe rule runs after the true next token is revealed. Section~\ref{sec:large-model-training} gives this layer directly, including the read-before-observe protocol and the forward-only detached write path.
+The generic DGM object above can be attached to many local memories. For sequence models, Appendix~\ref{sec:large-model-training} gives DGM-Embedding as an architectural extension with a read-before-observe protocol and forward-only detached writes.

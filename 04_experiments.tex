@@ -1,7 +1,7 @@
-\section{Experiments: When Refinement Matters}
+\section{Separating Examples and Sanity Checks}
 \label{sec:experiments}
 
-The experiments test the mechanism predicted by the theory rather than broad benchmark performance. A diagnostic task should contain both a repair component, where local memory updates help, and a refinement component, where repair-only methods collapse incompatible consequences into one state. All learners use a prequential protocol: predict first, observe the consequence, then update. Implementation details and additional sanity checks are in Appendix~\ref{app:additional-checks}.
+The experiments are separating examples for the formal model, not a broad benchmark suite. Each task contains a repair component, where local memory updates help, and a refinement component, where repair-only learners collapse incompatible consequences into one partition atom. All learners use a prequential protocol: predict first, observe the consequence, then update. The current experiments do not establish language-model-scale competitiveness, and the hidden-regime log-loss results expose the need for the calibrated memory in \eqref{eq:calibrated-dgm-mixture}. Implementation details and additional sanity checks are in Appendix~\ref{app:additional-checks}.
 
 \subsection{Hidden-regime sequence prediction}
 
@@ -22,11 +22,11 @@ DGM refine+repair & graph memory & $\mathbf{0.617\pm0.040}$ & $5.348\pm0.625$ & 
 Backprop MLP, online & one backprop step & $0.292\pm0.020$ & $2.217\pm0.054$ & -- \\
 \bottomrule
 \end{tabular}
-\caption{Hidden-regime online sequence prediction, averaged over five seeds. The useful operation is to create distinctions when identical tokens have regime-dependent consequences. The refine+repair run creates runtime concepts and had monotone local scoring-objective decrease at accepted refinements in all runs. Accuracy and log loss are both reported because the synthetic baselines differ in calibration.}
+\caption{Hidden-regime online sequence prediction, averaged over five seeds. The useful operation is to create distinctions when identical tokens have regime-dependent consequences. The refine+repair run creates runtime concepts and had monotone local scoring-objective decrease at accepted refinements in all runs, which improves accuracy. Its poor log loss shows that the uncalibrated memory used in this diagnostic is not adequate for probabilistic claims.}
 \label{tab:hidden-regime-check}
 \end{table}
 
-Held-out accuracies for the same runs were $0.285\pm0.049$ for cache LM, $0.346\pm0.106$ for budgeted $k$NN-LM, $0.235\pm0.024$ for nearest-centroid memory, $0.055\pm0.015$ for repair-only DGM, $0.680\pm0.065$ for refine+repair DGM, and $0.282\pm0.086$ for online backpropagation. The important comparison is structural: repair-only DGM fails because the task is constructed so that one local memory is the wrong information structure.
+Held-out accuracies for the same runs were $0.285\pm0.049$ for cache LM, $0.346\pm0.106$ for budgeted $k$NN-LM, $0.235\pm0.024$ for nearest-centroid memory, $0.055\pm0.015$ for repair-only DGM, $0.680\pm0.065$ for refine+repair DGM, and $0.282\pm0.086$ for online backpropagation. The important comparison is structural: repair-only DGM fails because the task is constructed so that one local memory is the wrong information structure. The log-loss column is equally important: a method that wins accuracy while losing NLL is not a calibrated probabilistic runtime learner, so the main algorithm specifies smoothed categorical memories and a backbone mixture before making log-loss claims.
 
 \subsection{Repair-only ablation}
 
@@ -67,7 +67,7 @@ DGM graph memory, online & refine-or-repair & $0.804\pm0.025$ & $0.944\pm0.026$ 
 
 \subsection{Synthetic next-token stream}
 
-Finally, we include a synthetic language-modeling stream. Each document context induces a different next-token transition map. The learner observes a prefix representation and must predict the next token before seeing it. After the next token is revealed, DGM memory stores the prefix type and next-token consequence; online backpropagation again receives one gradient step per token.
+Finally, we include a synthetic language-modeling stream. Each document context induces a different next-token transition map. The learner observes a prefix representation and must predict the next token before seeing it. After the next token is revealed, DGM memory stores the prefix type and next-token consequence; online backpropagation again receives one gradient step per token. This is a controlled next-token diagnostic, not evidence that DGM-Embedding is a competitive cache or $k$NN-LM replacement on real corpora.
 
 \begin{table}[t]
 \centering

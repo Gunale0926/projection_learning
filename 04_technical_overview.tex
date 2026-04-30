@@ -1,7 +1,7 @@
 \section{Proof Sketches}
 \label{sec:technical-overview}
 
-This section collects the main proof ideas in the order used by the paper: runtime excess risk decomposes into $\Delta_{\mathrm{repair}}$ and $\Delta_{\mathrm{refine}}$; contradictions require distinctions; minimal refinement adds the missing distinction and nothing else; useful distinctions have exact value under standard losses; and guarded DGM updates decrease the local penalized objective. The measure-theoretic notation, conditional-expectation facts, and decision-theoretic Bayes-risk framing are standard \citep{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}. Full formal versions appear in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
+This section collects the main proof ideas in the order used by the paper: runtime excess risk decomposes into $\Delta_{\mathrm{repair}}$ and $\Delta_{\mathrm{refine}}$; repair-only learners have linear regret against refined oracles; useful refinements are exactly those that change the Bayes action; minimal refinement adds the missing distinction and nothing else; useful distinctions have exact value under standard losses; and guarded DGM updates decrease the local penalized objective. The measure-theoretic notation, conditional-expectation facts, and decision-theoretic Bayes-risk framing are standard \citep{billingsley1995probability,kallenberg2002foundations,blackwell1953equivalent,berger1985statistical}. Full formal versions appear in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
 
 \begin{theorem}[Runtime error decomposition, proof sketch for Theorem~\ref{thm:error-decomposition}]
 \label{thm:error-decomposition:sketch}
@@ -10,13 +10,29 @@ The statement is Theorem~\ref{thm:error-decomposition}.
 \begin{proof}[Proof sketch]
 Add and subtract the Bayes risk under the current information:
 \begin{align*}
-R_L(f_t)-R_L(\calG)
+R_L(f_t)-R_L(\Pi^\star)
 =
-\Delta_{\mathrm{repair}}(f_t,\calF_t)
+\Delta_{\mathrm{repair}}(f_t,\Pi_t)
 +
-\Delta_{\mathrm{refine}}(\calF_t,\calG).
+\Delta_{\mathrm{refine}}(\Pi_t,\Pi^\star).
 \end{align*}
-The first term is nonnegative because $f_t$ is one of the $\calF_t$-measurable predictors over which $R_L(\calF_t)$ optimizes. The second is nonnegative because $\calG\supseteq\calF_t$ enlarges the admissible predictor class.
+The first term is nonnegative because $f_t$ is one of the $\Pi_t$-measurable predictors over which $R_L(\Pi_t)$ optimizes. The second is nonnegative because a refinement enlarges the admissible predictor class.
+\end{proof}
+
+\begin{theorem}[Repair-only regret, proof sketch for Theorem~\ref{thm:repair-only-regret}]
+\label{thm:repair-only-regret:sketch}
+The statement is Theorem~\ref{thm:repair-only-regret}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+Condition on the history before round $t$. A repair-only learner's prediction is $\Pi$-measurable, so its conditional expected loss is at least $R_L(\Pi)$ by definition of Bayes risk under the partition. Summing over rounds gives cumulative expected loss at least $TR_L(\Pi)$. A refined oracle using $\Pi^\star$ pays $TR_L(\Pi^\star)$, so the regret lower bound follows by subtraction.
+\end{proof}
+
+\begin{theorem}[Loss-relevant refinement, proof sketch for Theorem~\ref{thm:loss-relevant-refinement:formal}]
+\label{thm:loss-relevant-refinement:sketch}
+The statement is Theorem~\ref{thm:loss-relevant-refinement:informal}.
+\end{theorem}
+\begin{proof}[Proof sketch]
+If the $\calG$-Bayes action is already $\calF$-measurable, then it is feasible under the old information and attains the refined risk, so the refinement gap is zero. Conversely, if the old and refined risks are equal, any $\calF$-Bayes action is also $\calG$-optimal. Almost sure uniqueness of the $\calG$-Bayes action forces equality with the refined Bayes action, so the refined action has an $\calF$-measurable version.
 \end{proof}
 
 \begin{theorem}[Contradiction, proof sketch for Theorem~\ref{thm:contradiction:formal}]
@@ -165,7 +181,7 @@ Guarded repair proposes local memory or centroid changes while keeping anchors a
 The statement is Theorem~\ref{thm:safe-refinement:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Conditioning on a finite candidate class fixed before scoring, or generated from a proposal buffer independent of the scoring buffer, Hoeffding's inequality bounds the deviation between empirical and population risk for the old state and for each candidate-refined state \citep{hoeffding1963probability}. A union bound over this finite collection gives the usual finite-class validation guarantee \citep{devroye1996probabilistic}. Each gain is a difference of two risks, so its empirical-population deviation is at most twice the risk deviation. If the empirical gain exceeds cost plus $\tau+2\epsilon_m$, the population gain exceeds cost plus $\tau$ on this high-probability event.
+At each time $t$, condition on the filtration containing the past, current DGM state, and proposal buffer. The predictable finite candidate class is then fixed, while the scoring buffer remains independent by assumption. Hoeffding's inequality bounds the deviation between empirical and population risk for the old state and for each candidate-refined state \citep{hoeffding1963probability}. A union bound over the finite class gives failure probability of order $\delta/t^2$ after using the displayed $\epsilon_t$, and a second union bound over all times is summable. Each gain is a difference of two risks, so its empirical-population deviation is at most twice the risk deviation. If the empirical gain exceeds cost plus $\tau+2\epsilon_t$, the population gain exceeds cost plus $\tau$ on this high-probability event.
 \end{proof}
 
 \begin{corollary}[Bounded LM score, proof sketch for Corollary~\ref{cor:lm-clipped-refinement:formal}]
@@ -173,7 +189,7 @@ Conditioning on a finite candidate class fixed before scoring, or generated from
 The statement is Corollary~\ref{cor:lm-clipped-refinement:informal}.
 \end{corollary}
 \begin{proof}[Proof sketch]
-Clipping and normalizing next-token negative log likelihood gives a score in $[0,1]$. The finite-class refinement theorem therefore applies directly to the clipped scoring rule. The conclusion is intentionally about clipped population gain, not raw unbounded cross-entropy.
+Clipping and normalizing next-token negative log likelihood gives a score in $[0,1]$. The adaptive refinement theorem therefore applies directly to the clipped scoring rule. The conclusion is intentionally about clipped population gain, not raw unbounded cross-entropy.
 \end{proof}
 
 \begin{theorem}[Anchor-stable DGM information structure, proof sketch for Theorem~\ref{thm:anchor-stable:formal}]

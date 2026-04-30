@@ -3,87 +3,43 @@
 
 Runtime learning is usually phrased as an update problem: after a model is surprised, which memory, cache entry, adapter, or parameter should be changed? This paper studies the prior structural question. Before deciding how to update, a learner must decide whether the observed error is representable under its current information.
 
-At time $t$, a deployed learner has an information map
-\begin{align*}
-I_t:\Omega\to\calZ_t
-\end{align*}
-and a predictor
-\begin{align*}
-f_t=g_t\circ I_t .
-\end{align*}
-Fix a probability space $(\Omega,\calE,\mathbb P)$. The points of $\Omega$ are cases or histories; $\calE$ is the ambient sigma-algebra; and $\mathbb P$ is the data-generating distribution. The label space $\calZ_t$ is the learner's current quotient of the world. A label may be a decision-tree leaf, cache cell, hidden-state bucket, route, or runtime concept. The target is $Y:\Omega\to\calY$, predictions take values in an action space $\mathsf A$, and performance is measured by a loss $L:\calY\times\mathsf A\to\R$.
+The central object of this paper is not a memory update, but the equivalence relation induced by the learner's runtime state. If two cases are assigned to the same runtime state, then any update that preserves that state space must treat them as indistinguishable. Repair modifies values on equivalence classes. Refinement modifies the equivalence relation itself.
 
-The information exposed by the current representation is
-\begin{align*}
-\calF_t=\sigma(I_t),
-\end{align*}
-the sigma-algebra of events decidable from $I_t(\omega)$. In a finite space this is the partition into fibers $I_t^{-1}(z)$. Hence the equality $I_t(\omega)=I_t(\omega')$ is not only a representational accident: every predictor preserving the current information must assign the same action to $\omega$ and $\omega'$.
+Consider the smallest example. Let $\Omega=\{0,1\}$, let $P$ be uniform, and let the consequence be $Y=\omega$. If the current runtime representation has the trivial partition $\Pi=\{\{0,1\}\}$, then under log loss the best repair-only predictor assigns probability $1/2$ to each label and pays $\log 2$ per round. The refined partition $\Pi^\star=\{\{0\},\{1\}\}$ pays zero in the noiseless case. This gap is not caused by a bad optimizer, cache size, or local parameter value. It is caused by identifying two states that the target separates.
 
-We separate two update types. A \emph{repair} changes the downstream rule, local memory, or statistics while preserving information:
+We formalize this as \emph{online prediction with refinable partitions}. A learner maintains a state
 \begin{align*}
-\sigma(I_{t+1})=\calF_t .
+S_t=(\Pi_t,a_t),
 \end{align*}
-A \emph{refinement} changes the information structure:
-\begin{align*}
-\sigma(I_{t+1})=\calG,\qquad \calG\supsetneq\calF_t .
-\end{align*}
-The point of the distinction is that the two operations have different formal power.
+where $\Pi_t$ is a finite partition of the case space and $a_t:\Pi_t\to\mathsf A$ is a predictor on its atoms. On each round, the learner observes only the current atom containing the sampled case, predicts, observes the consequence, and then chooses either repair or refinement. A repair changes $a_t$ while keeping $\Pi_{t+1}=\Pi_t$. A refinement chooses an admissible binary distinction $U$ and replaces the partition by the join $\Pi_{t+1}=\Pi_t\vee U$.
 
-For a concrete predictor $f$, write
+This model makes a lower bound immediate and useful. For any fixed partition $\Pi$, every repair-only learner whose predictions remain $\Pi$-measurable has expected per-round loss at least the Bayes risk $R_L(\Pi)$. Relative to an oracle using a refined partition $\Pi^\star$, its expected regret is at least
 \begin{align*}
-R_L(f)=\E[L(Y,f)].
+T\left(R_L(\Pi)-R_L(\Pi^\star)\right).
 \end{align*}
-For an information structure $\calF\subseteq\calE$, let
+Thus, whenever the refinement gap is positive, repair-only learning has linear regret against a refined oracle. Caches, local memories, fast weights, nearest-neighbor writes, and test-time optimizers fall under this statement only when their updates preserve the relevant partition. Methods that change the representation are refinements in this model, not repairs.
+
+The minimal escape from this lower bound is also canonical. Adding a binary distinction $U$ replaces the current partition by
 \begin{align*}
-\Pred(\calF)=\{a:\Omega\to\mathsf A: a\text{ is }\calF\text{-measurable}\}
-\end{align*}
-be the predictors admissible under $\calF$, and define the Bayes risk under information $\calF$ by
-\begin{align*}
-R_L(\calF)
+\Pi\vee U
 =
-\inf_{a\in\Pred(\calF)}\E[L(Y,a)].
+\{B\cap U^{-1}(0),B\cap U^{-1}(1):B\in\Pi\}\setminus\{\varnothing\}.
 \end{align*}
-Given the current predictor $f_t$ and a candidate refinement $\calG\supseteq\calF_t$, the runtime excess risk decomposes into two adjacent gaps:
-\begin{align}
-\Delta_{\mathrm{repair}}(f_t,\calF_t)
-&=R_L(f_t)-R_L(\calF_t),
-\label{eq:intro-repair-gap}\\
-\Delta_{\mathrm{refine}}(\calF_t,\calG)
-&=R_L(\calF_t)-R_L(\calG).
-\label{eq:intro-refine-gap}
-\end{align}
-Equivalently,
-\begin{align}
-R_L(f_t)-R_L(\calG)
-&=
-\underbrace{\Delta_{\mathrm{repair}}(f_t,\calF_t)}_{\text{best possible repair at fixed information}}
-+
-\underbrace{\Delta_{\mathrm{refine}}(\calF_t,\calG)}_{\text{value of new information}}.
-\label{eq:intro-error-decomposition}
-\end{align}
-The repair gap is the error left by $f_t$ inside the current information structure. The refinement gap is the value of distinctions exposed by $\calG$ but absent from $\calF_t$.
+This operation cuts exactly the atoms crossed by $U$ and leaves all other atoms unchanged. A distinction is therefore not merely an auxiliary feature; it changes the information structure on which future predictions are allowed to depend.
 
-The obstruction is simple and architecture-independent. Suppose $I_t(\omega)=I_t(\omega')$, but the two cases require different outputs. Every repaired predictor still factors through $I_t$, so it must assign the same output to both cases. No cache update, local optimizer, nearest-neighbor write, fast-weight repair, or test-time gradient step can remove this contradiction while preserving $\calF_t$. The missing object is not a better value inside the cell. It is the distinction that splits the cell.
+Not every new bit is worth adding. A refinement should be accepted only if it changes the best achievable decision. We characterize this condition in Bayes-risk terms: if $\calF\subseteq\calG$ and the $\calG$-Bayes action is unique, then $R_L(\calF)-R_L(\calG)=0$ iff that refined Bayes action already has an $\calF$-measurable version. Under log loss, the gap becomes an expected conditional KL divergence, and a binary distinction has value $I(Y;U\mid\calF)$. This gives a consequence-based split score: accept distinctions because they change outcome distributions, not because they are geometrically novel.
 
-The minimal corrective operation is canonical. If the learner accepts new evidence $U_t$, the least information update that makes that evidence usable is
-\begin{align*}
-\calF_{t+1}=\calF_t\vee\sigma(U_t).
-\end{align*}
-In a finite partition, this operation cuts exactly the old cells crossed by $U_t$ and leaves all other cells unchanged. Thus refinement is not arbitrary model growth. It is the least change in the sigma-algebra needed to make the missing evidence measurable. The value of a refinement is loss-dependent: under log loss it is conditional mutual information, and under squared loss it is conditional variance reduction. Because finite-sample refinement can overfit even when population information cannot hurt, an implementation should accept refinements only after a guarded gain test.
-
-Distinction Graph Machines (DGM) are the algorithmic realization of this diagnostic. A DGM is a runtime data structure whose nodes are concepts with repairable memories and whose edges are binary distinction generators. Anchors provide stable concept identities, centroids support retrieval, and edges gate future routing. After observing a consequence, DGM scores empirical repair and refinement candidates. If the current concept is adequate, it repairs local memory at fixed information. If the consequence exposes an incompatibility inside the current information cell, it refines by adding a concept and consequence-forced distinction edges.
-
-For language models, DGM-Embedding instantiates the same rule as a detached next-token memory layer. Hidden-state concepts store next-token embedding memories and produce sparse logit corrections through a differentiable read path. The write path is forward-only: after the next token is observed, the layer repairs selected memories or refines the concept graph without inference-time backpropagation.
-
-This places DGM relative to several existing runtime mechanisms. Cache and $k$NN language models store or retrieve examples \citep{grave2017improving,khandelwal2020generalization}; fast weights and linear attention repair associative state \citep{ba2016using,schlag2021linear}; test-time adaptation optimizes an inference-time objective \citep{sun2020test,wang2021tent,sun2025learning}; online trees refine partitions \citep{breiman1984classification,domingos2000mining}; and adaptive prototype systems create categories \citep{carpenter1987massively,carpenter1987art2,kohonen1990self,fritzke1995growing,snell2017prototypical}. These ingredients are not new in isolation. The contribution is the formal refine-or-repair criterion: before writing runtime state, decide whether the observed error is representable under the current sigma-algebra or requires a new one.
+Distinction Graph Machines (DGM) are the data-structure realization of this abstract model. The formal object is Hard-DGM: fixed anchors and accepted binary edges generate a partition, node memories repair predictions on the resulting states, and refinement adds a new binary generator. The practical implementation is Soft-DGM: centroids, sparse retrieval, and differentiable edge gates approximate the hard route. The formal guarantees apply directly to Hard-DGM and to Soft-DGM only under candidate-recall and margin conditions.
 
 \paragraph{Contributions.}
-We make four contributions.
+We make six contributions.
 \begin{itemize}
-    \item We formulate runtime learning through information maps, measurable predictors, and Bayes risk under a sigma-algebra of available distinctions.
-    \item We decompose excess risk into a repair gap at fixed information and a refinement gap from missing information, and prove the missing-distinction obstruction.
-    \item We characterize minimal refinement as $\calF_t\vee\sigma(U_t)$ and identify standard value formulas for log loss and squared loss.
-    \item We introduce DGM and DGM-Embedding as guarded runtime algorithms that repair local memories or refine the information structure when consequences force a distinction.
+    \item \textbf{Model.} We introduce online prediction with refinable information partitions, where repair preserves $\Pi_t$ and refinement replaces $\Pi_t$ by $\Pi_t\vee U$.
+    \item \textbf{Lower bound.} We prove that any repair-only learner suffers linear regret against a refined oracle whenever $R_L(\Pi)>R_L(\Pi^\star)$.
+    \item \textbf{Characterization.} We show that a refinement has positive value exactly when it changes the Bayes action; under log loss, the value of a binary distinction is $I(Y;U\mid\calF)$.
+    \item \textbf{Algorithmic guarantees.} We give statistically guarded split tests, distinction-complexity parameters, realizable greedy recovery guarantees, and a finite-class oracle inequality.
+    \item \textbf{Data structure.} We implement refinable partitions as DGM, where graph edges are binary generators and node memories implement repair.
+    \item \textbf{Separating examples.} We give controlled streams showing that repair-only learners fail on missing-distinction tasks while refine-and-repair learners recover the needed partition. These are mechanism checks, not claims of language-model-scale competitiveness.
 \end{itemize}
 
-Section~\ref{sec:preliminaries} gives the decomposition and obstruction. Section~\ref{sec:minimal-refinement} gives minimal refinement. Section~\ref{sec:algorithms} defines DGM and its guarded update rule. Section~\ref{sec:large-model-training} gives DGM-Embedding. The remaining sections state guarantees, experiments, and related work; value identities, extensions, and formal proofs are in the appendix.
+Section~\ref{sec:preliminaries} defines refinable online prediction and proves the repair-only lower bound. Section~\ref{sec:minimal-refinement} gives the minimal join operation. Section~\ref{sec:value} characterizes useful distinctions and gives finite-sample refinement guarantees. Section~\ref{sec:algorithms} defines DGM as the data-structure implementation. The remaining sections give scoped guarantees, separating examples, and related work; DGM-Embedding and soft implementation details are in the appendix.

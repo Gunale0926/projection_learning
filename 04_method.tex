@@ -29,7 +29,42 @@ R_{\log}(\calF)-R_{\log}(\calG)=I(Y;\calG\mid\calF).
 \end{align*}
 \end{theorem}
 
-Here $I(Y;\calG\mid\calF)$ denotes $H(Y\mid\calF)-H(Y\mid\calG)$. Thus, for classification and language modeling, a refinement is useful exactly to the extent that it carries conditional mutual information about the consequence beyond what the learner already knows. If the new bit does not tell us anything about the next consequence beyond the old information, it is a gratuitous distinction, even if it separates inputs.
+Here $I(Y;\calG\mid\calF)$ denotes $H(Y\mid\calF)-H(Y\mid\calG)$. Writing
+\begin{align*}
+p_\calF(y)=\mathbb P(Y=y\mid\calF),
+\qquad
+p_\calG(y)=\mathbb P(Y=y\mid\calG),
+\end{align*}
+the same identity has the conditional-KL form
+\begin{align}
+R_{\log}(\calF)-R_{\log}(\calG)
+=
+\E\left[
+D_{\mathrm{KL}}\!\left(p_\calG(\cdot)\middle\|p_\calF(\cdot)\right)
+\right].
+\label{eq:conditional-kl-value}
+\end{align}
+Thus, for classification and language modeling, a refinement is useful exactly when it changes the conditional consequence distribution with positive probability. If the new bit does not tell us anything about the next consequence beyond the old information, it is a gratuitous distinction, even if it separates inputs.
+
+\begin{corollary}[Binary distinction value]
+\label{cor:binary-distinction-value:informal}
+Let $U\in\{0,1\}$ be a candidate distinction and let $\calG=\calF\vee\sigma(U)$. Under log loss,
+\begin{align*}
+R_{\log}(\calF)-R_{\log}(\calG)
+\!&=
+I(Y;U\mid\calF)\\
+&=
+\E\!\left[
+\sum_{u\in\{0,1\}}
+\mathbb P(U=u\mid\calF)
+D_{\mathrm{KL}}\!\left(
+\mathbb P(Y\in\cdot\mid\calF,U=u)
+\middle\|
+\mathbb P(Y\in\cdot\mid\calF)
+\right)
+\right].
+\end{align*}
+\end{corollary}
 
 \subsection{Squared loss}
 
@@ -45,6 +80,34 @@ R_2(\calF)-R_2(\calG)=\E\left[\norm{\E[Y\mid\calG]-\E[Y\mid\calF]}_2^2\right].
 
 The identity is the Hilbert-space analogue of the log-loss result. A distinction has squared-loss value when the cells it creates have different conditional means. In regression language, refinement is worth paying for when it separates consequences, not merely when it separates inputs.
 
+\subsection{Minimal loss-sufficient refinement}
+
+Minimal refinement in Section~\ref{sec:minimal-refinement} adds the least information needed to observe a proposed variable. The loss-sufficient question is slightly different: among the refinements inside $\calG$, what is the least information needed to attain the $\calG$-Bayes risk?
+
+\begin{theorem}[Minimal loss-sufficient refinement]
+\label{thm:minimal-loss-sufficient:informal}
+Let $\calF\subseteq\calG$ and assume the $\calG$-Bayes action $a_\calG^\star$ exists and is almost surely unique. Up to null sets, the smallest sigma-algebra $\calH$ satisfying
+\begin{align*}
+\calF\subseteq\calH\subseteq\calG,
+\qquad
+R_L(\calH)=R_L(\calG)
+\end{align*}
+is
+\begin{align*}
+\calF\vee\sigma(a_\calG^\star).
+\end{align*}
+For finite $Y$ under log loss, the corresponding smallest sufficient refinement is
+\begin{align*}
+\calF\vee\sigma(p_\calG),
+\qquad
+p_\calG(\cdot)=\mathbb P(Y\in\cdot\mid\calG).
+\end{align*}
+\end{theorem}
+
+\begin{proof}
+The action $a_\calG^\star$ is measurable with respect to $\calF\vee\sigma(a_\calG^\star)$, so this refinement attains $R_L(\calG)$. If any $\calH$ with $\calF\subseteq\calH\subseteq\calG$ also attains $R_L(\calG)$, Theorem~\ref{thm:loss-relevant-refinement:informal} applied to $\calH\subseteq\calG$ implies that $a_\calG^\star$ has an $\calH$-measurable version. Hence $\calF\vee\sigma(a_\calG^\star)\subseteq\calH$ up to null sets. Under log loss, the Bayes action is the conditional law $p_\calG$, giving the final statement.
+\end{proof}
+
 \subsection{Finite empirical scores}
 
 The population identities lead directly to standard empirical split scores: information gain for classification and variance reduction for regression trees \citep{breiman1984classification,domingos2000mining}. Suppose an atom $B$ contains samples $(x_j,y_j)$ and a candidate distinction $g:B\to\{0,1\}$ splits it into $B_0$ and $B_1$.
@@ -56,6 +119,15 @@ For classification, let $\hat p_B$, $\hat p_{B_0}$, and $\hat p_{B_1}$ be empiri
 Equivalently,
 \begin{align*}
 \Delta_{\log}(B,g)=\abs{B}\widehat I(Y;g\mid B).
+\end{align*}
+The normalized empirical edge score is therefore
+\begin{align*}
+\widehat I(Y;g\mid B)
+=
+H(\hat p_B)
+-
+\sum_{b\in\{0,1\}}
+\frac{\abs{B_b}}{\abs{B}}H(\hat p_{B_b}).
 \end{align*}
 
 For regression, define
@@ -72,3 +144,103 @@ It also has the between-cell form
 \end{align*}
 
 These scores implement the same principle as the population theory: split only when the proposed distinction has measurable consequence value. The DGM algorithm below turns this population rule into a guarded empirical decision.
+
+\subsection{Distinction complexity}
+
+The refinement gap measures the value of a target information structure. A complementary question is how many admissible distinctions are needed to reach it. Let $\Pi$ be an initial partition, let $\Pi^\star$ be a target refinement, and let $\calU\subseteq\{0,1\}^{\Omega}$ be a distinction class. For $\epsilon\ge0$, define the loss-dependent distinction complexity
+\begin{align}
+d_L^\epsilon(\Pi,\Pi^\star;\calU)
+=
+\min\left\{
+m:
+\exists U_1,\ldots,U_m\in\calU
+\text{ such that }
+R_L(\Pi\vee U_1\vee\cdots\vee U_m)
+\le
+R_L(\Pi^\star)+\epsilon
+\right\},
+\label{eq:distinction-complexity}
+\end{align}
+with value $+\infty$ if no such sequence exists. Repair-only learning is the case $m=0$. Decision trees, graph refinements, and prototype split systems differ partly in the distinction classes and ordering constraints they impose. DGM corresponds to a graph-generated class of local binary predicates proposed from confused runtime states.
+
+\subsection{Greedy recovery under realizability}
+
+The next theorem is a clean realizable upper bound for greedy refinement. It is intentionally stated for the abstract partition model rather than for Soft-DGM retrieval.
+
+\begin{definition}[Target-respecting distinction]
+\label{def:target-respecting}
+Let $\Pi^\star$ be a target partition. A distinction $U:\Omega\to\{0,1\}$ is $\Pi^\star$-respecting if it does not split any atom of $\Pi^\star$: for every $C\in\Pi^\star$, either $C\subseteq U^{-1}(0)$ or $C\subseteq U^{-1}(1)$.
+\end{definition}
+
+For an atom $B\in\Pi$, write $\Pi^\star|_B=\{C\in\Pi^\star:C\cap B\ne\varnothing\}$. The atom $B$ is impure if $\abs{\Pi^\star|_B}>1$. For a candidate distinction $U$, define its local value on $B$ by
+\begin{align*}
+V_L(B,U)
+=
+R_L(\{B\})-
+R_L\!\left(\{B\}\vee U\right),
+\end{align*}
+where the risks are conditional on $\omega\in B$. Under log loss, $V_{\log}(B,U)=I(Y;U\mid \omega\in B)$.
+
+\begin{theorem}[Greedy recovery under target-respecting splits]
+\label{thm:greedy-recovery:informal}
+Let $\Pi^\star$ have $K$ atoms and suppose the current partition is initially a coarsening of $\Pi^\star$. Assume that every impure current atom $B$ admits a $\Pi^\star$-respecting distinction $U\in\calU$ such that $U$ splits $\Pi^\star|_B$ into two nonempty groups and
+\begin{align*}
+V_L(B,U)\ge\gamma.
+\end{align*}
+Consider a greedy refinement algorithm whose candidate set contains at least one such distinction for every impure atom, whose accepted candidates are $\Pi^\star$-respecting, and whose empirical local values satisfy
+\begin{align*}
+\abs{\widehat V_L(B,U)-V_L(B,U)}\le \gamma/4
+\end{align*}
+for all candidates it scores. If the algorithm accepts a split whenever $\widehat V_L(B,U)>\gamma/2$, then it accepts a useful split in every impure atom it visits and recovers $\Pi^\star$ after at most $K-1$ accepted splits.
+\end{theorem}
+
+\begin{proof}
+Because every accepted split is $\Pi^\star$-respecting, the current partition remains a coarsening of $\Pi^\star$ after each accepted refinement. A candidate with true value at least $\gamma$ has empirical value at least $3\gamma/4$, so it exceeds the $\gamma/2$ threshold and is accepted when proposed. Since the candidate also splits $\Pi^\star|_B$ into two nonempty groups, it increases by one the number of represented target blocks inside the current coarsening. Starting from one represented block per connected component and ending with at most $K$ target atoms, at most $K-1$ accepted splits are needed before no atom is impure.
+\end{proof}
+
+For finite $\calU$ and bounded loss, the event in Theorem~\ref{thm:greedy-recovery:informal} follows from a standard held-out concentration bound. It suffices to score each accepted split with
+\begin{align*}
+m
+=
+O\left(
+\frac{1}{\gamma^2}
+\log\frac{K\abs{\calU}}{\delta}
+\right)
+\end{align*}
+independent validation samples, up to constants and the bounded-loss range.
+
+\subsection{A finite-class oracle inequality}
+
+The same finite model gives a structural-risk bound for searching over refinements. Let $\mathfrak P_B(\calU)$ be the set of partitions obtainable from an initial partition $\Pi_0$ by at most $B$ distinctions from finite $\calU$. If $\Pi_0$ has $m_0$ atoms, every $\Pi\in\mathfrak P_B(\calU)$ has at most $m_0+B$ atoms, and the number of distinction sequences is at most $\abs{\calU}^B$.
+
+\begin{theorem}[Finite-class refinement oracle inequality]
+\label{thm:oracle-refinement:informal}
+Assume $L\in[0,1]$ and $\mathsf A$ is finite. Let $\widehat R_L(\Pi)$ be the empirical risk of the best atomwise action for $\Pi$ on $n$ iid validation samples, and let
+\begin{align*}
+\widehat\Pi\in
+\argmin_{\Pi\in\mathfrak P_B(\calU)}
+\left\{
+\widehat R_L(\Pi)+\lambda\abs{\Pi}
+\right\}.
+\end{align*}
+Then with probability at least $1-\delta$,
+\begin{align*}
+R_L(\widehat\Pi)+\lambda\abs{\widehat\Pi}
+\le
+\min_{\Pi\in\mathfrak P_B(\calU)}
+\left\{
+R_L(\Pi)+\lambda\abs{\Pi}
+\right\}
++2\sqrt{
+\frac{
+B\log\abs{\calU}
++(m_0+B)\log\abs{\mathsf A}
++\log(2/\delta)}
+{2n}
+}.
+\end{align*}
+\end{theorem}
+
+\begin{proof}
+For any fixed sequence of at most $B$ distinctions and any assignment of actions to the resulting at most $m_0+B$ atoms, Hoeffding's inequality controls the empirical-population risk deviation. The number of such partition-action pairs is at most $\abs{\calU}^B\abs{\mathsf A}^{m_0+B}$. A union bound gives a uniform deviation $\epsilon$ equal to the square-root term without the leading factor $2$. On this event, empirical penalized risk and population penalized risk differ by at most $\epsilon$ for every candidate. Applying the usual empirical-minimizer argument gives the displayed $2\epsilon$ bound.
+\end{proof}
