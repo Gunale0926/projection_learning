@@ -349,6 +349,44 @@ D_t>\tau_{\mathrm{disagree}}.
 \end{align}
 Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m=\abs{\calB_t^{\mathrm{score}}}$; it can be set to zero for a purely empirical implementation, or to the adaptive validation margin in Theorem~\ref{thm:safe-refinement:informal}. If the refinement test fails, DGM commits the guarded repair candidate in \eqref{eq:guarded-repair}. This makes refinement a statistically guarded gap comparison rather than an unscored growth heuristic.
 
+\begin{figure}[t]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[x=1cm,y=1cm,>=stealth]
+\tikzset{
+    stage/.style={draw,rounded corners=2pt,fill=gray!8,minimum width=1.75cm,minimum height=0.64cm,font=\scriptsize,align=center},
+    repair/.style={draw,rounded corners=2pt,fill=green!10,minimum width=2.05cm,minimum height=0.72cm,font=\scriptsize,align=center},
+    refine/.style={draw,rounded corners=2pt,fill=blue!8,minimum width=2.05cm,minimum height=0.72cm,font=\scriptsize,align=center},
+    test/.style={draw,rounded corners=2pt,fill=orange!10,minimum width=2.65cm,minimum height=1.05cm,font=\scriptsize,align=center},
+    commit/.style={draw,rounded corners=2pt,fill=purple!8,minimum width=1.75cm,minimum height=0.62cm,font=\scriptsize,align=center},
+    lab/.style={font=\scriptsize}
+}
+\node[stage] (obs) at (0,0) {observe\\$(h_t,y_t)$};
+\node[stage] (signals) at (2.05,0) {proposal signals\\$\rho_t,D_t,N(h_t)$};
+
+\node[repair] (repaircand) at (4.55,0.9) {repair candidates\\fixed anchors and edges};
+\node[refine] (refinecand) at (4.55,-0.9) {refinement candidate\\new anchor and edges};
+\node[repair] (repairscore) at (7.15,0.9) {score on $\calB_t^{\mathrm{score}}$\\$\widehat\Delta_{\mathrm{repair}}$};
+\node[refine] (refinescore) at (7.15,-0.9) {score on $\calB_t^{\mathrm{score}}$\\$\widehat\Delta_{\mathrm{refine}}$};
+\node[test] (accept) at (10.0,0) {accept refinement if\\$\widehat\Delta_{\mathrm{refine}}>\widehat\Delta_{\mathrm{repair}}+\tau+2\epsilon_m$\\and $D_t>\tau_{\mathrm{disagree}}$};
+\node[commit] (refinecommit) at (12.95,0.78) {commit\\refinement};
+\node[commit] (repaircommit) at (12.95,-0.78) {commit\\guarded repair};
+
+\draw[->,thick] (obs) -- (signals);
+\draw[->,thick] (signals.east) -- (repaircand.west);
+\draw[->,thick] (signals.east) -- (refinecand.west);
+\draw[->,thick] (repaircand) -- (repairscore);
+\draw[->,thick] (refinecand) -- (refinescore);
+\draw[->,thick] (repairscore.east) -- (accept.north west);
+\draw[->,thick] (refinescore.east) -- (accept.south west);
+\draw[->,thick] (accept.north east) -- (refinecommit.west);
+\draw[->,thick] (accept.south east) -- (repaircommit.west);
+\end{tikzpicture}%
+}
+\caption{DGM refine-or-repair decision. Proposal signals only choose candidates to score; the committed update is selected by held-out empirical gains. A refinement changes the information structure only when its penalized gain beats the best non-worsening repair by the safety margin; otherwise DGM repairs local state while preserving anchors and edges.}
+\label{fig:dgm-decision}
+\end{figure}
+
 \begin{algorithm}[H]
 \caption{\textsc{DGM-Observe}}
 \label{alg:dgm-observe}

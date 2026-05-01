@@ -173,6 +173,56 @@ Both terms are nonnegative.
 Add and subtract $R_L(\Pi_t)$. The repair gap is nonnegative because $f_t$ is feasible for the infimum defining $R_L(\Pi_t)$. The refinement gap is nonnegative because every $\Pi_t$-measurable predictor is also measurable with respect to any refinement $\Pi^\star$.
 \end{proof}
 
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,>=stealth]
+\tikzset{
+    atom/.style={draw,rounded corners=2pt,fill=gray!8,minimum width=2.15cm,minimum height=1.35cm},
+    child/.style={draw,rounded corners=2pt,fill=blue!6,minimum width=1.0cm,minimum height=1.35cm},
+    state/.style={circle,fill=black,inner sep=0pt,minimum size=4pt},
+    mem/.style={draw,rounded corners=1.5pt,fill=green!10,minimum width=1.0cm,minimum height=0.35cm,font=\scriptsize},
+    lab/.style={font=\scriptsize},
+    title/.style={font=\scriptsize\bfseries}
+}
+
+\node[title] at (0,1.25) {current atom};
+\node[atom] (old) at (0,0.25) {};
+\node[state,label={[lab]90:$\omega$}] at (-0.48,0.42) {};
+\node[state,label={[lab]90:$\omega'$}] at (0.48,0.42) {};
+\node[lab] at (-0.48,-0.10) {$Y=0$};
+\node[lab] at (0.48,-0.10) {$Y=1$};
+\node[mem] at (0,-0.95) {$a(B)$};
+\draw[->] (0,-0.42) -- (0,-0.76);
+
+\node[title] at (4.25,1.85) {repair};
+\node[atom] (repairatom) at (4.25,0.95) {};
+\node[state,label={[lab]90:$\omega$}] at (3.77,1.12) {};
+\node[state,label={[lab]90:$\omega'$}] at (4.73,1.12) {};
+\node[lab] at (4.25,0.58) {$\Pi_{t+1}=\Pi_t$};
+\node[mem] at (4.25,-0.05) {$a'(B)$};
+\draw[->] (4.25,0.28) -- (4.25,0.12);
+\node[lab,align=center,text width=2.2cm] at (4.25,-0.78) {one payload still serves both cases};
+
+\node[title] at (4.25,-1.25) {refinement};
+\node[child] (leftchild) at (3.68,-2.15) {};
+\node[child] (rightchild) at (4.82,-2.15) {};
+\node[state,label={[lab]90:$\omega$}] at (3.68,-1.98) {};
+\node[state,label={[lab]90:$\omega'$}] at (4.82,-1.98) {};
+\node[lab] at (3.68,-2.52) {$U=0$};
+\node[lab] at (4.82,-2.52) {$U=1$};
+\node[mem] at (3.68,-3.10) {$a_0$};
+\node[mem] at (4.82,-3.10) {$a_1$};
+\draw[->] (3.68,-2.82) -- (3.68,-2.94);
+\draw[->] (4.82,-2.82) -- (4.82,-2.94);
+\node[lab,align=center,text width=2.9cm] at (4.25,-3.65) {$\Pi_{t+1}=\Pi_t\vee U$ permits separate actions};
+
+\draw[->,thick] (1.15,0.62) -- (3.0,1.08) node[midway,above,lab,sloped] {repair};
+\draw[->,thick] (1.15,-0.12) -- (3.0,-2.02) node[midway,below,lab,sloped] {refine by $U$};
+\end{tikzpicture}
+\caption{Repair versus refinement. Repair changes the payload assigned to an existing atom but preserves the equivalence relation. Refinement joins the partition with a distinction $U$, splitting the old atom only where the new bit matters and allowing different local actions.}
+\label{fig:repair-vs-refinement}
+\end{figure}
+
 \subsection{Repair-only lower bound}
 
 The pointwise contradiction inside a cell becomes a sequential lower bound. If the current partition collapses states that a refined oracle separates, no repair-only learner can avoid paying the corresponding Bayes-risk gap every round.
