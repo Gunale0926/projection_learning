@@ -540,13 +540,46 @@ p_{\mathrm{DGM}}(y\mid h)
 \label{eq:calibrated-dgm-mixture}
 \end{align}
 \end{definition}
-This keeps the read path a valid probability distribution. It also gives the simple safety bound
+This keeps the read path a valid probability distribution. It also gives the simple pointwise safety bound
 \begin{align*}
 -\log p_{\mathrm{DGM}}(y\mid h)
 \le
 -\log p_0(y\mid h)-\log(1-\lambda_t)
 \end{align*}
-whenever $\lambda_t<1$. In experiments where log loss is central, $\lambda_t$ should be selected online by a validation rule or, under bounded or clipped validation losses, by Hedge over a small grid of trust weights.
+whenever $\lambda_t<1$. For log-loss experiments we use a stronger cumulative safeguard. Let $\Lambda=\{\lambda_1,\ldots,\lambda_K\}\subseteq[0,1]$ with $0\in\Lambda$, define
+\begin{align*}
+q_{t,k}(y)
+=
+(1-\lambda_k)p_0(y\mid h_t)+\lambda_k p_{\mathrm{mem}}(y\mid h_t),
+\end{align*}
+and predict with a mixture $p_t(y)=\sum_k w_{t,k}q_{t,k}(y)$. After observing $y_t$, update the trust weights by
+\begin{align}
+w_{t+1,k}
+=
+\frac{w_{t,k}q_{t,k}(y_t)}
+{\sum_{\ell=1}^K w_{t,\ell}q_{t,\ell}(y_t)}.
+\label{eq:trust-weight-update}
+\end{align}
+
+\begin{theorem}[No-harm log-loss trust aggregation]
+\label{thm:dgm-no-harm-log-loss}
+Initialize $w_{1,k}=1/K$ and update by \eqref{eq:trust-weight-update}. For any outcome sequence,
+\begin{align*}
+\sum_{t=1}^T -\log p_t(y_t)
+\le
+\min_{k\in[K]}\sum_{t=1}^T -\log q_{t,k}(y_t)+\log K.
+\end{align*}
+Since $0\in\Lambda$, one expert is the frozen backbone predictor, so
+\begin{align*}
+\sum_{t=1}^T -\log p_t(y_t)
+\le
+\sum_{t=1}^T -\log p_0(y_t\mid h_t)+\log K.
+\end{align*}
+\end{theorem}
+
+\begin{proof}
+Let $Z_t=\sum_k w_{1,k}\prod_{s=1}^t q_{s,k}(y_s)$. The posterior update implies $p_t(y_t)=Z_t/Z_{t-1}$, hence $\prod_{t=1}^T p_t(y_t)=Z_T$. For every $k$, $Z_T\ge K^{-1}\prod_{t=1}^T q_{t,k}(y_t)$. Taking negative logarithms and minimizing over $k$ gives the first bound. The second follows from the $\lambda=0$ expert.
+\end{proof}
 
 Because $p_0(y\mid h)$, $M_j(h)$, and the soft weights can depend on the hidden state, the practical predictor need not be constant on atoms of the edge partition alone. The formal interpretation is the base-information convention from Section~\ref{sec:preliminaries}: let
 \begin{align*}

@@ -31,55 +31,57 @@
 \contentsline {subsection}{\numberline {8.7}From DGM to DGM-Embedding}{25}{subsection.8.7}%
 \contentsline {section}{\numberline {9}Guarantees}{25}{section.9}%
 \contentsline {paragraph}{1. Error decomposes into two gaps.}{25}{section*.7}%
-\contentsline {paragraph}{2. Repair-only learners have linear regret.}{25}{section*.8}%
-\contentsline {paragraph}{3. Useful refinements change the Bayes action.}{25}{section*.9}%
+\contentsline {paragraph}{2. Repair-only learners have linear regret.}{26}{section*.8}%
+\contentsline {paragraph}{3. Useful refinements change the Bayes action.}{26}{section*.9}%
 \contentsline {paragraph}{4. Missing distinctions obstruct repair.}{26}{section*.10}%
 \contentsline {paragraph}{5. Refinement has a canonical minimal form.}{26}{section*.11}%
-\contentsline {paragraph}{6. Greedy refinement has finite-class guarantees.}{26}{section*.12}%
-\contentsline {paragraph}{7. Guarded DGM updates descend locally.}{26}{section*.13}%
+\contentsline {paragraph}{6. Greedy refinement has finite-class guarantees.}{27}{section*.12}%
+\contentsline {paragraph}{7. Guarded DGM updates descend locally.}{27}{section*.13}%
 \contentsline {section}{\numberline {10}Theory-Matching Experiments}{27}{section.10}%
 \contentsline {subsection}{\numberline {10.1}Known Bayes-gap calibration}{27}{subsection.10.1}%
 \contentsline {subsection}{\numberline {10.2}Guarded refine-or-repair decisions}{28}{subsection.10.2}%
-\contentsline {subsection}{\numberline {10.3}Graph-memory ablation on contextual XOR}{28}{subsection.10.3}%
-\contentsline {paragraph}{Scope.}{28}{section*.19}%
-\contentsline {section}{\numberline {11}Related Work}{29}{section.11}%
-\contentsline {paragraph}{Repair without refinement.}{29}{section*.20}%
-\contentsline {paragraph}{Refinement without local repair.}{29}{section*.21}%
-\contentsline {paragraph}{Routing without runtime concept creation.}{29}{section*.22}%
-\contentsline {section}{\numberline {12}Conclusion}{29}{section.12}%
-\contentsline {section}{\numberline {A}Appendix Roadmap}{38}{appendix.A}%
-\contentsline {section}{\numberline {B}Limitations}{38}{appendix.B}%
-\contentsline {section}{\numberline {C}Related Work}{39}{appendix.C}%
-\contentsline {subsection}{\numberline {C.1}Methods that repair without refining}{39}{subsection.C.1}%
-\contentsline {subsection}{\numberline {C.2}Methods that refine without local repair}{40}{subsection.C.2}%
-\contentsline {subsection}{\numberline {C.3}Methods that route without runtime concept creation}{40}{subsection.C.3}%
-\contentsline {subsection}{\numberline {C.4}DGM's position}{40}{subsection.C.4}%
-\contentsline {section}{\numberline {D}DGM-Embedding: Architectural Extension for Language Models}{41}{appendix.D}%
-\contentsline {subsection}{\numberline {D.1}Hidden-state concepts}{41}{subsection.D.1}%
-\contentsline {subsection}{\numberline {D.2}Calibrated memory distribution}{41}{subsection.D.2}%
-\contentsline {subsection}{\numberline {D.3}Read before observe}{42}{subsection.D.3}%
-\contentsline {subsection}{\numberline {D.4}Sequential detached training}{43}{subsection.D.4}%
-\contentsline {paragraph}{Block-lagged approximation.}{43}{section*.25}%
-\contentsline {section}{\numberline {E}DGM Implementation Extensions}{44}{appendix.E}%
-\contentsline {subsection}{\numberline {E.1}Trees as a hard-routing special case}{44}{subsection.E.1}%
-\contentsline {subsection}{\numberline {E.2}DGM data-structure cost}{44}{subsection.E.2}%
-\contentsline {subsection}{\numberline {E.3}Ridge local memory}{45}{subsection.E.3}%
-\contentsline {subsection}{\numberline {E.4}Training modes for representation drift}{45}{subsection.E.4}%
-\contentsline {paragraph}{Mode A: frozen encoder.}{45}{section*.26}%
-\contentsline {paragraph}{Mode B: EMA query encoder.}{45}{section*.27}%
-\contentsline {paragraph}{Mode C: periodic state rebuild.}{45}{section*.28}%
-\contentsline {subsection}{\numberline {E.5}Non-canonical adapter extension}{45}{subsection.E.5}%
-\contentsline {subsection}{\numberline {E.6}Cost and systems notes}{46}{subsection.E.6}%
-\contentsline {subsection}{\numberline {E.7}Closed-form local repair}{47}{subsection.E.7}%
-\contentsline {section}{\numberline {F}Additional Computational Checks}{47}{appendix.F}%
-\contentsline {subsection}{\numberline {F.1}Online image streams}{47}{subsection.F.1}%
-\contentsline {subsection}{\numberline {F.2}Frozen-embedding adapter check}{47}{subsection.F.2}%
-\contentsline {subsection}{\numberline {F.3}Projection-memory residual identity}{47}{subsection.F.3}%
-\contentsline {section}{\numberline {G}Proof Sketches}{48}{appendix.G}%
-\contentsline {section}{\numberline {H}From Distinctions to Projection Memory}{53}{appendix.H}%
-\contentsline {subsection}{\numberline {H.1}One-hot partition memory}{54}{subsection.H.1}%
-\contentsline {subsection}{\numberline {H.2}CPM conflict as missing distinction}{54}{subsection.H.2}%
-\contentsline {subsection}{\numberline {H.3}The hierarchy}{54}{subsection.H.3}%
-\contentsline {section}{\numberline {I}Minimal Refinement Proofs}{55}{appendix.I}%
-\contentsline {section}{\numberline {J}Value of Distinction Proofs}{56}{appendix.J}%
-\contentsline {section}{\numberline {K}DGM Algorithm and Projection-Bridge Proofs}{59}{appendix.K}%
+\contentsline {subsection}{\numberline {10.3}Calibrated log-loss trust aggregation}{28}{subsection.10.3}%
+\contentsline {subsection}{\numberline {10.4}Graph-memory ablation on contextual XOR}{29}{subsection.10.4}%
+\contentsline {subsection}{\numberline {10.5}Runtime comparison against backpropagation baselines}{30}{subsection.10.5}%
+\contentsline {paragraph}{Scope.}{31}{section*.21}%
+\contentsline {section}{\numberline {11}Related Work}{31}{section.11}%
+\contentsline {paragraph}{Repair without refinement.}{31}{section*.22}%
+\contentsline {paragraph}{Refinement without local repair.}{31}{section*.23}%
+\contentsline {paragraph}{Routing without runtime concept creation.}{31}{section*.24}%
+\contentsline {section}{\numberline {12}Conclusion}{32}{section.12}%
+\contentsline {section}{\numberline {A}Appendix Roadmap}{40}{appendix.A}%
+\contentsline {section}{\numberline {B}Limitations}{40}{appendix.B}%
+\contentsline {section}{\numberline {C}Related Work}{41}{appendix.C}%
+\contentsline {subsection}{\numberline {C.1}Methods that repair without refining}{41}{subsection.C.1}%
+\contentsline {subsection}{\numberline {C.2}Methods that refine without local repair}{42}{subsection.C.2}%
+\contentsline {subsection}{\numberline {C.3}Methods that route without runtime concept creation}{42}{subsection.C.3}%
+\contentsline {subsection}{\numberline {C.4}DGM's position}{42}{subsection.C.4}%
+\contentsline {section}{\numberline {D}DGM-Embedding: Architectural Extension for Language Models}{43}{appendix.D}%
+\contentsline {subsection}{\numberline {D.1}Hidden-state concepts}{43}{subsection.D.1}%
+\contentsline {subsection}{\numberline {D.2}Calibrated memory distribution}{43}{subsection.D.2}%
+\contentsline {subsection}{\numberline {D.3}Read before observe}{44}{subsection.D.3}%
+\contentsline {subsection}{\numberline {D.4}Sequential detached training}{45}{subsection.D.4}%
+\contentsline {paragraph}{Block-lagged approximation.}{45}{section*.27}%
+\contentsline {section}{\numberline {E}DGM Implementation Extensions}{46}{appendix.E}%
+\contentsline {subsection}{\numberline {E.1}Trees as a hard-routing special case}{46}{subsection.E.1}%
+\contentsline {subsection}{\numberline {E.2}DGM data-structure cost}{46}{subsection.E.2}%
+\contentsline {subsection}{\numberline {E.3}Ridge local memory}{47}{subsection.E.3}%
+\contentsline {subsection}{\numberline {E.4}Training modes for representation drift}{47}{subsection.E.4}%
+\contentsline {paragraph}{Mode A: frozen encoder.}{47}{section*.28}%
+\contentsline {paragraph}{Mode B: EMA query encoder.}{47}{section*.29}%
+\contentsline {paragraph}{Mode C: periodic state rebuild.}{47}{section*.30}%
+\contentsline {subsection}{\numberline {E.5}Non-canonical adapter extension}{47}{subsection.E.5}%
+\contentsline {subsection}{\numberline {E.6}Cost and systems notes}{48}{subsection.E.6}%
+\contentsline {subsection}{\numberline {E.7}Closed-form local repair}{49}{subsection.E.7}%
+\contentsline {section}{\numberline {F}Additional Computational Checks}{49}{appendix.F}%
+\contentsline {subsection}{\numberline {F.1}Online image streams}{49}{subsection.F.1}%
+\contentsline {subsection}{\numberline {F.2}Frozen-embedding adapter check}{49}{subsection.F.2}%
+\contentsline {subsection}{\numberline {F.3}Projection-memory residual identity}{49}{subsection.F.3}%
+\contentsline {section}{\numberline {G}Proof Sketches}{50}{appendix.G}%
+\contentsline {section}{\numberline {H}From Distinctions to Projection Memory}{55}{appendix.H}%
+\contentsline {subsection}{\numberline {H.1}One-hot partition memory}{56}{subsection.H.1}%
+\contentsline {subsection}{\numberline {H.2}CPM conflict as missing distinction}{56}{subsection.H.2}%
+\contentsline {subsection}{\numberline {H.3}The hierarchy}{56}{subsection.H.3}%
+\contentsline {section}{\numberline {I}Minimal Refinement Proofs}{57}{appendix.I}%
+\contentsline {section}{\numberline {J}Value of Distinction Proofs}{58}{appendix.J}%
+\contentsline {section}{\numberline {K}DGM Algorithm and Projection-Bridge Proofs}{61}{appendix.K}%

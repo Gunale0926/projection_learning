@@ -1,1 +1,13 @@
-We study online prediction when a learner's runtime state induces an information partition of the case space. A repair update changes predictions on the current partition atoms, while a refinement update changes the partition by adding a prediction-time observable binary distinction. We prove that any learner whose predictions remain measurable with respect to a fixed partition suffers linear regret against a refined oracle whenever the refined partition has smaller Bayes risk, with an epsilon-oracle form when Bayes actions are not attained. Thus some online errors are not optimization errors but information-structure errors. We characterize useful refinements by Bayes actions: a refinement has zero value exactly when the refined Bayes action is already measurable under the old information. Under log loss, the value of a binary distinction is conditional mutual information; under squared loss, it is conditional variance reduction. We then give bounded-loss finite-sample refinement rules, greedy recovery guarantees under realizability, and a finite-class oracle inequality. Finally, we instantiate the theory as Distinction Graph Machines, a graph-memory data structure in which nodes store repairable local memories and accepted edges, together with anchor-order events, generate hard-route distinctions. Controlled streams demonstrate the separation between repair-only and refine-and-repair learners.
+We prove a repair obstruction for online prediction.
+For any fixed information partition $\Pi$, every adaptive learner whose predictions remain $\Pi$-measurable has expected regret at least
+\[
+T\left(R_L(\Pi)-R_L(\Pi^\star)\right)
+\]
+against a refined oracle partition $\Pi^\star$, up to the standard epsilon-oracle relaxation when Bayes actions are not attained.
+Thus a positive refinement gap is an information-structure error: no update that preserves $\Pi$ can remove it.
+
+We characterize useful refinements.
+Adding a prediction-time binary distinction has zero value exactly when the refined Bayes action is already measurable under the old information; under log loss its value is $I(Y;U\mid\calF)$, and under squared loss it is conditional variance reduction.
+
+We instantiate the escape operation as Distinction Graph Machines, a dynamic graph-memory data structure whose edges are accepted distinctions and whose nodes store repairable local memories.
+Controlled streams separate repair-only learners from refine-and-repair learners.
