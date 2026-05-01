@@ -1,85 +1,112 @@
-\section{Separating Examples and Sanity Checks}
+\section{Theory-Matching Experiments}
 \label{sec:experiments}
 
-The experiments are separating examples for the formal model, not a broad benchmark suite. Each task contains a repair component, where local memory updates help, and a refinement component, where repair-only learners collapse incompatible consequences into one partition atom. All learners use a prequential protocol: predict first, observe the consequence, then update. The current experiments do not establish language-model-scale competitiveness, and the hidden-regime log-loss results expose the need for the calibrated memory in \eqref{eq:calibrated-dgm-mixture}. Implementation details and additional sanity checks are in Appendix~\ref{app:additional-checks}.
+The experiments are controlled diagnostics for the formal claims, not a broad benchmark suite. Each stream is designed so that the Bayes-optimal repair inside an existing atom is different from a refinement that changes the information structure. All learners use a prequential protocol: predict first, observe the consequence, then update. The implementation and generated artifacts are in \path{experiments/run_refinement_theory_experiments.py} and \path{experiments/refinement_theory_results}.
 
-\subsection{Hidden-regime sequence prediction}
+\subsection{Known Bayes-gap calibration}
 
-The most direct check is a hidden-regime online sequence task. A hidden regime chooses the next-token transition map. The learner is not given the regime label; it observes only a noisy continuous cue and the current token, predicts the next token, and then receives the next-token consequence. The same current token can therefore require different next tokens in different regimes. A repair-only memory averages those consequences, while a refine-and-repair learner can create separate runtime concepts.
+The first experiment tests the numerical prediction of the repair-only lower bound. We sample
+\[
+Z\sim \mathrm{Unif}\{1,\ldots,K\},\qquad U\sim \mathrm{Bernoulli}(1/2),
+\]
+and the old partition observes only $Z$, while the refined partition observes $(Z,U)$. Consequences follow
+\[
+Y\mid Z=z,U=u\sim \mathrm{Bernoulli}(p_{z,u}),\qquad
+p_{z,0}=0.5-\delta,\quad p_{z,1}=0.5+\delta .
+\]
+Thus $P(Y=1\mid Z=z)=0.5$, so the old atom has log-risk $\log 2$, while the refined risk is $H(0.5+\delta)$. The predicted slope of repair-only cumulative regret is therefore
+\[
+\Delta_{\mathrm{theory}}=\log 2-H(0.5+\delta)=I(Y;U\mid Z).
+\]
+We compare smoothed count predictors for the old and refined partitions, plus a one-bit DGM count learner whose candidate distinction is either the true bit $U$ or an independent noise bit.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\linewidth]{experiments/refinement_theory_results/bayes_gap_slope_vs_theory.png}
+\caption{Known Bayes-gap calibration. The estimated repair-only regret slope matches the theoretical refinement gap $I(Y;U\mid Z)$ under log loss.}
+\label{fig:bayes-gap-slope}
+\end{figure}
 
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{p{0.24\linewidth}p{0.18\linewidth}ccc}
+\begin{tabular}{ccccc}
 \toprule
-Model & Runtime state & Preq. acc. & Preq. log loss & Concepts \\
+$\delta$ & Theory gap & Repair/refined slope & Bayes-oracle slope & Accepted noise splits \\
 \midrule
-Cache LM & token counts & $0.362\pm0.029$ & $1.443\pm0.069$ & -- \\
-Budgeted $k$NN-LM & 64 examples & $0.583\pm0.010$ & $4.342\pm0.338$ & 64 examples \\
-Nearest-centroid memory & 16 centroids & $0.278\pm0.035$ & $2.070\pm0.112$ & 16 \\
-DGM repair only & one local memory & $0.079\pm0.017$ & $2.798\pm0.006$ & 1 \\
-DGM refine+repair & graph memory & $\mathbf{0.617\pm0.040}$ & $5.348\pm0.625$ & $87.6$ \\
-Backprop MLP, online & one backprop step & $0.292\pm0.020$ & $2.217\pm0.054$ & -- \\
+$0.0$ & $0.0000$ & $-0.0000\pm0.0000$ & $0.0000\pm0.0000$ & $0.00$ \\
+$0.1$ & $0.0201$ & $0.0206\pm0.0013$ & $0.0206\pm0.0013$ & $0.00$ \\
+$0.2$ & $0.0823$ & $0.0824\pm0.0012$ & $0.0824\pm0.0012$ & $0.00$ \\
+$0.3$ & $0.1927$ & $0.1928\pm0.0041$ & $0.1929\pm0.0041$ & $0.00$ \\
+$0.4$ & $0.3681$ & $0.3682\pm0.0037$ & $0.3682\pm0.0038$ & $0.00$ \\
 \bottomrule
 \end{tabular}
-\caption{Hidden-regime online sequence prediction, averaged over five seeds. The useful operation is to create distinctions when identical tokens have regime-dependent consequences. The refine+repair run creates runtime concepts and had monotone local scoring-objective decrease at accepted refinements in all runs, which improves accuracy. Its poor log loss shows that the uncalibrated memory used in this diagnostic is not adequate for probabilistic claims.}
-\label{tab:hidden-regime-check}
+\caption{Regret-slope calibration over 16 seeds. Slopes are in nats per sample, estimated from the second half of each stream. At $\delta=0$, $U$ carries no consequence information and no refinement is accepted.}
+\label{tab:bayes-gap-calibration}
 \end{table}
 
-Held-out accuracies for the same runs were $0.285\pm0.049$ for cache LM, $0.346\pm0.106$ for budgeted $k$NN-LM, $0.235\pm0.024$ for nearest-centroid memory, $0.055\pm0.015$ for repair-only DGM, $0.680\pm0.065$ for refine+repair DGM, and $0.282\pm0.086$ for online backpropagation. The important comparison is structural: repair-only DGM fails because the task is constructed so that one local memory is the wrong information structure. The log-loss column is equally important: a method that wins accuracy while losing NLL is not a calibrated probabilistic runtime learner, so the main algorithm specifies smoothed categorical memories and a backbone mixture before making log-loss claims.
+The agreement is the important point: the error made by repair-only counts is not an optimizer artifact. Its asymptotic slope is the information-structure gap predicted by the theorem. The $\delta=0$ row is the corresponding negative control.
 
-\subsection{Repair-only ablation}
+\subsection{Guarded refine-or-repair decisions}
 
-We also run a hard-routing special case on XOR Gaussian clusters. The repair-only model has one leaf and cannot represent XOR, while refine+repair creates accepted distinctions with objective decrease. This is the smallest test of the obstruction theorem: if incompatible labels lie inside one information cell, local repair has no representation in which to store the answer.
+The second experiment tests whether refinement is consequence-sensitive rather than novelty-sensitive. We create two old atoms. In the repair atom, $Y\sim\mathrm{Bernoulli}(0.8)$ and all candidate distinctions are independent of $Y$, but the current local prediction is deliberately stale at $q(Y=1)=0.2$. The correct action is repair. In the refinement atom, $Y\mid U=0\sim\mathrm{Bernoulli}(0.1)$ and $Y\mid U=1\sim\mathrm{Bernoulli}(0.9)$, so the correct action is to refine by $U$.
+
+The candidate pool contains the true distinction $U$, twenty independent noise bits, and six geometry-only bits that are visually separable but independent of $Y$. Candidate proposal and validation use separate buffers. A refinement is accepted only when its penalized held-out gain exceeds both zero and the held-out repair gain by a margin.
 
 \begin{table}[t]
 \centering
-\begin{tabular}{lccc}
+\small
+\begin{tabular}{ccccc}
 \toprule
-Model & Accepted splits & Prequential accuracy & Test accuracy \\
+Scoring buffer & True recall & False refinement & Spurious acceptance & Repair accuracy \\
 \midrule
-Repair only & 0 & $0.491$ & $0.501$ \\
-Refine+repair & 9 & $0.939$ & $0.967$ \\
+$32$ & $0.956$ & $0.001$ & $0.001$ & $0.999$ \\
+$64$ & $0.991$ & $0.000$ & $0.000$ & $1.000$ \\
+$128$ & $1.000$ & $0.000$ & $0.000$ & $1.000$ \\
+$256$ & $1.000$ & $0.000$ & $0.000$ & $1.000$ \\
+$512$ & $1.000$ & $0.000$ & $0.000$ & $1.000$ \\
 \bottomrule
 \end{tabular}
-\caption{Single-run hard-routing ablation on XOR Gaussian clusters. Local repair alone cannot solve a missing-distinction task, while accepted refinements decrease the local penalized objective and recover the required partition.}
-\label{tab:repair-refine-ablation}
+\caption{Guarded refinement decisions over 800 trials per cell type and buffer size. The learner accepts the consequence-useful distinction and rejects noise or geometry-only distinctions.}
+\label{tab:guarded-refinement}
 \end{table}
 
-\subsection{Controlled contextual XOR}
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\linewidth]{experiments/refinement_theory_results/guarded_sample_size_curve.png}
+\caption{Sample-size curve for the guarded decision rule. Larger scoring buffers preserve true-refinement recall while driving false refinement and spurious acceptance to zero.}
+\label{fig:guarded-refinement}
+\end{figure}
 
-As a graph-memory check, we use a two-context XOR stream. In the first context the label is XOR of two Gaussian cluster signs; in the second context the labels are flipped. The context coordinate is observable, but the learner must discover how it changes the consequence. The offline MLP is a batch upper bound; the online MLP predicts each example and then performs one backpropagation step; DGM uses the same online protocol but may refine the concept graph before repairing local state.
+This directly probes the algorithmic distinction between ``new feature'' and ``useful refinement.'' The repair atom contains a large empirical repair gain and many possible bits, but no bit has stable consequence value, so the guarded rule repairs instead of growing the graph.
+
+\subsection{Graph-memory ablation on contextual XOR}
+
+The third experiment checks the data-structure claim. The stream is a contextual XOR problem: $Y=b_1\oplus b_2\oplus c$, where the initial atoms are keyed by the two visible signs $(b_1,b_2)$ and the useful edge-generated distinction is the context bit $c$. We add nuisance coordinates so that prototype growth and cache baselines can create geometrically distinct states without obtaining the consequence-relevant partition.
 
 \begin{table}[t]
 \centering
-\begin{tabular}{lccc}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc}
 \toprule
-Model & Runtime update & Prequential accuracy & Test accuracy \\
+Model & Preq. acc. & Preq. NLL & Test acc. & Concepts & Context edges & Purity \\
 \midrule
-Backprop MLP, offline & batch backprop & $-$ & $0.993\pm0.002$ \\
-Backprop MLP, online & one backprop step & $0.569\pm0.065$ & $0.654\pm0.038$ \\
-DGM graph memory, online & refine-or-repair & $0.804\pm0.025$ & $0.944\pm0.026$ \\
+Full DGM refine+repair+edges & $\mathbf{0.959\pm0.002}$ & $\mathbf{0.073}$ & $\mathbf{0.998}$ & $8.0$ & $4.0$ & $0.997$ \\
+DGM repair only & $0.503\pm0.007$ & $0.696$ & $0.502$ & $4.0$ & $0.0$ & $0.514$ \\
+DGM refine only, no repair & $0.501\pm0.007$ & $0.693$ & $0.496$ & $8.0$ & $4.0$ & $0.997$ \\
+No-edge centroid growth & $0.504\pm0.004$ & $0.698$ & $0.502$ & $8.0$ & -- & $0.155$ \\
+$k$NN/cache, same budget & $0.497\pm0.006$ & $0.785$ & $0.499$ & $8.0$ & -- & -- \\
+$k$NN/cache, larger budget & $0.494\pm0.005$ & $0.788$ & $0.498$ & $64.0$ & -- & -- \\
 \bottomrule
 \end{tabular}
-\caption{DGM graph memory versus backpropagation on a limited online contextual-XOR stream. Offline backprop is a batch upper bound. The relevant runtime comparison is between online backpropagation and online distinction refinement. The DGM run has monotone local scoring-objective decrease at accepted refinements in all runs.}
-\label{tab:dgm-check}
+}
+\caption{Contextual XOR graph-memory ablation over 10 seeds. Full DGM accepts all four context edges and no spurious edges. Repair-only cannot separate incompatible consequences; refine-only recovers the structure but has no local memory repair; no-edge and cache baselines do not recover the consequence partition under the same stream.}
+\label{tab:contextual-xor-ablation}
 \end{table}
 
-\subsection{Synthetic next-token stream}
+This separates the two mechanisms. Refine-only recovers the right partition structure, as shown by high purity, but without local memory repair its predictions remain at chance. Repair-only has local counts but the wrong atoms. The full graph-memory learner combines edge-generated refinement with local repair and uses only the eight target concepts rather than relying on unbounded growth.
 
-Finally, we include a synthetic language-modeling stream. Each document context induces a different next-token transition map. The learner observes a prefix representation and must predict the next token before seeing it. After the next token is revealed, DGM memory stores the prefix type and next-token consequence; online backpropagation again receives one gradient step per token. This is a controlled next-token diagnostic, not evidence that DGM-Embedding is a competitive cache or $k$NN-LM replacement on real corpora.
-
-\begin{table}[t]
-\centering
-\begin{tabular}{lccc}
-\toprule
-Task & Offline backprop & Online backprop & Online DGM memory \\
-\midrule
-Synthetic LM & $0.931\pm0.071$ & $0.125\pm0.021$ & $0.912\pm0.077$ \\
-\bottomrule
-\end{tabular}
-\caption{Synthetic next-token stream. The task isolates runtime adaptation: the hidden context determines the token transition rule, so the useful operation is to remember a local prefix-to-token consequence after observing it. DGM memory approaches the offline batch MLP while one-step online backpropagation adapts slowly.}
-\label{tab:lm-check}
-\end{table}
-
-These experiments do not claim that DGM is a finished competitive language-modeling system. They check the mechanism predicted by the theory: when error is caused by a missing distinction, methods that only repair state are forced to mix incompatible consequences; a refine-and-repair learner can create the missing runtime concept and then repair it locally.
+\paragraph{Scope.}
+These experiments do not claim that DGM is a finished competitive language-modeling system. They test the mechanisms required by the theory: repair-only regret has the predicted information-structure slope; the refinement rule accepts only consequence-useful distinctions; and graph-generated refinement plus local repair is more effective than either operation alone.
