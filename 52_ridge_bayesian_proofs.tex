@@ -29,13 +29,15 @@ u^\top a_j-b&=u^\top a_j-\frac{1}{2}u^\top a_i-\frac{1}{2}u^\top a_j\\
 \end{align*}
 \end{proof}
 
-\begin{theorem}[DGM graph generates a finite information structure, formal version of Theorem~\ref{thm:dgm-graph-partition:informal}]
+The construction is used only for separated anchors. In implementations, proposed edges with $\norm{a_i-a_j}_2\le\eta_{\mathrm{anchor}}$ are skipped or replaced by a fallback distinction, so the normalized direction is never formed from duplicate or numerically indistinguishable anchors.
+
+\begin{theorem}[DGM graph generates a finite edge-skeleton information structure, formal version of Theorem~\ref{thm:dgm-graph-partition:informal}]
 \label{thm:dgm-graph-partition:formal}
 Let $S$ be a finite set of binary generators $g_s:\mathsf H\to\{0,1\}$. Define
 \begin{align*}
 \sigma_S(h)=\big(g_s(h)\big)_{s\in S}.
 \end{align*}
-The relation $h\sim_S h'$ iff $\sigma_S(h)=\sigma_S(h')$ is an equivalence relation. Its nonempty equivalence classes form a finite partition $\calP_S^G$ of $\mathsf H$. If a new generator $g$ is added, then
+The relation $h\sim_S h'$ iff $\sigma_S(h)=\sigma_S(h')$ is an equivalence relation. Its nonempty equivalence classes form a finite edge-skeleton partition $\calP_S^G$ of $\mathsf H$. If a new generator $g$ is added, then
 \begin{align*}
 \calP_{S\cup\{g\}}^G=\calP_S^G\vee\sigma(g),
 \end{align*}
@@ -74,9 +76,9 @@ Let $N$ be a finite candidate set and let
 \alpha_j=\frac{\exp(-d_j/T)\chi_j}{\sum_{r\in N}\exp(-d_r/T)\chi_r}.
 \end{align*}
 If $j^\star_{\mathrm{hard}}\notin N$, where $j^\star_{\mathrm{hard}}$ is the exact hard-route selected concept, then this sparse soft read gives no guarantee for the omitted hard-route concept. Otherwise, assume $j^\star=j^\star_{\mathrm{hard}}\in N$.
-If $j^\star$ is the unique candidate with $d_j-d_{j^\star}\ge\delta>0$ for all $j\ne j^\star$ and $\chi_j=\chi_{j^\star}=1$, then
+For an eligible competitor set $E\subseteq N\setminus\{j^\star\}$, if $d_j-d_{j^\star}\ge\delta>0$ and $\chi_j/\chi_{j^\star}\le C_E<\infty$ for all $j\in E$, then
 \begin{align*}
-1-\alpha_{j^\star}\le (\abs{N}-1)\exp(-\delta/T).
+\sum_{j\in E}\alpha_j\le C_E\abs{E}\exp(-\delta/T).
 \end{align*}
 Moreover, suppose $\log\chi_j$ contains a term
 \begin{align*}
@@ -90,24 +92,38 @@ For a wrong-side set $W\subseteq N$, suppose every $j\in W$ violates some incide
 \frac{C\abs{N}}{\chi_{\min}}
 \exp\left(-\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}\right).
 \end{align*}
+More generally, if
+\begin{align*}
+\Delta_d=\max_{j\in W}(d_r-d_j)_+,
+\end{align*}
+then the same mass is at most
+\begin{align*}
+\frac{\abs{N}}{\chi_{\min}}
+\exp\left(
+\frac{\Delta_d}{T}
+-
+\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}
+\right),
+\end{align*}
+and therefore vanishes along any joint limit satisfying
+\begin{align*}
+\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}-\frac{\Delta_d}{T}\to+\infty.
+\end{align*}
+Consequently, if $N\setminus\{j^\star\}$ is covered by eligible competitors satisfying the distance-margin and compatibility-ratio bounds and wrong-side competitors satisfying either wrong-side bound above, then $\alpha_{j^\star}\to1$ under the corresponding temperature limit.
 \end{theorem}
 \begin{proof}
 If $j^\star_{\mathrm{hard}}\notin N$, then the soft normalization assigns weight only to candidates in $N$ and the omitted hard-route concept has no route to receive weight. This is the candidate-recall caveat.
 
-For the nearest-reference statement,
+For the eligible-competitor statement, the denominator is at least $\exp(-d_{j^\star}/T)\chi_{j^\star}$, so
 \begin{align*}
-\frac{\sum_{j\ne j^\star}\exp(-d_j/T)}
-{\exp(-d_{j^\star}/T)}
-=\sum_{j\ne j^\star}\exp(-(d_j-d_{j^\star})/T)
-\le (\abs{N}-1)\exp(-\delta/T).
+\sum_{j\in E}\alpha_j
+&\le
+\sum_{j\in E}
+\frac{\exp(-d_j/T)\chi_j}
+{\exp(-d_{j^\star}/T)\chi_{j^\star}}\\
+&\le C_E\sum_{j\in E}\exp(-(d_j-d_{j^\star})/T)
+\le C_E\abs{E}\exp(-\delta/T).
 \end{align*}
-Since
-\begin{align*}
-1-\alpha_{j^\star}
-=\frac{\sum_{j\ne j^\star}\exp(-d_j/T)}
-{\exp(-d_{j^\star}/T)+\sum_{j\ne j^\star}\exp(-d_j/T)},
-\end{align*}
-the same upper bound follows.
 
 For an edge violation, set $a=\delta_e/\tau_e>0$. Since
 \begin{align*}
@@ -126,6 +142,15 @@ Combining this with the assumed distance-score ratio bound gives
 &\le \frac{C\abs{N}}{\chi_{\min}}
 \exp\left(-\frac{\beta_{\min}\delta_e}{\sqrt{D_{\max}}\tau_e}\right).
 \end{align*}
+Without a uniform distance-score ratio, use
+\begin{align*}
+\frac{\exp(-d_j/T)}{\exp(-d_r/T)}
+=
+\exp\left(\frac{d_r-d_j}{T}\right)
+\le
+\exp(\Delta_d/T),
+\end{align*}
+which gives the joint-limit bound and the stated convergence condition.
 \end{proof}
 
 \begin{theorem}[Refine-or-repair objective descent, formal version of Theorem~\ref{thm:refine-repair-descent:informal}]
@@ -138,13 +163,13 @@ J_{\calB_t^{\mathrm{score}}}(\calS)
 +\lambda_{\mathrm{concept}}N_{\mathrm{concept}}(\calS)
 +\lambda_{\mathrm{edge}}\abs{E(\calS)}
 \end{align*}
-with nonnegative penalties on a fixed scoring buffer. If a repair step is committed only after the guarded test
+with nonnegative penalties on a fixed scoring buffer, where $\lambda_{\mathrm{concept}}$ includes the anchored concept and the anchor-order bookkeeping induced by creating it. If a repair step is committed only after the guarded test
 \begin{align*}
 \widehat R(\calS_{t+1};\calB_t^{\mathrm{score}})
 \le
 \widehat R(\calS_t;\calB_t^{\mathrm{score}}),
 \end{align*}
-and leaves anchors, edges, and concept count unchanged, then $J_{\calB_t^{\mathrm{score}}}$ does not increase. If a refinement creates one concept and $q$ edges and is accepted only when
+and leaves anchors, edges, and concept count unchanged, then $J_{\calB_t^{\mathrm{score}}}$ does not increase. If a refinement creates one concept and actual edge set $E_{\mathrm{new}}$ and is accepted only when
 \begin{align*}
 \widehat\Delta_{\mathrm{refine}}>
 \max\{\widehat\Delta_{\mathrm{repair}},0\}+\tau+2\epsilon_m,
@@ -159,7 +184,7 @@ where $\widehat\Delta_{\mathrm{repair}}\ge0$ is the empirical repair gain and
 -
 \lambda_{\mathrm{concept}}
 -
-\lambda_{\mathrm{edge}}q,
+\lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}},
 \end{align*}
 then
 \begin{align*}
@@ -179,7 +204,7 @@ For refinement,
 J_{\calB_t^{\mathrm{score}}}(\calS_t)-J_{\calB_t^{\mathrm{score}}}(\calS_{t+1})
 &=\widehat R(\calS_t;\calB_t^{\mathrm{score}})
 -\widehat R(\calS_{t+1};\calB_t^{\mathrm{score}})
--\lambda_{\mathrm{concept}}-\lambda_{\mathrm{edge}}q\\
+-\lambda_{\mathrm{concept}}-\lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}}\\
 &=\widehat\Delta_{\mathrm{refine}}\\
 &>\widehat\Delta_{\mathrm{repair}}+\tau+2\epsilon_m.
 \end{align*}
@@ -190,7 +215,7 @@ The theorem is local to the fixed scoring buffer used in its statement. If the s
 
 \begin{theorem}[Statistically safe adaptive refinement, formal version of Theorem~\ref{thm:safe-refinement:informal}]
 \label{thm:safe-refinement:formal}
-Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing the past stream, current DGM state, and all proposal-buffer information available before scoring at time $t$. Let $\calC_t$ be a finite candidate class predictable with respect to $\mathfrak H_t$, and let $\calB_t^{\mathrm{score}}$ contain $m_t$ samples independent of $\mathfrak H_t$ conditional on the current scoring distribution. For candidate $g$, let $\widehat\Delta_t(g)$ be the empirical gain on $\calB_t^{\mathrm{score}}$ and let $\Delta_t(g)$ be the corresponding population gain. Define
+Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing the past stream, current DGM state, and all proposal-buffer information available before scoring at time $t$. Let $\calC_t$ be a finite candidate class predictable with respect to $\mathfrak H_t$, and let $\calB_t^{\mathrm{score}}$ contain $m_t$ fresh held-out samples, or samples not previously used to choose proposals or update the state, independent of $\mathfrak H_t$ conditional on the current scoring distribution. For candidate $g$, let $\widehat G_t(g)$ be the empirical raw risk decrease on $\calB_t^{\mathrm{score}}$ before complexity cost and let $G_t(g)$ be the corresponding population raw gain. Define
 \begin{align*}
 \epsilon_t=
 \sqrt{
@@ -200,28 +225,28 @@ Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing
 \end{align*}
 Then, with probability at least $1-\delta$, every time $t$ and candidate $g\in\calC_t$ satisfy
 \begin{align*}
-\abs{\widehat\Delta_t(g)-\Delta_t(g)}
+\abs{\widehat G_t(g)-G_t(g)}
 \le
 2\epsilon_t.
 \end{align*}
 Consequently, if
 \begin{align*}
-\widehat\Delta_t(g)>
+\widehat G_t(g)>
 \lambda\operatorname{cost}(g)+\tau+2\epsilon_t,
 \end{align*}
 then on the same event
 \begin{align*}
-\Delta_t(g)>
+G_t(g)>
 \lambda\operatorname{cost}(g)+\tau.
 \end{align*}
 \end{theorem}
 \begin{proof}
-Condition on $\mathfrak H_t$. The candidate class is then fixed, and the scoring buffer is independent of the proposal mechanism by assumption. Apply Hoeffding's inequality to the empirical risk of the old state and to the empirical risk of each candidate-refined state. For any fixed state in this finite collection,
+Condition on $\mathfrak H_t$. The candidate class is then fixed, and the scoring buffer is independent of the proposal mechanism and prior state-selection decisions by assumption. Apply Hoeffding's inequality to the empirical risk of the old state and to the empirical risk of each candidate-refined state. For any fixed state in this finite collection,
 \begin{align*}
 \mathbb P\left(\abs{\widehat R-R}>\epsilon\right)
 \le 2\exp(-2m\epsilon^2).
 \end{align*}
-With $m=m_t$ and $\epsilon=\epsilon_t$, the failure probability at time $t$ is at most $\delta/(2t^2)$ after a union bound over the old state and the $\abs{\calC_t}$ candidate states. Since $\sum_{t\ge1}t^{-2}<2$, the displayed constant $4t^2$ gives total failure probability at most $\delta$ over all times. On this event, each gain is a difference of two risks, so empirical and population gain differ by at most $2\epsilon_t$. The implication follows by subtracting this deviation from the empirical gain lower bound.
+With $m=m_t$ and $\epsilon=\epsilon_t$, the failure probability at time $t$ is at most $\delta/(2t^2)$ after a union bound over the old state and the $\abs{\calC_t}$ candidate states. Since $\sum_{t\ge1}t^{-2}<2$, the displayed constant $4t^2$ gives total failure probability at most $\delta$ over all times. On this event, each raw gain is a difference of two risks, so empirical and population raw gain differ by at most $2\epsilon_t$. The implication follows by subtracting this deviation from the empirical raw-gain lower bound.
 \end{proof}
 
 \begin{corollary}[Bounded language-model refinement score, formal version of Corollary~\ref{cor:lm-clipped-refinement:informal}]
@@ -233,7 +258,7 @@ For language modeling, let
 \frac{1}{L_{\max}}
 \min\{-\log p(x_{t+1}\mid x_{\le t}),L_{\max}\}
 \end{align*}
-for a fixed $L_{\max}>0$. If the scoring buffer, empirical gain, and population gain in Theorem~\ref{thm:safe-refinement:formal} are computed using $\ell_{\mathrm{clip}}$, then the theorem applies to language-model refinement decisions made with this clipped score. In particular, an accepted refinement has positive clipped population gain after paying complexity cost and margin $\tau$ with probability at least $1-\delta$.
+for a fixed $L_{\max}>0$. If the scoring buffer, empirical raw gain, and population raw gain in Theorem~\ref{thm:safe-refinement:formal} are computed using $\ell_{\mathrm{clip}}$, then the theorem applies to language-model refinement decisions made with this clipped score. In particular, an accepted refinement has positive clipped population gain after paying complexity cost and margin $\tau$ with probability at least $1-\delta$.
 \end{corollary}
 \begin{proof}
 The clipped score satisfies $0\le \ell_{\mathrm{clip}}\le 1$. Substituting this bounded loss into Theorem~\ref{thm:safe-refinement:formal} gives the claim directly. The statement is only about the clipped score; raw negative log likelihood is unbounded and would require a separate concentration assumption.
@@ -285,26 +310,26 @@ For any input $h$, the tree follows exactly one root-to-leaf path. The leaf reac
 
 \begin{theorem}[DGM data-structure bound, formal version of Theorem~\ref{thm:dgm-complexity:informal}]
 \label{thm:dgm-complexity:formal}
-Assume DGM has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}})$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. If each concept stores an anchor, a centroid, and a sparse categorical memory with average support $\bar s$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
+Assume DGM has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)d+\abs{N(h)}d+C_{\mathrm{local}})$ for dense linear edge gates. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ guarded distinction edges costs an additional $O(d+qd)$ plus anchor-order query bookkeeping. If each concept stores an anchor, a centroid, and a sparse categorical memory with average support $\bar s$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
 \end{theorem}
 \begin{proof}
 A distance computation between $h\in\R^d$ and one concept center costs $O(d)$. Exact centroid and anchor retrieval over $N_t$ concepts therefore costs
 \begin{align*}
 O(N_td).
 \end{align*}
-Graph-neighbor expansion has cost proportional to the incident lists touched and is absorbed into selected edge-gate bookkeeping. After the candidate set $N(h)$ is selected, evaluating the incident edge gates costs $O(Q(h))$. Computing sparse routing weights, distances within the selected set, and evaluating selected local memories costs
+Graph-neighbor expansion has cost proportional to the incident lists touched and is lower order relative to dense edge-gate evaluation. After the candidate set $N(h)$ is selected, evaluating the incident linear edge gates costs $O(Q(h)d)$. Computing sparse routing weights, distances within the selected set, and evaluating selected local memories costs
 \begin{align*}
 O(\abs{N(h)}d+C_{\mathrm{local}}).
 \end{align*}
 Thus prediction costs
 \begin{align*}
-O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}}).
+O(N_td+Q(h)d+\abs{N(h)}d+C_{\mathrm{local}}).
 \end{align*}
 Observation begins with the same retrieval computation. If it repairs a selected concept, it adds the cost of evaluating and scoring the proposed local repair candidates on the scoring buffer. If it creates a new anchor-centroid pair, storing the pair costs $O(d)$. For each new edge, computing and storing the linear distinction vector costs $O(d)$, so $q$ edges cost
 \begin{align*}
 O(qd).
 \end{align*}
-The total additional cost for refinement is therefore $O(d+qd)$.
+The total additional vector-update cost for refinement is therefore $O(d+qd)$, plus whatever indexing or comparison bookkeeping is used to support anchor-order queries.
 
 For memory, each concept stores $a_j,c_j\in\R^d$ and a sparse categorical memory of average support $\bar s$, giving
 \begin{align*}
@@ -321,11 +346,11 @@ Adding the two terms proves the claimed bound.
 \label{thm:dgm-layer-cost:formal}
 Consider a DGM adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $\abs{N}$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}dr).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}dr).
 \end{align*}
 If the write path is detached and uses rank-one local repair, the write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}(d_q+dr)).
 \end{align*}
 For a block of length $L$, backpropagation through the slow parameters does not require storing the full DGM state history $\calS_1,\ldots,\calS_L$.
 \end{theorem}
@@ -334,7 +359,7 @@ For a token hidden state $h\in\R^d$, the query computation
 \begin{align*}
 q=Qh
 \end{align*}
-costs $O(dd_q)$. The retrieval cost is $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Evaluating selected incident edge gates costs $O(Q_N)$.
+costs $O(dd_q)$. The retrieval cost is $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Evaluating selected incident dense edge gates costs $O(Q_N d_q)$.
 
 For a selected concept $j$, the rank-$r$ adapter read is
 \begin{align*}
@@ -348,14 +373,18 @@ The routing weights add lower-order top-$k$ normalization cost, absorbed into th
 
 The write path first computes the same query, retrieval, and edge gates. It then updates selected concept statistics and selected local memories. Concept bookkeeping costs $O(d_q)$ per selected concept. A rank-one local repair of a rank-$r$ or low-rank sufficient-statistic memory costs $O(dr)$ per selected memory. Hence the write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}(d_q+dr)).
 \end{align*}
 
 Finally, the update rule is applied as
 \begin{align*}
-\operatorname{stopgrad}(\calS_{t+1})=\operatorname{DGMObserve}(\operatorname{stopgrad}(\calS_t),h_t,x_{t+1}).
+\calS_{t+1}
+=
+\operatorname{stopgrad}\!\left(
+\operatorname{DGMObserve}(\operatorname{stopgrad}(\calS_t),\operatorname{stopgrad}(h_t),x_{t+1})
+\right).
 \end{align*}
-Thus the computational graph for the loss contains the selected read computation, but not the chain of state-update maps from $\calS_1$ through $\calS_L$. Therefore full DGM state history is not required for backpropagation through the slow parameters.
+Thus the computational graph for the loss contains the selected read computation, but not the chain of state-update maps from $\calS_1$ through $\calS_L$ or the write-time hidden states used to mutate the fast state. Therefore full DGM state history is not required for backpropagation through the slow parameters.
 \end{proof}
 
 \begin{theorem}[One-hot memory is partition-measurable, formal version of Theorem~\ref{thm:one-hot-measurable:informal}]
@@ -388,6 +417,7 @@ W\phi_\calP(\omega)=We_i=w_i=f(\omega).
 Let $\calP=\{B_1,\ldots,B_n\}$ and let $\omega,\omega'\in B_i$. Suppose $v(\omega)\ne v(\omega')$. Let $k=\phi_\calP(\omega)=\phi_\calP(\omega')=e_i$. If a memory $W$ has already committed $We_i=v(\omega)$, then the evidence $We_i=v(\omega')$ has innovation $z=0$ relative to the old key span and residual $e\ne0$.
 \end{theorem}
 \begin{proof}
+Here the stored-key matrix $K$ is oriented with stored keys as columns, so $KK^\dagger$ is the orthogonal projector onto their column span.
 Since $\omega,\omega'\in B_i$,
 \begin{align*}
 \phi_\calP(\omega)=\phi_\calP(\omega')=e_i.

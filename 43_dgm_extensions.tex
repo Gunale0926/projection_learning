@@ -22,9 +22,9 @@ Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}
 \end{align*}
 be the number of incident edge gates evaluated for the selected candidates. With exact nearest-neighbor search, prediction costs
 \begin{align*}
-O(N_td+Q(h)+\abs{N(h)}d+C_{\mathrm{local}}),
+O(N_td+Q(h)d+\abs{N(h)}d+C_{\mathrm{local}}),
 \end{align*}
-where $C_{\mathrm{local}}$ is the cost of evaluating the selected local memories. With approximate nearest-neighbor indexing, the $N_td$ term can be replaced by the query cost of the index \citep{indyk1998approximate,johnson2019billion}. Creating an anchor-centroid pair costs $O(d)$ plus the cost of initializing its memory. Adding $q$ distinction edges costs $O(qd)$. If each concept stores a sparse categorical memory with average support size $\bar s$, runtime memory is
+where $C_{\mathrm{local}}$ is the cost of evaluating the selected local memories and the $Q(h)d$ term evaluates dense linear edge gates. With approximate nearest-neighbor indexing, the $N_td$ term can be replaced by the query cost of the index \citep{indyk1998approximate,johnson2019billion}. Creating an anchor-centroid pair costs $O(d)$ plus the cost of initializing its memory and the bookkeeping used for anchor-order queries. Adding $q$ guarded distinction edges costs $O(qd)$. If each concept stores a sparse categorical memory with average support size $\bar s$, runtime memory is
 \begin{align*}
 O(N_t(2d+\bar s)+\abs{E_t}d).
 \end{align*}
@@ -32,7 +32,7 @@ An embedding-mean variant instead uses $O(N_t(2d+d_e)+\abs{E_t}d)$ memory, but i
 
 \begin{theorem}[DGM data-structure bound]
 \label{thm:dgm-complexity:informal}
-For exact search over $N_t$ centroids in $\R^d$, one edge-gated DGM prediction costs $O(N_td+Q+\abs{N}d+C_{\mathrm{local}})$, where $N=N(h)$ and $Q=Q(h)$. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ distinction edges costs an additional $O(d+qd)$. With sparse categorical memories of average support $\bar s$, the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
+For exact search over $N_t$ centroids in $\R^d$, one edge-gated DGM prediction costs $O(N_td+Q d+\abs{N}d+C_{\mathrm{local}})$, where $N=N(h)$ and $Q=Q(h)$ is an edge count. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ guarded distinction edges costs an additional $O(d+qd)$ plus anchor-order query bookkeeping. With sparse categorical memories of average support $\bar s$, the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
 \end{theorem}
 
 \subsection{Ridge local memory}
@@ -98,11 +98,11 @@ During sequential detached training, backpropagation sees the selected read comp
 \label{thm:dgm-layer-cost:informal}
 Consider a DGM adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $\abs{N}$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}dr).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}dr).
 \end{align*}
 If the write path is detached and uses rank-one local repair, the write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}(d_q+dr)).
 \end{align*}
 For a block of length $L$, the DGM state history need not be stored for backpropagation; the additional activation memory is the selected read computation, not the full sequence of memory states. The categorical DGM-Embedding layer replaces the $\abs{N}dr$ adapter term by sparse count lookup, edge-gated mixture, and trust-weight update costs.
 \end{theorem}

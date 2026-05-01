@@ -165,7 +165,7 @@ The statement is Theorem~\ref{thm:soft-routing-hard-limit:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
 The sparse soft read can only assign mass to candidates it retrieved. Therefore, if the exact hard-route concept is omitted from the candidate set, no temperature limit can recover that route. Under candidate recall, the remaining argument is a finite softmax and gate-sharpening calculation.
-For ordinary nearest-center routing, every nonnearest candidate has unnormalized weight smaller by at least $\exp(-\delta/T)$, so the total nonnearest mass is bounded by a finite candidate-count factor times this exponential. For a structural edge gate with uniformly positive weight, a wrong-side signed margin $-\delta_e$ contributes a log-sigmoid term bounded by $-\delta_e/\tau_e$. Degree normalization rescales the exponent but does not remove exponential decay under a uniform degree bound. After normalizing against an eligible candidate with compatibility bounded below and bounded distance-score ratio, the wrong-side mass vanishes as the edge temperature tends to zero.
+For ordinary nearest-center routing, every nonnearest candidate has unnormalized weight smaller by at least $\exp(-\delta/T)$, so the total nonnearest mass is bounded by a finite candidate-count factor times this exponential. For a structural edge gate with uniformly positive weight, a wrong-side signed margin $-\delta_e$ contributes a log-sigmoid term bounded by $-\delta_e/\tau_e$. Degree normalization rescales the exponent but does not remove exponential decay under a uniform degree bound. After normalizing against an eligible candidate with compatibility bounded below, the wrong-side mass vanishes if the wrong-side/reference distance-score ratio is bounded, or more generally if the joint limit satisfies $\beta_{\min}\delta_e/(\sqrt{D_{\max}}\tau_e)-\Delta_d/T\to+\infty$.
 \end{proof}
 
 \begin{theorem}[Refine-or-repair descent, proof sketch for Theorem~\ref{thm:refine-repair-descent:formal}]
@@ -173,7 +173,7 @@ For ordinary nearest-center routing, every nonnearest candidate has unnormalized
 The statement is Theorem~\ref{thm:refine-repair-descent:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Guarded repair proposes local memory or centroid changes while keeping anchors and edges fixed, then commits only candidates that do not increase empirical loss on the fixed scoring buffer $\calB_t^{\mathrm{score}}$. The identity candidate is always feasible. The concept and edge penalties therefore stay fixed, so the local objective $J_{\calB_t^{\mathrm{score}}}$ does not increase. A refinement that creates one anchored concept and $q$ edges changes $J_{\calB_t^{\mathrm{score}}}$ by the empirical-risk decrease on the scoring buffer minus $\lambda_{\mathrm{concept}}+\lambda_{\mathrm{edge}}q$, which is exactly the penalized refinement gain in \eqref{eq:refine-gain}. The acceptance test requires this net decrease to exceed the empirical repair gain plus $\tau+2\epsilon_m$.
+Guarded repair proposes local memory or centroid changes while keeping anchors and edges fixed, then commits only candidates that do not increase empirical loss on the fixed scoring buffer $\calB_t^{\mathrm{score}}$. The identity candidate is always feasible. The concept and edge penalties therefore stay fixed, so the local objective $J_{\calB_t^{\mathrm{score}}}$ does not increase. A refinement that creates one anchored concept and accepted edge set $E_{\mathrm{new}}$ changes $J_{\calB_t^{\mathrm{score}}}$ by the empirical-risk decrease on the scoring buffer minus $\lambda_{\mathrm{concept}}+\lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}}$, where the concept penalty includes the induced anchor-order bookkeeping. This is exactly the penalized refinement gain in \eqref{eq:refine-gain}. The acceptance test requires this net decrease to exceed the empirical repair gain plus $\tau+2\epsilon_m$.
 \end{proof}
 
 \begin{theorem}[Safe refinement, proof sketch for Theorem~\ref{thm:safe-refinement:formal}]
@@ -181,7 +181,7 @@ Guarded repair proposes local memory or centroid changes while keeping anchors a
 The statement is Theorem~\ref{thm:safe-refinement:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-At each time $t$, condition on the filtration containing the past, current DGM state, and proposal buffer. The predictable finite candidate class is then fixed, while the scoring buffer remains independent by assumption. Hoeffding's inequality bounds the deviation between empirical and population risk for the old state and for each candidate-refined state \citep{hoeffding1963probability}. A union bound over the finite class gives failure probability of order $\delta/t^2$ after using the displayed $\epsilon_t$, and a second union bound over all times is summable. Each gain is a difference of two risks, so its empirical-population deviation is at most twice the risk deviation. If the empirical gain exceeds cost plus $\tau+2\epsilon_t$, the population gain exceeds cost plus $\tau$ on this high-probability event.
+At each time $t$, condition on the filtration containing the past, current DGM state, and proposal buffer. The predictable finite candidate class is then fixed, while the scoring buffer remains fresh or otherwise unused by prior proposal and state-selection decisions. Hoeffding's inequality bounds the deviation between empirical and population risk for the old state and for each candidate-refined state \citep{hoeffding1963probability}. A union bound over the finite class gives failure probability of order $\delta/t^2$ after using the displayed $\epsilon_t$, and a second union bound over all times is summable. Each raw gain is a difference of two risks, so its empirical-population deviation is at most twice the risk deviation. If the empirical raw gain exceeds complexity cost plus $\tau+2\epsilon_t$, the population raw gain exceeds cost plus $\tau$ on this high-probability event.
 \end{proof}
 
 \begin{corollary}[Bounded LM score, proof sketch for Corollary~\ref{cor:lm-clipped-refinement:formal}]
@@ -225,7 +225,7 @@ A prediction computes centroid and anchor distances from $h$ to $N_t$ concepts i
 \begin{align*}
 O(N_td).
 \end{align*}
-It then evaluates $Q(h)$ selected incident edge gates and $\abs{N(h)}$ selected local memories, costing $O(Q(h)+\abs{N(h)}d+C_{\mathrm{local}})$ including sparse routing weights. Guarded repair adds the cost of scoring proposed local candidates. Creating one anchor-centroid pair stores two vectors in $\R^d$, still $O(d)$. Adding $q$ distinction edges stores $q$ vectors and thresholds, costing
+It then evaluates $Q(h)$ selected incident edge gates and $\abs{N(h)}$ selected local memories. Dense linear edge gates cost $O(Q(h)d)$, so this part costs $O(Q(h)d+\abs{N(h)}d+C_{\mathrm{local}})$ including sparse routing weights. Guarded repair adds the cost of scoring proposed local candidates. Creating one anchor-centroid pair stores two vectors in $\R^d$, still $O(d)$. Adding $q$ distinction edges stores $q$ vectors and thresholds, costing
 \begin{align*}
 O(qd).
 \end{align*}
@@ -240,7 +240,7 @@ O(N_t(2d+d_e)+\abs{E_t}d).
 The statement is Theorem~\ref{thm:dgm-layer-cost:informal}.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Computing $q=Qh$ costs $O(dd_q)$. Retrieval costs $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Edge-gate evaluation over selected incident edges costs $O(Q_N)$. For each selected concept, a rank-$r$ adapter computes
+Computing $q=Qh$ costs $O(dd_q)$. Retrieval costs $C_{\mathrm{ret}}(N_t,d_q)$ by definition. Dense edge-gate evaluation over selected incident edges costs $O(Q_N d_q)$. For each selected concept, a rank-$r$ adapter computes
 \begin{align*}
 W_jKh.
 \end{align*}
@@ -250,7 +250,7 @@ O(\abs{N}dr).
 \end{align*}
 The detached write path repeats query, retrieval, and edge-gate evaluation, then updates only selected local states. A rank-one local repair or low-rank sufficient-statistic update costs $O(dr)$ per selected memory, with $O(d_q)$ additional concept bookkeeping. Hence write overhead is
 \begin{align*}
-O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N+\abs{N}(d_q+dr)).
+O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}(d_q+dr)).
 \end{align*}
 Because the write path is detached, backpropagation does not need intermediate copies of $\calS_t$ for all $t$. It stores the selected read computation used in the forward loss.
 \end{proof}

@@ -250,7 +250,7 @@ D_t=\max_{i,r\in N(h)}\norm{\mu_i(h)-\mu_r(h)}_2,
 and for language modeling the log-loss surprise $-\log p_{j^\star}(x_{t+1}\mid x_{\le t})$ is the local disagreement signal.
 These quantities are proposal signals. They decide which candidates are worth scoring; they do not define repair or refinement.
 
-All gap estimates below are computed on a held-out scoring buffer $\calB_t^{\mathrm{score}}$. Refinement proposals may use a disjoint proposal buffer $\calB_t^{\mathrm{prop}}$ together with the current observation; the scoring buffer is held out from proposal generation. A practical implementation can maintain the split by reservoir sampling incoming observations into the two buffers. If an implementation reuses one buffer for both proposal and scoring, the empirical rule still defines a heuristic, but Theorem~\ref{thm:safe-refinement:informal} applies to the sample-split version.
+All gap estimates below are computed on a held-out scoring buffer $\calB_t^{\mathrm{score}}$. Refinement proposals may use a disjoint proposal buffer $\calB_t^{\mathrm{prop}}$ together with the current observation; the scoring buffer is held out from proposal generation and from previous accept/reject decisions that determine the current state. Theorem~\ref{thm:safe-refinement:informal} applies when each scoring decision uses fresh held-out samples, or samples not previously used to choose proposals or update the state. Reservoir sampling can maintain disjoint proposal and scoring streams, but reusing the same validation buffer adaptively requires reusable-holdout or adaptive-validation control. Without that extra control, the empirical rule is a heuristic rather than the Hoeffding guarantee.
 
 The edges created by a refinement are attached to a concrete confused-neighbor set. Let $\operatorname{Div}_{\calY}(M_i,M_r;h)$ denote a task-appropriate consequence divergence, such as total variation for classifiers, Euclidean mean distance for regression memories, or next-token distribution divergence for language models. Define
 \begin{align*}
@@ -319,6 +319,7 @@ and adds the actual accepted edge set $E_{\mathrm{new}}$ from the new anchored c
 \lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}}.
 \label{eq:refine-gain}
 \end{align}
+Here $\lambda_{\mathrm{concept}}$ is the penalty for creating the anchored concept and its induced anchor-order bookkeeping, while $\lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}}$ accounts for the accepted edge generators. Using the edge budget $q$ instead of the actual $\abs{E_{\mathrm{new}}}$ is a conservative implementation choice that only makes the acceptance test stricter.
 The candidate is accepted only if it beats the repair gain by a safety margin:
 \begin{align}
 \widehat\Delta_{\mathrm{refine}}>
@@ -347,7 +348,7 @@ Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m
 \State propose repair candidates with anchors and edges fixed
 \State compute empirical repair gain $\widehat\Delta_{\mathrm{repair}}$ by \eqref{eq:repair-gain}
 \If{$\rho>\tau_{\mathrm{repair}}$ or $D_t>\tau_{\mathrm{disagree}}$}
-\State form a candidate new anchor/centroid from $h$ and $\calB_t^{\mathrm{prop}}$, with candidate edges to $\operatorname{Confused}_q(h,y)$
+\State form a candidate new anchor/centroid from $h$ and $\calB_t^{\mathrm{prop}}$, with guarded candidate edges to separated members of $\operatorname{Confused}_q(h,y)$
 \State estimate penalized refinement gain $\widehat\Delta_{\mathrm{refine}}$ on $\calB_t^{\mathrm{score}}$ by \eqref{eq:refine-gain}
 \If{$\widehat\Delta_{\mathrm{refine}}>\max\{\widehat\Delta_{\mathrm{repair}},0\}+\tau+2\epsilon_m$ and $D_t>\tau_{\mathrm{disagree}}$}
 \State commit the new anchored concept and its distinction edges
