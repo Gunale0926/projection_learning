@@ -1,11 +1,13 @@
-\subsection{Minimal refinement}
+\section{Minimal Refinement}
 \label{sec:minimal-refinement}
 
-Once a contradiction shows that the current atom is too coarse, the next question is not how to grow a large model. It is which information must be added. The primitive operation in this paper is minimal refinement: given an information structure and evidence that a new event or variable must be observable, add that observability and nothing else. We state the finite partition theorem first, then the sigma-algebra form. The latter is the standard measure-theoretic join; the former is its finite special case \citep{billingsley1995probability,kallenberg2002foundations}.
+Adding a distinction has a canonical minimal form: split exactly the atoms crossed by that distinction. Once a contradiction shows that the current atom is too coarse, the next question is not how to grow a large model. It is which information must be added. The primitive operation in this paper is minimal refinement: given an information structure and evidence that a new event or variable must be observable, add that observability and nothing else. We state the finite partition theorem first, then the sigma-algebra form. The latter is the standard measure-theoretic join; the former is its finite special case \citep{billingsley1995probability,kallenberg2002foundations}.
 
-\subsubsection{The finite refinement rule}
+\subsection{The finite refinement rule}
 
-Let $\calP$ be a finite partition and let $D\subseteq\Omega$ be a new binary distinction event. Define
+\begin{definition}[Partition-measurable event and finite split]
+\label{def:partition-measurable-event}
+Let $\calP$ be a finite partition of $\Omega$. An event $D\subseteq\Omega$ is $\calP$-measurable if it is a union of atoms of $\calP$. For any event $D$, the finite split of $\calP$ by $D$ is
 \begin{align}
 \calP_D
 &=\{B\cap D:B\in\calP, B\cap D\ne\varnothing\}\notag\\
@@ -13,6 +15,7 @@ Let $\calP$ be a finite partition and let $D\subseteq\Omega$ be a new binary dis
 \label{eq:finite-refinement}
 \end{align}
 This keeps exactly the nonempty pieces obtained by cutting each old atom by $D$.
+\end{definition}
 
 \begin{theorem}[Minimal finite refinement]
 \label{thm:minimal-refinement:informal}
@@ -29,13 +32,22 @@ so $D$ is a union of $\calP_D$-atoms. Now let $\calQ$ refine $\calP$ and make $D
 
 The theorem gives a canonical update. The evidence determines the least refined representation: atoms untouched by $D$ remain unchanged, while atoms crossed by $D$ split into the two pieces that the evidence distinguishes.
 
-\subsubsection{The sigma-algebra form}
+\subsection{The sigma-algebra form}
 
 For general spaces, the same operation is the join of sigma-algebras. If the current information is $\calF_t$ and the evidence is a variable $U_t$, the minimal updated information is
 \begin{align}
 \calF_{t+1}=\calF_t\vee\sigma(U_t).
 \label{eq:join-update}
 \end{align}
+
+\begin{definition}[Generated sigma-algebra and join]
+\label{def:sigma-join}
+For a random variable $U$, $\sigma(U)$ denotes the smallest sigma-algebra with respect to which $U$ is measurable. For two sigma-algebras $\calF$ and $\calH$, their join is
+\begin{align*}
+\calF\vee\calH=\sigma(\calF\cup\calH),
+\end{align*}
+the smallest sigma-algebra containing both. In particular, $\calF\vee\sigma(U)$ is the information structure obtained by adding observability of $U$ to $\calF$.
+\end{definition}
 
 \begin{theorem}[Minimal sigma-algebra refinement]
 \label{thm:sigma-refinement:informal}
@@ -46,4 +58,4 @@ Let $\calF\subseteq\calE$ be a sigma-algebra and let $U$ be a random variable. T
 By definition, $\calF\vee\sigma(U)=\sigma(\calF\cup\sigma(U))$, so it contains $\calF$ and makes $U$ measurable. If another sigma-algebra $\calG$ contains $\calF$ and makes $U$ measurable, then $\calF\cup\sigma(U)\subseteq\calG$. Since $\calG$ is a sigma-algebra, $\sigma(\calF\cup\sigma(U))\subseteq\calG$.
 \end{proof}
 
-Thus the same object governs finite decision-tree splits and measurable-space refinement. A distinction is not an auxiliary feature added after learning; it is a change in the sigma-algebra of what the learner may condition on. The obstruction in Section~\ref{sec:preliminaries} says when such a change is necessary; minimal refinement says how little information must be added.
+Thus the same object governs finite decision-tree splits and measurable-space refinement. A distinction is not an auxiliary feature added after learning; it is a change in the sigma-algebra of what the learner may condition on. The obstruction in Section~\ref{sec:repair-obstruction} says when such a change is necessary; minimal refinement says how little information must be added.

@@ -1,22 +1,65 @@
-\section{Online Prediction with Refinable Partitions}
+\section{Mathematical Model: Partitions, Predictors, and Bayes Risk}
 \label{sec:preliminaries}
 
-We start with a finite model. The measurable-space notation used later is the direct sigma-algebra generalization, but the computational object is a partition. A runtime state declares which cases are equivalent; a repair changes predictions on equivalence classes, while a refinement changes the equivalence relation.
+We first formalize the information available to a runtime learner as a partition of the case space. The measurable-space notation used later is the direct sigma-algebra generalization, but the computational object is a finite partition.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.20\linewidth}p{0.70\linewidth}}
+\toprule
+Symbol & Meaning \\
+\midrule
+$\Omega$ & finite case space \\
+$P$ & distribution over cases \\
+$Y:\Omega\to\calY$ & consequence or label variable \\
+$\mathsf A$ & action space \\
+$L:\calY\times\mathsf A\to\R$ & loss \\
+$\Pi$ & finite information partition of $\Omega$ \\
+$\Pred(\Pi)$ & predictors measurable with respect to $\Pi$ \\
+$R_L(f)$ & risk of predictor $f$ \\
+$R_L(\Pi)$ & Bayes risk achievable under partition $\Pi$ \\
+$I:\Omega\to\calZ$ & information map inducing a partition $\Pi(I)$ \\
+$U:\Omega\to\{0,1\}$ & binary distinction \\
+$\Pi\vee U$ & partition obtained by splitting $\Pi$ by $U$ \\
+$\calF,\calG$ & sigma-algebras or information structures \\
+$V_L(\calF,\calG)$ & value of refining $\calF$ to $\calG$ \\
+$d_L^\epsilon$ & loss-dependent distinction complexity \\
+$a_j,c_j,M_j$ & DGM anchor, centroid, and local memory for concept $j$ \\
+$E_t,g_e,\calP_t^G$ & DGM edge set, edge generator, and graph-generated partition \\
+$\calB_t^{\mathrm{score}}$ & held-out scoring buffer for empirical refinement tests \\
+$\widehat\Delta_{\mathrm{repair}},\widehat\Delta_{\mathrm{refine}}$ & empirical repair and refinement gains \\
+\bottomrule
+\end{tabular}
+\caption{Notation used throughout the paper. We say $\Pi'$ is finer than $\Pi$ if every atom of $\Pi'$ is contained in an atom of $\Pi$.}
+\label{tab:notation}
+\end{table}
 
 \subsection{Partitions, predictors, and risk}
 
-Let $\Omega$ be a finite case space, let $P$ be a distribution on $\Omega$, let $Y:\Omega\to\calY$ be the consequence variable, let $\mathsf A$ be an action space, and let $L:\calY\times\mathsf A\to\R$ be a loss. A finite partition
+Let $\Omega$ be a finite case space, let $P$ be a distribution on $\Omega$, let $Y:\Omega\to\calY$ be the consequence variable, let $\mathsf A$ be an action space, and let $L:\calY\times\mathsf A\to\R$ be a loss with finite expectations for the predictors under discussion.
+
+\begin{definition}[Information partition and partition-measurable predictor]
+\label{def:partition-measurable}
+A finite information partition is a collection of nonempty disjoint atoms
 \begin{align*}
 \Pi=\{B_1,\ldots,B_m\}
 \end{align*}
-induces the equivalence relation $\omega\sim_\Pi\omega'$ iff $\omega,\omega'$ lie in the same atom $B\in\Pi$. A predictor under $\Pi$ is a map $a:\Pi\to\mathsf A$, equivalently a function $f:\Omega\to\mathsf A$ that is constant on every atom:
+whose union is $\Omega$. It induces the equivalence relation $\omega\sim_\Pi\omega'$ iff $\omega,\omega'$ lie in the same atom $B\in\Pi$.
+
+A predictor is $\Pi$-measurable if it cannot distinguish states inside the same atom:
 \begin{align*}
 \Pred(\Pi)
 =
 \{f:\Omega\to\mathsf A:
 \omega\sim_\Pi\omega'\Rightarrow f(\omega)=f(\omega')\}.
 \end{align*}
-The Bayes risk achievable under partition $\Pi$ is
+Equivalently, a $\Pi$-measurable predictor is a map $a:\Pi\to\mathsf A$ evaluated on the atom containing $\omega$.
+\end{definition}
+
+\begin{definition}[Bayes risk under a partition]
+\label{def:partition-bayes-risk}
+For $f:\Omega\to\mathsf A$, write $R_L(f)=\E[L(Y,f)]$. The Bayes risk achievable under partition $\Pi$ is
 \begin{align}
 R_L(\Pi)
 =
@@ -28,27 +71,46 @@ R_L(\Pi)
 \label{eq:partition-bayes-risk}
 \end{align}
 where atoms with $P(B)=0$ may be assigned arbitrary actions. Thus $R_L(\Pi)$ is the best possible risk after the representation has committed to the equivalence relation $\sim_\Pi$.
+\end{definition}
 
-\begin{definition}[Refinable online prediction problem]
-\label{def:refinable-online-prediction}
-A refinable online prediction problem is a tuple
+\begin{definition}[Information map and induced partition]
+\label{def:information-map-partition}
+An information map is a runtime representation $I:\Omega\to\calZ$. It induces the partition
 \begin{align*}
-\mathfrak P=(\Omega,\calY,\mathsf A,P,L,\calU,c),
+\Pi(I)=\{I^{-1}(z):z\in\calZ,\ I^{-1}(z)\ne\varnothing\}.
 \end{align*}
-where $\Omega$ is finite, $Y:\Omega\to\calY$ is the consequence variable, $P$ is the sampling distribution, $L:\calY\times\mathsf A\to[0,1]$ is a bounded loss, $\calU\subseteq\{0,1\}^{\Omega}$ is a class of admissible binary distinctions, and $c:\calU\to\R_+$ assigns refinement costs.
+Any predictor that factors through $I$, written $f(\omega)=a(I(\omega))$, is measurable with respect to $\Pi(I)$.
+\end{definition}
 
-At round $t$, the learner maintains $S_t=(\Pi_t,a_t)$ with $a_t:\Pi_t\to\mathsf A$. A case $\omega_t\sim P$ is drawn, the learner observes only the atom $B_t\in\Pi_t$ containing $\omega_t$, predicts $a_t(B_t)$, observes $Y_t=Y(\omega_t)$, and then chooses one of two updates:
-\begin{align*}
-\mathrm{Repair}:&\qquad \Pi_{t+1}=\Pi_t,\quad a_{t+1}\text{ may change},\\
-\mathrm{Refine}:&\qquad \Pi_{t+1}=\Pi_t\vee U_t\text{ for some }U_t\in\calU.
-\end{align*}
-For a binary distinction $U:\Omega\to\{0,1\}$,
+\section{Online Prediction with Repair and Refinement}
+\label{sec:online-model}
+
+The online learner has two update types: repair preserves the current partition, while refinement joins it with a new binary distinction.
+
+\begin{definition}[Binary distinction and partition join]
+\label{def:partition-join}
+A binary distinction is a function $U:\Omega\to\{0,1\}$. Joining $\Pi$ with $U$ means splitting every atom of $\Pi$ according to the value of $U$:
 \begin{align}
 \Pi\vee U
 =
 \{B\cap U^{-1}(0),B\cap U^{-1}(1):B\in\Pi\}\setminus\{\varnothing\}.
 \label{eq:partition-join}
 \end{align}
+\end{definition}
+
+\begin{definition}[Refinable online prediction problem]
+\label{def:refinable-online-prediction}
+A refinable online prediction problem is a tuple
+\begin{align*}
+\mathfrak P=(\Omega,\calY,\mathsf A,P,L,\calO,\calU,c),
+\end{align*}
+where $\Omega$ is finite, $Y:\Omega\to\calY$ is the consequence variable, $P$ is the sampling distribution, $L:\calY\times\mathsf A\to\R$ has finite risk for admissible predictors, $\calO\subseteq2^\Omega$ is the pre-outcome observable sigma-algebra, $\calU\subseteq\{0,1\}^{\Omega}$ is a class of admissible binary distinctions that are $\calO$-measurable, and $c:\calU\to\R_+$ assigns refinement costs. Bounded losses are required only in finite-sample concentration statements, where they are stated explicitly. The $\calO$-measurability condition prevents a prediction-time distinction from depending directly on the consequence label; pure value-of-information examples can be recovered by taking $\calO=2^\Omega$.
+
+At round $t$, the learner maintains $S_t=(\Pi_t,a_t)$ with $a_t:\Pi_t\to\mathsf A$. A case $\omega_t\sim P$ is drawn, the learner observes only the atom $B_t\in\Pi_t$ containing $\omega_t$, predicts $a_t(B_t)$, observes $Y_t=Y(\omega_t)$, and then chooses one of two updates:
+\begin{align*}
+\mathrm{Repair}:&\qquad \Pi_{t+1}=\Pi_t,\quad a_{t+1}\text{ may change},\\
+\mathrm{Refine}:&\qquad \Pi_{t+1}=\Pi_t\vee U_t\text{ for some }U_t\in\calU.
+\end{align*}
 The cumulative objective is prediction loss plus refinement cost,
 \begin{align*}
 \calL_T
@@ -59,10 +121,22 @@ The cumulative objective is prediction loss plus refinement cost,
 \end{align*}
 \end{definition}
 
-The partition formulation also covers information maps. If a runtime representation is $I_t:\Omega\to\calZ_t$, its induced partition is the set of nonempty fibers $I_t^{-1}(z)$. Repair preserves these fibers. Refinement splits at least one fiber.
+\begin{definition}[Fixed-information repair update]
+\label{def:fixed-information-repair}
+Let a parameterized runtime predictor factor through a fixed information map $I:\Omega\to\calZ$:
+\begin{align*}
+f_\psi(\omega)=a_\psi(I(\omega)).
+\end{align*}
+An update of $\psi$ is a fixed-information repair update if $I$ is unchanged. The update rule may be a gradient step, a closed-form sufficient-statistic update, a cache write, or any other optimizer; what makes it repair is the invariance of the induced partition $\Pi(I)$, not the optimizer used.
+\end{definition}
 
-\subsection{Repair and refinement gaps}
+\section{The Repair-Only Obstruction}
+\label{sec:repair-obstruction}
 
+If the partition is fixed, the learner cannot beat the Bayes risk of that partition, no matter how sophisticated the repair update is.
+
+\begin{definition}[Repair gap and refinement gap]
+\label{def:repair-refinement-gaps}
 For a concrete predictor $f\in\Pred(\Pi)$ and a candidate refined partition $\Pi^\star$ that refines $\Pi$, define
 \begin{align}
 \Delta_{\mathrm{repair}}(f,\Pi)
@@ -73,6 +147,7 @@ For a concrete predictor $f\in\Pred(\Pi)$ and a candidate refined partition $\Pi
 \label{eq:refinement-gap}
 \end{align}
 The first gap is the residual error of the current predictor at fixed equivalence relation. The second is the value of changing the equivalence relation.
+\end{definition}
 
 \begin{theorem}[Runtime error decomposition]
 \label{thm:error-decomposition}
@@ -104,13 +179,13 @@ Let $\Pi$ be a fixed partition and let $\Pi^\star$ be a refinement. Consider any
 \ge
 T R_L(\Pi).
 \end{align*}
-Consequently, relative to an oracle using $\Pi^\star$,
+Consequently, if Bayes actions exist under $\Pi^\star$, then relative to an oracle using $\Pi^\star$,
 \begin{align*}
 \E[\mathrm{Regret}_T]
 \ge
 T\left(R_L(\Pi)-R_L(\Pi^\star)\right).
 \end{align*}
-If $R_L(\Pi)>R_L(\Pi^\star)$, every repair-only learner suffers $\Omega(T)$ expected regret against the refined oracle.
+If the infimum under $\Pi^\star$ is not attained, the same statement holds in the epsilon-oracle sense: for every $\epsilon>0$, regret against an $\epsilon$-optimal $\Pi^\star$-measurable oracle is at least $T(R_L(\Pi)-R_L(\Pi^\star)-\epsilon)$. Thus if $R_L(\Pi)>R_L(\Pi^\star)$, every repair-only learner suffers $\Omega(T)$ expected regret against refined or epsilon-refined oracles.
 \end{theorem}
 
 \begin{proof}
@@ -120,12 +195,28 @@ Condition on the learner's history before round $t$. The chosen predictor $\hat 
 \ge
 R_L(\Pi).
 \end{align*}
-Taking expectation and summing over $t$ gives the first inequality. The $\Pi^\star$ oracle achieves $R_L(\Pi^\star)$ per round by using the Bayes action on each atom of $\Pi^\star$, so subtracting its cumulative risk gives the regret bound.
+Taking expectation and summing over $t$ gives the first inequality. If Bayes actions exist on the atoms of $\Pi^\star$, the $\Pi^\star$ oracle achieves $R_L(\Pi^\star)$ per round by using them, so subtracting its cumulative risk gives the regret bound. Without attained Bayes actions, for every $\epsilon>0$ choose an $\epsilon$-optimal atomwise predictor under $\Pi^\star$; subtracting its cumulative risk gives the epsilon-oracle bound.
 \end{proof}
+
+The displayed comparator gives the refined partition to the oracle for free. If regret includes a one-time refinement cost $C(\Pi^\star)$ for reaching $\Pi^\star$, the same argument gives
+\begin{align*}
+\E[\mathrm{Regret}_T]
+\ge
+T\left(R_L(\Pi)-R_L(\Pi^\star)\right)-\lambda C(\Pi^\star).
+\end{align*}
+
+\begin{corollary}[Fixed-information gradient repair lower bound]
+\label{cor:fixed-information-gradient-repair}
+Consider any online optimizer, including backpropagation, whose predictions at every round factor through a fixed information map $I$:
+\begin{align*}
+\hat f_t(\omega)=a_{\psi_t}(I(\omega)).
+\end{align*}
+Then $\hat f_t\in\Pred(\Pi(I))$ for all $t$, so Theorem~\ref{thm:repair-only-regret} applies with $\Pi=\Pi(I)$. In particular, if a refined partition $\Pi^\star$ has $R_L(\Pi(I))>R_L(\Pi^\star)$, this fixed-information gradient repair suffers linear regret against the refined oracle. Backpropagation through parameters that change $I$ is outside this corollary; in the present model, such an update changes the information structure rather than merely repairing actions on fixed atoms.
+\end{corollary}
 
 \begin{example}[Two-state separation]
 \label{ex:two-state-separation}
-Let $\Omega=\{0,1\}$, $P(0)=P(1)=1/2$, and $Y=\omega$. Under the trivial partition $\Pi=\{\{0,1\}\}$, the best log-loss predictor is $q(Y=0)=q(Y=1)=1/2$, so $R_{\log}(\Pi)=\log 2$. The refined partition $\Pi^\star=\{\{0\},\{1\}\}$ has $R_{\log}(\Pi^\star)=0$ in the noiseless case. Therefore any repair-only learner has expected regret $T\log 2$ against the refined oracle. This example is not about neural networks, caches, or trees. It is about equivalence relations: a learner that identifies two states cannot assign them two different consequences.
+Let $\Omega=\{0,1\}$, $P(0)=P(1)=1/2$, and $Y=\omega$. Under the trivial partition $\Pi=\{\{0,1\}\}$, the best log-loss predictor is $q(Y=0)=q(Y=1)=1/2$, so $R_{\log}(\Pi)=\log 2$. The refined partition $\Pi^\star=\{\{0\},\{1\}\}$ has $R_{\log}(\Pi^\star)=0$ in the noiseless case when point-mass predictions are allowed. Therefore any repair-only learner has expected regret $T\log 2$ against the refined oracle. This example is not about neural networks, caches, or trees. It is about equivalence relations: a learner that identifies two states cannot assign them two different consequences.
 \end{example}
 
 \begin{corollary}[Contradiction requires distinction]
@@ -139,7 +230,17 @@ Every $f\in\Pred(\Pi)$ is constant on the atom containing $\omega$ and $\omega'$
 
 \subsection{Sigma-algebra extension}
 
-The finite partition model is the main computational model. The sigma-algebra notation is the measure-theoretic extension used for value identities and language-model interpretations. On a probability space $(\Omega,\calE,\mathbb P)$, an information structure is a sub-sigma-algebra $\calF\subseteq\calE$, and
+The finite partition model is the main computational model. The sigma-algebra notation is the measure-theoretic extension used for value identities and language-model interpretations. In this formulation, $L$ is measurable with finite expectation for the actions considered.
+
+\begin{definition}[$\calF$-measurable predictor and Bayes action]
+\label{def:F-measurable-predictor}
+On a probability space $(\Omega,\calE,\mathbb P)$, an information structure is a sub-sigma-algebra $\calF\subseteq\calE$. For a measurable action space $(\mathsf A,\Sigma_{\mathsf A})$, a predictor $a:\Omega\to\mathsf A$ is $\calF$-measurable if
+\begin{align*}
+a^{-1}(C)\in\calF
+\qquad
+\text{for every }C\in\Sigma_{\mathsf A}.
+\end{align*}
+The admissible predictor class and Bayes risk are
 \begin{align*}
 \Pred(\calF)
 =
@@ -147,23 +248,15 @@ The finite partition model is the main computational model. The sigma-algebra no
 \qquad
 R_L(\calF)=\inf_{a\in\Pred(\calF)}\E[L(Y,a)].
 \end{align*}
-For a finite partition $\Pi$, this recovers the previous definitions by taking $\calF=\sigma(\Pi)$.
+When the infimum is attained, any minimizer is an $\calF$-Bayes action and is denoted $a_\calF^\star$. A random variable $b$ has an $\calF$-measurable version if there exists an $\calF$-measurable random variable $\tilde b$ such that $\tilde b=b$ almost surely.
+\end{definition}
 
-When the infimum is attained, write $a_\calF^\star$ for a Bayes action under $\calF$. A richer information structure is useful only when its optimal action cannot already be expressed using the old information.
+For a finite partition $\Pi$, Definition~\ref{def:F-measurable-predictor} recovers Definition~\ref{def:partition-measurable} by taking $\calF=\sigma(\Pi)$ and the action space discrete.
 
-\begin{theorem}[Loss-relevant refinement]
-\label{thm:loss-relevant-refinement:informal}
-Let $\calF\subseteq\calG\subseteq\calE$. Assume Bayes actions exist under $\calF$ and $\calG$, and that the $\calG$-Bayes action is almost surely unique. Then
+Implementations often have fixed pre-existing prediction outputs that are not created by the runtime refinement mechanism, such as a backbone distribution or other fixed pre-outcome features used outside DGM routing. We write this base information as a sigma-algebra $\calB$ and measure runtime refinements through the total information $\calB\vee\calF_t$. The full hidden state used to propose or instantiate distinctions should not automatically be included as freely conditionable base information: if $\calB$ contains $h$, then every edge predicate $g_e(h)$ and anchor-order event is already $\calB$-measurable, so the unrestricted sigma-algebra refinement gap becomes trivial. Thus the refinement gap relative to a target $\calF^\star$ is
 \begin{align*}
-R_L(\calF)-R_L(\calG)=0
+R_L(\calB\vee\calF_t)-R_L(\calB\vee\calF^\star).
 \end{align*}
-if and only if $a_\calG^\star$ has an $\calF$-measurable version.
-\end{theorem}
+Repairs keep $\calF_t$ fixed, while refinements replace $\calF_t$ by $\calF_t\vee\sigma(U_t)$. All monotonicity and value identities below apply after joining both sides with the same fixed $\calB$.
 
-\begin{proof}
-If $a_\calG^\star$ is $\calF$-measurable, then it is feasible for $R_L(\calF)$, so
-\begin{align*}
-R_L(\calF)\le \E[L(Y,a_\calG^\star)]=R_L(\calG).
-\end{align*}
-Monotonicity under $\calF\subseteq\calG$ gives the reverse inequality. Conversely, if the risks are equal and $a_\calF^\star$ is an $\calF$-Bayes action, then $a_\calF^\star$ is also feasible under $\calG$ and achieves $R_L(\calG)$. By almost sure uniqueness under $\calG$, $a_\calF^\star=a_\calG^\star$ almost surely. Hence $a_\calG^\star$ has an $\calF$-measurable version.
-\end{proof}
+Section~\ref{sec:value} uses this notation to characterize exactly when a richer information structure is useful.
