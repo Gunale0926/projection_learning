@@ -1,7 +1,7 @@
 \section{Distinction Graph Machines: A Data Structure for Refinable Partitions}
 \label{sec:algorithms}
 
-DGM implements refinable information structures as a graph: edges generate distinctions and nodes store repairable memories. The theory so far gives a diagnostic: decide whether an observed error is better explained by $\Delta_{\mathrm{repair}}$ at fixed information or by $\Delta_{\mathrm{refine}}$ from missing distinctions. A runtime implementation therefore needs a state representation that can both repair local statistics and add distinctions. DGM is the data-structure realization of the abstract refinable-partition model.
+DGM implements refinable information structures as a graph: edges generate distinctions and nodes store repairable memories. The ingredients are related to decision-tree refinement, adaptive category creation, prototype memories, and external neural memories, but DGM uses them to implement the repair/refinement distinction \citep{breiman1984classification,domingos2000mining,carpenter1987massively,grossberg2013adaptive,kohonen1990self,weston2015memory,graves2016hybrid}. The theory so far gives a diagnostic: decide whether an observed error is better explained by $\Delta_{\mathrm{repair}}$ at fixed information or by $\Delta_{\mathrm{refine}}$ from missing distinctions. A runtime implementation therefore needs a state representation that can both repair local statistics and add distinctions. DGM is the data-structure realization of the abstract refinable-partition model.
 
 \subsection{Why a graph, not a tree?}
 
@@ -126,7 +126,7 @@ For any finite edge set $E_t$, equality of signatures $\sigma_t^G(h)$ is an equi
 
 \subsection{Soft-DGM edge-gated prediction}
 
-The hard route selects the nearest eligible anchor using fixed anchors, accepted edges, and anchor-distance order, so repairs that change only memories and centroids do not change $\calF_t^{\mathrm{DGM}}$. Given $h$, Soft-DGM instead computes retrieval distances $d_j(h)=\norm{h-c_j}_2^2$ to movable centroids. Moving centroids can change the smooth routing weights and therefore the actual Soft-DGM predictor, even when the Hard-DGM skeleton is fixed. Thus centroid repair is a repair in the formal hard-route structure, not a strict claim that the soft read map remains partition-measurable. A centroid-only top-$k$ set is not sufficient for the formal hard-route guarantee: if the hard eligible anchor never enters the candidate set, edge gates cannot recover it. We therefore use a recall-oriented candidate set
+The hard route selects the nearest eligible anchor using fixed anchors, accepted edges, and anchor-distance order, so repairs that change only memories and centroids do not change $\calF_t^{\mathrm{DGM}}$. Given $h$, Soft-DGM instead computes retrieval distances $d_j(h)=\norm{h-c_j}_2^2$ to movable centroids. Moving centroids can change the smooth routing weights and therefore the actual Soft-DGM predictor, even when the Hard-DGM skeleton is fixed. Thus centroid repair is a repair in the formal hard-route structure, not a strict claim that the soft read map remains partition-measurable. A centroid-only top-$k$ set is not sufficient for the formal hard-route guarantee: if the hard eligible anchor never enters the candidate set, edge gates cannot recover it. Approximate-nearest-neighbor systems can make the retrieval term sublinear or hardware-efficient, but the formal guarantee still needs recall of the hard-route candidate \citep{indyk1998approximate,johnson2019billion}. We therefore use a recall-oriented candidate set
 \begin{align*}
 N(h)=
 N_{k_c}^{\mathrm{centroid}}(h)
@@ -217,17 +217,24 @@ Under either condition, total wrong-side routing mass vanishes. Together with th
 \end{theorem}
 
 \begin{algorithm}[H]
-\caption{\textsc{Predict} for a Distinction Graph Machine}
+\caption{\textsc{DGM-Predict}}
 \label{alg:dgm-predict}
 \begin{algorithmic}[1]
-\State \textbf{Input:} state $\calS_t=(\{a_j,c_j,M_j,n_j\}_{j=1}^{N_t},G_t)$, encoder $\phi_\theta$, example $x$
+\Statex $\calS_t=(\{a_j,c_j,M_j,n_j\}_{j=1}^{N_t},G_t),\quad x\in\calX$
 \State $h\gets\phi_\theta(x)$
 \State $N(h)\gets N_{k_c}^{\mathrm{centroid}}(h)\cup N_{k_a}^{\mathrm{anchor}}(h)\cup\operatorname{GraphNeighbors}(N_{k_c}^{\mathrm{centroid}}(h))$
-\For{$j\in N(h)$}
-\State compute edge compatibility $\chi_j(h)$ from incident distinctions
-\State compute edge-gated weight $\alpha_j(h)$ by \eqref{eq:edge-gated-routing}
-\EndFor
-\State \Return $\sum_{j\in N(h)}\alpha_j(h)M_j(h)$
+\State $\chi_j(h)\gets
+\exp\!\left\{
+\frac{1}{\sqrt{\max\{1,\abs{\operatorname{Inc}_t(j)}\}}}
+\sum_{e\in \operatorname{Inc}_t(j)}
+\beta_e\log \operatorname{sigmoid}\!\left(s_{e,j}(u_e^\top h-b_e)/\tau_e\right)
+\right\},\quad j\in N(h)$
+\State $\alpha_j(h)\gets
+\dfrac{\exp(-\norm{h-c_j}_2^2/T)\chi_j(h)}
+{\sum_{r\in N(h)}\exp(-\norm{h-c_r}_2^2/T)\chi_r(h)},
+\quad j\in N(h)$
+\State $\hat a_t(h)\gets\sum_{j\in N(h)}\alpha_j(h)M_j(h)$
+\State \Return $\hat a_t(h)$
 \end{algorithmic}
 \end{algorithm}
 
@@ -250,7 +257,7 @@ D_t=\max_{i,r\in N(h)}\norm{\mu_i(h)-\mu_r(h)}_2,
 and for language modeling the log-loss surprise $-\log p_{j^\star}(x_{t+1}\mid x_{\le t})$ is the local disagreement signal.
 These quantities are proposal signals. They decide which candidates are worth scoring; they do not define repair or refinement.
 
-All gap estimates below are computed on a held-out scoring buffer $\calB_t^{\mathrm{score}}$. Refinement proposals may use a disjoint proposal buffer $\calB_t^{\mathrm{prop}}$ together with the current observation; the scoring buffer is held out from proposal generation and from previous accept/reject decisions that determine the current state. Theorem~\ref{thm:safe-refinement:informal} applies when each scoring decision uses fresh held-out samples, or samples not previously used to choose proposals or update the state. Reservoir sampling can maintain disjoint proposal and scoring streams, but reusing the same validation buffer adaptively requires reusable-holdout or adaptive-validation control. Without that extra control, the empirical rule is a heuristic rather than the Hoeffding guarantee.
+All gap estimates below are computed on a held-out scoring buffer $\calB_t^{\mathrm{score}}$. Refinement proposals may use a disjoint proposal buffer $\calB_t^{\mathrm{prop}}$ together with the current observation; the scoring buffer is held out from proposal generation and from previous accept/reject decisions that determine the current state. Theorem~\ref{thm:safe-refinement:informal} applies when each scoring decision uses fresh held-out samples, or samples not previously used to choose proposals or update the state. Reservoir sampling can maintain disjoint proposal and scoring streams, but reusing the same validation buffer adaptively requires reusable-holdout or adaptive-validation control \citep{dwork2015reusable,dwork2015generalization}. Without that extra control, the empirical rule is a heuristic rather than the Hoeffding guarantee.
 
 The edges created by a refinement are attached to a concrete confused-neighbor set. Let $\operatorname{Div}_{\calY}(M_i,M_r;h)$ denote a task-appropriate consequence divergence, such as total variation for classifiers, Euclidean mean distance for regression memories, or next-token distribution divergence for language models. Define
 \begin{align*}
@@ -301,13 +308,24 @@ DGM's guarded repair candidate is
 \end{align}
 The identity state is in $\calC_{\mathrm{repair}}$, so $\widehat\Delta_{\mathrm{repair}}\ge0$. Thus monotone repair is an enforced algorithmic property, not merely a theorem assumption. The anchor $a_{j^\star}$ is never moved by repair. Consequently, local memory repair and centroid adaptation do not rewrite previously accepted edge generators.
 
-A candidate creates
+For a triggered refinement, define the candidate index $j_{\mathrm{new}}=N_t+1$ and the proposed edge set
+\begin{align}
+E_{\mathrm{new}}(h,y)
+=
+\left\{
+(j_{\mathrm{new}},i):
+i\in\operatorname{Confused}_q(h,y),\
+\norm{h-a_i}_2>\eta_{\mathrm{anchor}}
+\right\}.
+\label{eq:new-edge-set}
+\end{align}
+The corresponding candidate state creates
 \begin{align*}
-a_{\mathrm{new}}=h,\qquad
-c_{\mathrm{new}}=h,\qquad
-M_{\mathrm{new}}=\operatorname{InitMemory}(h,y),
+a_{j_{\mathrm{new}}}=h,\qquad
+c_{j_{\mathrm{new}}}=h,\qquad
+M_{j_{\mathrm{new}}}=\operatorname{InitMemory}(h,y),
 \end{align*}
-and adds the actual accepted edge set $E_{\mathrm{new}}$ from the new anchored concept to well-separated members of $\operatorname{Confused}_q(h,y)$. Let $\widehat R(\calS;\calB_t^{\mathrm{score}})$ be the empirical local loss on the scoring buffer after routing with state $\calS$. The empirical penalized refinement gain is
+with edge set $E_t\cup E_{\mathrm{new}}(h,y)$. Let $\calS_t^{\mathrm{new}}$ denote this state, and let $\widehat R(\calS;\calB_t^{\mathrm{score}})$ be the empirical local loss on the scoring buffer after routing with state $\calS$. The empirical penalized refinement gain is
 \begin{align}
 \widehat\Delta_{\mathrm{refine}}
 =\widehat R(\calS_t;\calB_t^{\mathrm{score}})
@@ -316,10 +334,10 @@ and adds the actual accepted edge set $E_{\mathrm{new}}$ from the new anchored c
 -
 \lambda_{\mathrm{concept}}
 -
-\lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}}.
+\lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}(h,y)}.
 \label{eq:refine-gain}
 \end{align}
-Here $\lambda_{\mathrm{concept}}$ is the penalty for creating the anchored concept and its induced anchor-order bookkeeping, while $\lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}}$ accounts for the accepted edge generators. Using the edge budget $q$ instead of the actual $\abs{E_{\mathrm{new}}}$ is a conservative implementation choice that only makes the acceptance test stricter.
+Here $\lambda_{\mathrm{concept}}$ is the penalty for creating the anchored concept and its induced anchor-order bookkeeping, while $\lambda_{\mathrm{edge}}\abs{E_{\mathrm{new}}(h,y)}$ accounts for the accepted edge generators. Using the edge budget $q$ instead of the actual $\abs{E_{\mathrm{new}}(h,y)}$ is a conservative implementation choice that only makes the acceptance test stricter.
 The candidate is accepted only if it beats the repair gain by a safety margin:
 \begin{align}
 \widehat\Delta_{\mathrm{refine}}>
@@ -332,31 +350,49 @@ D_t>\tau_{\mathrm{disagree}}.
 Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m=\abs{\calB_t^{\mathrm{score}}}$; it can be set to zero for a purely empirical implementation, or to the adaptive validation margin in Theorem~\ref{thm:safe-refinement:informal}. If the refinement test fails, DGM commits the guarded repair candidate in \eqref{eq:guarded-repair}. This makes refinement a statistically guarded gap comparison rather than an unscored growth heuristic.
 
 \begin{algorithm}[H]
-\caption{\textsc{Observe} for a Distinction Graph Machine}
+\caption{\textsc{DGM-Observe}}
 \label{alg:dgm-observe}
 \begin{algorithmic}[1]
-\State \textbf{Input:} state $\calS_t$, labeled consequence $(x,y)$
-\State $h\gets\phi_\theta(x)$
+\Statex $\calS_t,\quad (x_t,y_t),\quad \calB_t^{\mathrm{prop}},\quad \calB_t^{\mathrm{score}}$
+\State $h_t\gets\phi_\theta(x_t)$
 \If{$N_t=0$}
-\State create anchor and centroid $a_1=c_1=h$ with memory $\operatorname{InitMemory}(h,y)$
-\State \Return updated state
+\State $\calS_{t+1}\gets(\{(h_t,h_t,\operatorname{InitMemory}(h_t,y_t),1)\},(\{1\},\varnothing))$
+\State \Return $\calS_{t+1}$
 \EndIf
-\State retrieve $N(h)$ and compute edge-gated routing weights
-\State $j^\star\gets\argmax_{j\in N(h)}\alpha_j(h)$
-\State $\rho\gets L(y,M_{j^\star}(h))$
-\State compute neighborhood disagreement $D_t$
-\State propose repair candidates with anchors and edges fixed
-\State compute empirical repair gain $\widehat\Delta_{\mathrm{repair}}$ by \eqref{eq:repair-gain}
-\If{$\rho>\tau_{\mathrm{repair}}$ or $D_t>\tau_{\mathrm{disagree}}$}
-\State form a candidate new anchor/centroid from $h$ and $\calB_t^{\mathrm{prop}}$, with guarded candidate edges to separated members of $\operatorname{Confused}_q(h,y)$
-\State estimate penalized refinement gain $\widehat\Delta_{\mathrm{refine}}$ on $\calB_t^{\mathrm{score}}$ by \eqref{eq:refine-gain}
-\If{$\widehat\Delta_{\mathrm{refine}}>\max\{\widehat\Delta_{\mathrm{repair}},0\}+\tau+2\epsilon_m$ and $D_t>\tau_{\mathrm{disagree}}$}
-\State commit the new anchored concept and its distinction edges
-\State \Return updated state
+\State $\mathcal N_t\gets N_{k_c}^{\mathrm{centroid}}(h_t)\cup N_{k_a}^{\mathrm{anchor}}(h_t)\cup\operatorname{GraphNeighbors}(N_{k_c}^{\mathrm{centroid}}(h_t))$
+\State $\alpha_{t,j}\gets\alpha_j(h_t),\quad j\in \mathcal N_t$
+\State $j_t^\star\gets\argmax_{j\in \mathcal N_t}\alpha_{t,j}$
+\State $\rho_t\gets L(y_t,M_{j_t^\star}(h_t))$
+\State $D_t\gets\max_{i,r\in \mathcal N_t}\operatorname{Div}_{\calY}(M_i,M_r;h_t)$
+\State $\calC_t^{\mathrm{repair}}\gets\calC_{\mathrm{repair}}(\calS_t,h_t,y_t)$
+\State $\widehat\Delta_t^{\mathrm{repair}}\gets
+\widehat R(\calS_t;\calB_t^{\mathrm{score}})
+-\min_{\calS'\in\calC_t^{\mathrm{repair}}}
+\widehat R(\calS';\calB_t^{\mathrm{score}})$
+\State $\calS_t^{\mathrm{repair}}\in
+\argmin_{\substack{\calS'\in\calC_t^{\mathrm{repair}}\\
+\widehat R(\calS';\calB_t^{\mathrm{score}})
+\le \widehat R(\calS_t;\calB_t^{\mathrm{score}})}}
+\widehat R(\calS';\calB_t^{\mathrm{score}})$
+\State $z_t\gets\one\{\rho_t>\tau_{\mathrm{repair}}\ \vee\ D_t>\tau_{\mathrm{disagree}}\}$
+\If{$z_t=1$}
+\State $E_t^{\mathrm{new}}\gets E_{\mathrm{new}}(h_t,y_t),\quad \calS_t^{\mathrm{new}}\gets\operatorname{AddConcept}(\calS_t,h_t,y_t,E_t^{\mathrm{new}};\calB_t^{\mathrm{prop}})$
+\State $\widehat\Delta_t^{\mathrm{refine}}\gets
+\widehat R(\calS_t;\calB_t^{\mathrm{score}})
+-\widehat R(\calS_t^{\mathrm{new}};\calB_t^{\mathrm{score}})
+-\lambda_{\mathrm{concept}}
+-\lambda_{\mathrm{edge}}\abs{E_t^{\mathrm{new}}}$
+\State $r_t\gets
+\one\{\widehat\Delta_t^{\mathrm{refine}}>
+\max\{\widehat\Delta_t^{\mathrm{repair}},0\}+\tau+2\epsilon_m
+\ \wedge\ D_t>\tau_{\mathrm{disagree}}\}$
+\If{$r_t=1$}
+\State $\calS_{t+1}\gets\calS_t^{\mathrm{new}}$
+\State \Return $\calS_{t+1}$
 \EndIf
 \EndIf
-\State commit the best candidate satisfying the guarded repair test \eqref{eq:guarded-repair}
-\State \Return updated state
+\State $\calS_{t+1}\gets\calS_t^{\mathrm{repair}}$
+\State \Return $\calS_{t+1}$
 \end{algorithmic}
 \end{algorithm}
 
@@ -486,7 +522,7 @@ memory, up to indexing overhead.
 The theorem is an implementation bound rather than a statistical guarantee. It says that DGM realizes the abstract operation $\Pi\mapsto\Pi\vee U$ on the edge skeleton and the corresponding join update on $\calF^{\mathrm{DGM}}$ with local graph updates and sparse routing, provided the candidate retrieval layer supplies the relevant hard-route concepts.
 
 \paragraph{Comparison to gradient and memory baselines.}
-Backpropagation is not itself a repair or refinement operation; it is an optimizer. If it updates only parameters downstream of a fixed information map, it is a fixed-information repair update in the sense of Definition~\ref{def:fixed-information-repair}. If it updates the encoder or routing representation, it may change the induced partition and is outside the repair-only lower bound. Table~\ref{tab:runtime-memory-comparison} summarizes the resulting computational comparison. Let $P_{\mathrm{tr}}$ be the number of trainable parameters updated by backpropagation, $A_{\mathrm{bp}}$ the activation storage required for the backward pass over the adaptation window, $M$ the number of stored examples in a cache or $k$NN memory, $D_{\mathrm{tree}}$ the tree depth, $S_{\mathrm{leaf}}$ the per-leaf sufficient statistics, and $\bar s$ the average sparse categorical support per DGM concept. The table lists runtime-adaptation overhead beyond any shared frozen forward pass that computes $h$.
+Backpropagation is not itself a repair or refinement operation; it is an optimizer. If it updates only parameters downstream of a fixed information map, it is a fixed-information repair update in the sense of Definition~\ref{def:fixed-information-repair}. If it updates the encoder or routing representation, it may change the induced partition and is outside the repair-only lower bound. Table~\ref{tab:runtime-memory-comparison} summarizes the resulting computational comparison against common online optimizers, caches, trees, and parameter-efficient adaptation modules \citep{rumelhart1986learning,kingma2015adam,grave2017improving,khandelwal2020generalization,domingos2000mining,houlsby2019parameter,hu2022lora}. Let $P_{\mathrm{tr}}$ be the number of trainable parameters updated by backpropagation, $A_{\mathrm{bp}}$ the activation storage required for the backward pass over the adaptation window, $M$ the number of stored examples in a cache or $k$NN memory, $D_{\mathrm{tree}}$ the tree depth, $S_{\mathrm{leaf}}$ the per-leaf sufficient statistics, and $\bar s$ the average sparse categorical support per DGM concept. The table lists runtime-adaptation overhead beyond any shared frozen forward pass that computes $h$.
 
 \begin{table}[t]
 \centering
@@ -515,7 +551,7 @@ DGM, sparse Soft-DGM & Approximate Hard-DGM under candidate recall and margins &
 
 \begin{definition}[Calibrated categorical local memory]
 \label{def:calibrated-categorical-memory}
-The local memory $M_j$ is the repair mechanism inside an already chosen concept. For classification and language modeling, the main-text canonical memory is a calibrated categorical memory rather than an unconstrained embedding score. Concept $j$ stores token or label counts $n_{j,y}$ and $n_j=\sum_y n_{j,y}$. Given a backbone distribution $p_0(y\mid h)$ and smoothing strength $\alpha_0>0$, define
+The local memory $M_j$ is the repair mechanism inside an already chosen concept. For classification and language modeling, the main-text canonical memory is a calibrated categorical memory rather than an unconstrained embedding score, consistent with proper probabilistic scores and calibration diagnostics for probability forecasts \citep{brier1950verification,gneiting2007strictly,guo2017calibration}. Concept $j$ stores token or label counts $n_{j,y}$ and $n_j=\sum_y n_{j,y}$. Given a backbone distribution $p_0(y\mid h)$ and smoothing strength $\alpha_0>0$, define
 \begin{align}
 p_j(y\mid h)
 =
@@ -546,7 +582,7 @@ This keeps the read path a valid probability distribution. It also gives the sim
 \le
 -\log p_0(y\mid h)-\log(1-\lambda_t)
 \end{align*}
-whenever $\lambda_t<1$. For log-loss experiments we use a stronger cumulative safeguard. Let $\Lambda=\{\lambda_1,\ldots,\lambda_K\}\subseteq[0,1]$ with $0\in\Lambda$, define
+whenever $\lambda_t<1$. For log-loss experiments we use a stronger cumulative safeguard based on standard prediction-with-expert-advice and aggregating-algorithm bounds \citep{vovk1990aggregating,freund1997decision,cesabianchi2006prediction}. Let $\Lambda=\{\lambda_1,\ldots,\lambda_K\}\subseteq[0,1]$ with $0\in\Lambda$, define
 \begin{align*}
 q_{t,k}(y)
 =
@@ -561,7 +597,7 @@ w_{t+1,k}
 \label{eq:trust-weight-update}
 \end{align}
 
-\begin{theorem}[No-harm log-loss trust aggregation]
+\begin{theorem}[No-harm log-loss trust aggregation, standard]
 \label{thm:dgm-no-harm-log-loss}
 Initialize $w_{1,k}=1/K$ and update by \eqref{eq:trust-weight-update}. For any outcome sequence,
 \begin{align*}

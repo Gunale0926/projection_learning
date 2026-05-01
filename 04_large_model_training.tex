@@ -3,7 +3,7 @@
 
 For language modeling, the world state is a prefix and the consequence is the next observed token. This makes the refine-or-repair decision concrete. If a prefix type is already represented, the layer should repair its next-token memory. If the same runtime concept is repeatedly asked to predict incompatible next-token consequences, the layer should refine the concept graph. This appendix gives DGM-Embedding as an architectural path, not as a completed large-scale language-model result.
 
-The layer is the language-model analogue of the finite DGM loop. The prefix hidden state chooses edge-gated concepts; their memories produce a calibrated next-token distribution mixed with the backbone; the true next token then supplies the detached consequence used for repair or refinement. There is no inference-time inner optimization problem in this write path.
+The layer is the language-model analogue of the finite DGM loop. The prefix hidden state chooses edge-gated concepts; their memories produce a calibrated next-token distribution mixed with the backbone; the true next token then supplies the detached consequence used for repair or refinement. There is no inference-time inner optimization problem in this write path, unlike test-time adaptation methods that run an optimization step at inference time \citep{sun2020test,wang2021tent,niu2022eata,zhang2022memo,sun2025learning}.
 
 \subsection{Hidden-state concepts}
 
@@ -45,11 +45,11 @@ p_{\mathrm{final}}(y\mid x_{\le t})
 +\lambda_t p_{\mathrm{mem}}(y\mid x_{\le t}),
 \qquad \lambda_t\in[0,1].
 \end{align*}
-The mixture is normalized without storing full-vocabulary counts at each concept. A learned or online-selected trust weight $\lambda_t$ controls how much the memory layer can move the backbone distribution; under bounded or clipped validation losses, Hedge over a small grid of $\lambda$ values gives regret to the best fixed trust weight in hindsight.
+The mixture is normalized without storing full-vocabulary counts at each concept. A learned or online-selected trust weight $\lambda_t$ controls how much the memory layer can move the backbone distribution; under bounded or clipped validation losses, Hedge over a small grid of $\lambda$ values gives regret to the best fixed trust weight in hindsight \citep{vovk1990aggregating,freund1997decision,cesabianchi2006prediction}.
 
 \subsection{Read before observe}
 
-DGM-Embedding uses the same streaming order during training and inference whenever external consequences are available:
+DGM-Embedding uses the same prequential streaming order during training and inference whenever external consequences are available \citep{dawid1984prequential}:
 \begin{align*}
 \text{predict }x_{t+1}\rightarrow\text{observe }x_{t+1}\rightarrow\text{repair or refine}\rightarrow\text{predict }x_{t+2}.
 \end{align*}

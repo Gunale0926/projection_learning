@@ -23,7 +23,7 @@ against a refined oracle $\Pi^\star$. Thus a positive refinement gap is not just
 Corollary~\ref{cor:fixed-information-gradient-repair} clarifies the relationship to backpropagation: gradient updates are repair-only only when they update parameters downstream of a fixed information map. Full backpropagation through the representation can change the information structure and is not covered by this lower bound.
 
 \paragraph{3. Useful refinements change the Bayes action.}
-Theorem~\ref{thm:loss-relevant-refinement:informal} states that, under uniqueness of the refined Bayes action, a refinement has zero value exactly when the refined action is already measurable under the old information. For finite $Y$ under log loss, Theorem~\ref{thm:log-value:informal} sharpens this to
+Theorem~\ref{thm:loss-relevant-refinement:informal} states that, under uniqueness of the refined Bayes action, a refinement has zero value exactly when the refined action is already measurable under the old information, in the classical decision-theoretic sense of information value \citep{blackwell1953equivalent,berger1985statistical}. For finite $Y$ under log loss, Theorem~\ref{thm:log-value:informal} sharpens this to
 \begin{align*}
 R_{\log}(\calF)-R_{\log}(\calG)
 =
@@ -49,7 +49,7 @@ Theorems~\ref{thm:minimal-refinement:informal} and \ref{thm:sigma-refinement:inf
 \begin{align*}
 \calF_{t+1}=\calF_t\vee\sigma(U_t).
 \end{align*}
-Section~\ref{sec:value} gives the standard value identities that explain when such a distinction is useful: conditional mutual information under log loss and conditional variance reduction under squared loss. Theorem~\ref{thm:minimal-loss-sufficient:informal} further identifies the smallest refinement needed to express the refined Bayes action.
+Section~\ref{sec:value} gives the standard value identities that explain when such a distinction is useful: conditional mutual information under log loss and conditional variance reduction under squared loss \citep{cover2006elements,gneiting2007strictly,billingsley1995probability,kallenberg2002foundations}. Theorem~\ref{thm:minimal-loss-sufficient:informal} further identifies the smallest refinement needed to express the refined Bayes action.
 
 For DGM specifically, the edge skeleton realizes this minimal join operation. The exact hard route also adds anchor-order events as routing infrastructure when a new anchor is inserted, so the full Hard-DGM update is a structured refinement rather than always a single-event minimal refinement.
 

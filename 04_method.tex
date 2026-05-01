@@ -191,7 +191,7 @@ It also has the between-cell form
 \end{align*}
 \end{definition}
 
-The population identities lead directly to these standard empirical split scores: information gain for classification and variance reduction for regression trees \citep{breiman1984classification,domingos2000mining}. They implement the same principle as Definition~\ref{def:distinction-value}: split only when the proposed distinction has measurable consequence value. The DGM algorithm below turns this population rule into a guarded empirical decision.
+The population identities lead directly to these standard empirical split scores: information gain for classification and variance reduction for regression trees \citep{quinlan1986induction,breiman1984classification,domingos2000mining}. They implement the same principle as Definition~\ref{def:distinction-value}: split only when the proposed distinction has measurable consequence value. The DGM algorithm below turns this population rule into a guarded empirical decision.
 
 \subsection{Distinction complexity}
 
@@ -260,7 +260,7 @@ for all candidates it scores. If the algorithm accepts a split whenever $\wideha
 Because every accepted split is $\Pi^\star$-respecting, the current partition remains a coarsening of $\Pi^\star$ after each accepted refinement. A candidate with true value at least $\gamma$ has empirical value at least $3\gamma/4$, so it exceeds the $\gamma/2$ threshold and is accepted when proposed. Conversely, any accepted candidate has true value greater than $\gamma/4$ by the uniform estimation event. A $\Pi^\star$-respecting split with positive value cannot be trivial on the selected atom: if one side had zero conditional mass, the conditional Bayes risk would be unchanged. Thus any accepted candidate separates the selected impure atom into two positive-mass unions of target atoms. It replaces one positive-mass current atom by two positive-mass unions of target atoms and increases the number of represented positive-mass current atoms by one. The algorithm keeps selecting impure positive-mass atoms until none remain. Starting from $m_0^+$ positive-mass current atoms and ending with at most $K^+$ positive-mass target atoms, at most $K^+-m_0^+\le K^+-1$ accepted splits are needed.
 \end{proof}
 
-For finite $\calU$, finite action class $\mathsf A$, and bounded loss, the event in Theorem~\ref{thm:greedy-recovery:informal} follows from a standard held-out union bound over scored split-action pairs. It suffices to score each accepted split with
+For finite $\calU$, finite action class $\mathsf A$, and bounded loss, the event in Theorem~\ref{thm:greedy-recovery:informal} follows from a standard held-out union bound over scored split-action pairs \citep{hoeffding1963probability,devroye1996probabilistic}. It suffices to score each accepted split with
 \begin{align*}
 m
 =

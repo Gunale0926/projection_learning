@@ -1,7 +1,7 @@
 \section{Mathematical Model: Partitions, Predictors, and Bayes Risk}
 \label{sec:preliminaries}
 
-We first formalize the information available to a runtime learner as a partition of the case space. The measurable-space notation used later is the direct sigma-algebra generalization, but the computational object is a finite partition.
+We first formalize the information available to a runtime learner as a partition of the case space, using the standard link between information, measurability, and admissible decision rules \citep{blackwell1953equivalent,berger1985statistical,billingsley1995probability,kallenberg2002foundations}. The measurable-space notation used later is the direct sigma-algebra generalization, but the computational object is a finite partition.
 
 \begin{table}[t]
 \centering
@@ -70,7 +70,7 @@ R_L(\Pi)
 \inf_{a\in\mathsf A}\E[L(Y,a)\mid \omega\in B],
 \label{eq:partition-bayes-risk}
 \end{align}
-where atoms with $P(B)=0$ may be assigned arbitrary actions. Thus $R_L(\Pi)$ is the best possible risk after the representation has committed to the equivalence relation $\sim_\Pi$.
+where atoms with $P(B)=0$ may be assigned arbitrary actions. Thus $R_L(\Pi)$ is the best possible risk after the representation has committed to the equivalence relation $\sim_\Pi$, i.e., the Bayes risk under constrained information \citep{berger1985statistical}.
 \end{definition}
 
 \begin{definition}[Information map and induced partition]
@@ -133,13 +133,13 @@ Let a parameterized runtime predictor factor through a fixed information map $I:
 \begin{align*}
 f_\psi(\omega)=a_\psi(I(\omega)).
 \end{align*}
-An update of $\psi$ is a fixed-information repair update if $I$ is unchanged. The update rule may be a gradient step, a closed-form sufficient-statistic update, a cache write, or any other optimizer; what makes it repair is the invariance of the induced partition $\Pi(I)$, not the optimizer used.
+An update of $\psi$ is a fixed-information repair update if $I$ is unchanged. The update rule may be a gradient step, a closed-form sufficient-statistic update, a cache write, or any other optimizer \citep{rumelhart1986learning,zinkevich2003online,shalev2012online,grave2017improving,khandelwal2020generalization,ba2016using,schlag2021linear}; what makes it repair is the invariance of the induced partition $\Pi(I)$, not the optimizer used.
 \end{definition}
 
 \section{The Repair-Only Obstruction}
 \label{sec:repair-obstruction}
 
-If the partition is fixed, the learner cannot beat the Bayes risk of that partition, no matter how sophisticated the repair update is.
+If the partition is fixed, the learner cannot beat the Bayes risk of that partition, no matter how sophisticated the repair update is. This is the fixed-information specialization of the classical decision-theoretic fact that a decision rule cannot exploit information it is not allowed to condition on \citep{blackwell1953equivalent,berger1985statistical}.
 
 \begin{definition}[Repair gap and refinement gap]
 \label{def:repair-refinement-gaps}
@@ -236,7 +236,7 @@ Every $f\in\Pred(\Pi)$ is constant on the atom containing $\omega$ and $\omega'$
 
 \subsection{Sigma-algebra extension}
 
-The finite partition model is the main computational model. The sigma-algebra notation is the measure-theoretic extension used for value identities and language-model interpretations. In this formulation, $L$ is measurable with finite expectation for the actions considered.
+The finite partition model is the main computational model. The sigma-algebra notation is the measure-theoretic extension used for value identities and language-model interpretations \citep{billingsley1995probability,kallenberg2002foundations}. In this formulation, $L$ is measurable with finite expectation for the actions considered.
 
 \begin{definition}[$\calF$-measurable predictor and Bayes action]
 \label{def:F-measurable-predictor}

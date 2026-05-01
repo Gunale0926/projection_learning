@@ -64,7 +64,7 @@ During end-to-end training, rebuild or clear the DGM state every $K$ optimizatio
 
 \subsection{Non-canonical adapter extension}
 
-Beyond the categorical next-token memory in Appendix~\ref{sec:large-model-training}, a richer optional layer stores a local linear repair map. It requires an explicit residual target and should not be conflated with the calibrated next-token memory mechanism:
+Beyond the categorical next-token memory in Appendix~\ref{sec:large-model-training}, a richer optional adapter-style layer stores a local linear repair map, related to parameter-efficient adapter and LoRA modules but updated as a local DGM memory \citep{houlsby2019parameter,hu2022lora}. It requires an explicit residual target and should not be conflated with the calibrated next-token memory mechanism:
 \begin{align*}
 \calS_t^{\mathrm{adp}}=\{a_j,c_j,W_j,n_j\}_{j=1}^{N_t}\cup G_t,
 \qquad
@@ -89,7 +89,7 @@ Equivalently, a memory may maintain small ridge sufficient statistics and solve 
 
 \subsection{Cost and systems notes}
 
-During sequential detached training, backpropagation sees the selected read computation, while the DGM state is updated in the same order as streaming inference. The important comparison is with test-time gradient adaptation. A TTT-style layer typically performs an inner backward pass at inference time. A DGM layer performs retrieval, sparse local read, and closed-form or sufficient-statistic repair. The cost is forward-only:
+During sequential detached training, backpropagation sees the selected read computation, while the DGM state is updated in the same order as streaming inference. The important comparison is with test-time gradient adaptation \citep{sun2020test,wang2021tent,niu2022eata,zhang2022memo,sun2025learning}. A TTT-style layer typically performs an inner backward pass at inference time. A DGM layer performs retrieval, sparse local read, and closed-form or sufficient-statistic repair. The cost is forward-only:
 \begin{align*}
 \text{DGM inference}=\text{backbone forward}+\text{retrieval}+\text{sparse local repair}.
 \end{align*}
