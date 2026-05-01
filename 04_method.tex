@@ -157,7 +157,7 @@ Population refinement value becomes empirical information gain or variance reduc
 
 \begin{definition}[Empirical distinction scores]
 \label{def:empirical-distinction-scores}
-Suppose an atom $B$ contains samples $(x_j,y_j)$ and a candidate distinction $g:B\to\{0,1\}$ splits it into $B_0$ and $B_1$.
+Suppose an atom $B$ contains samples $(x_j,y_j)$ and a candidate distinction $g:B\to\{0,1\}$ splits it into $B_0$ and $B_1$. The formulas below are evaluated for nontrivial empirical splits with $\abs{B_0},\abs{B_1}>0$. A candidate with an empty empirical child is assigned score zero and is not accepted by a positive-gain split rule.
 
 For classification, let $\hat p_B$, $\hat p_{B_0}$, and $\hat p_{B_1}$ be empirical label distributions. The empirical log-loss improvement is
 \begin{align*}
@@ -239,7 +239,13 @@ where the risks are conditional on $\omega\in B$. Under log loss, $V_{\log}(B,U)
 
 \begin{theorem}[Greedy recovery under target-respecting splits]
 \label{thm:greedy-recovery:informal}
-Let $\Pi^\star$ have $K$ atoms and suppose the current partition $\Pi_0$ is initially a coarsening of $\Pi^\star$, with $m_0=\abs{\Pi_0}$. Assume that every positive-mass impure current atom $B$ admits a $\Pi^\star$-respecting distinction $U\in\calU$ such that $U$ splits $\Pi^\star|_B$ into two groups whose unions both have positive conditional probability under $P(\cdot\mid B)$ and
+Let
+\begin{align*}
+K^+=\abs{\{C\in\Pi^\star:P(C)>0\}},
+\qquad
+m_0^+=\abs{\{B\in\Pi_0:P(B)>0\}}.
+\end{align*}
+Suppose the current partition $\Pi_0$ is initially a coarsening of $\Pi^\star$. Assume that every positive-mass impure current atom $B$ admits a $\Pi^\star$-respecting distinction $U\in\calU$ such that $U$ splits $\Pi^\star|_B$ into two groups whose unions both have positive conditional probability under $P(\cdot\mid B)$ and
 \begin{align*}
 V_L(B,U)\ge\gamma.
 \end{align*}
@@ -247,23 +253,23 @@ Consider a greedy refinement algorithm that repeatedly selects a positive-mass i
 \begin{align*}
 \abs{\widehat V_L(B,U)-V_L(B,U)}\le \gamma/4
 \end{align*}
-for all candidates it scores. If the algorithm accepts a split whenever $\widehat V_L(B,U)>\gamma/2$, then it accepts a useful split for every selected impure atom and recovers $\Pi^\star$ on the positive-mass support after at most $K-m_0\le K-1$ accepted splits.
+for all candidates it scores. If the algorithm accepts a split whenever $\widehat V_L(B,U)>\gamma/2$, then it accepts a useful split for every selected impure atom and recovers $\Pi^\star$ on the positive-mass support after at most $K^+-m_0^+\le K^+-1$ accepted splits.
 \end{theorem}
 
 \begin{proof}
-Because every accepted split is $\Pi^\star$-respecting, the current partition remains a coarsening of $\Pi^\star$ after each accepted refinement. A candidate with true value at least $\gamma$ has empirical value at least $3\gamma/4$, so it exceeds the $\gamma/2$ threshold and is accepted when proposed. Conversely, any accepted candidate has true value greater than $\gamma/4$ by the uniform estimation event. A $\Pi^\star$-respecting split with positive value cannot be trivial on the selected atom: if one side had zero conditional mass, the conditional Bayes risk would be unchanged. Thus any accepted candidate separates the selected impure atom into two positive-mass unions of target atoms. It replaces one positive-mass current atom by two positive-mass unions of target atoms and increases the number of represented positive-mass current atoms by one. The algorithm keeps selecting impure positive-mass atoms until none remain. Starting from $m_0$ atoms and ending with at most $K$ positive-mass target atoms, at most $K-m_0\le K-1$ accepted splits are needed.
+Because every accepted split is $\Pi^\star$-respecting, the current partition remains a coarsening of $\Pi^\star$ after each accepted refinement. A candidate with true value at least $\gamma$ has empirical value at least $3\gamma/4$, so it exceeds the $\gamma/2$ threshold and is accepted when proposed. Conversely, any accepted candidate has true value greater than $\gamma/4$ by the uniform estimation event. A $\Pi^\star$-respecting split with positive value cannot be trivial on the selected atom: if one side had zero conditional mass, the conditional Bayes risk would be unchanged. Thus any accepted candidate separates the selected impure atom into two positive-mass unions of target atoms. It replaces one positive-mass current atom by two positive-mass unions of target atoms and increases the number of represented positive-mass current atoms by one. The algorithm keeps selecting impure positive-mass atoms until none remain. Starting from $m_0^+$ positive-mass current atoms and ending with at most $K^+$ positive-mass target atoms, at most $K^+-m_0^+\le K^+-1$ accepted splits are needed.
 \end{proof}
 
-For finite $\calU$ and bounded loss, the event in Theorem~\ref{thm:greedy-recovery:informal} follows from a standard held-out concentration bound. It suffices to score each accepted split with
+For finite $\calU$, finite action class $\mathsf A$, and bounded loss, the event in Theorem~\ref{thm:greedy-recovery:informal} follows from a standard held-out union bound over scored split-action pairs. It suffices to score each accepted split with
 \begin{align*}
 m
 =
 O\left(
 \frac{1}{\gamma^2}
-\log\frac{K\abs{\calU}}{\delta}
+\log\frac{K^+\abs{\calU}\abs{\mathsf A}^3}{\delta}
 \right)
 \end{align*}
-independent validation samples, up to constants and the bounded-loss range.
+independent validation samples, up to constants and the bounded-loss range. For finite-label log-loss split scores or regression scores with infinite action spaces, the same conclusion requires the corresponding entropy, variance, or empirical-risk concentration assumption; bounded loss and finite $\calU$ alone do not control the Bayes-action estimation error.
 
 \subsection{A finite-class oracle inequality}
 

@@ -106,6 +106,12 @@ A refinable online prediction problem is a tuple
 \end{align*}
 where $\Omega$ is finite, $Y:\Omega\to\calY$ is the consequence variable, $P$ is the sampling distribution, $L:\calY\times\mathsf A\to\R$ has finite risk for admissible predictors, $\calO\subseteq2^\Omega$ is the pre-outcome observable sigma-algebra, $\calU\subseteq\{0,1\}^{\Omega}$ is a class of admissible binary distinctions that are $\calO$-measurable, and $c:\calU\to\R_+$ assigns refinement costs. Bounded losses are required only in finite-sample concentration statements, where they are stated explicitly. The $\calO$-measurability condition prevents a prediction-time distinction from depending directly on the consequence label; pure value-of-information examples can be recovered by taking $\calO=2^\Omega$.
 
+The initial runtime partition is assumed to be prediction-time observable:
+\begin{align*}
+\sigma(\Pi_0)\subseteq \calO.
+\end{align*}
+Since every accepted distinction $U_t\in\calU$ is $\calO$-measurable, induction gives $\sigma(\Pi_t)\subseteq\calO$ for every reachable partition. Thus observing the current atom is itself a pre-outcome observation, not an additional label-dependent channel.
+
 At round $t$, the learner maintains $S_t=(\Pi_t,a_t)$ with $a_t:\Pi_t\to\mathsf A$. A case $\omega_t\sim P$ is drawn, the learner observes only the atom $B_t\in\Pi_t$ containing $\omega_t$, predicts $a_t(B_t)$, observes $Y_t=Y(\omega_t)$, and then chooses one of two updates:
 \begin{align*}
 \mathrm{Repair}:&\qquad \Pi_{t+1}=\Pi_t,\quad a_{t+1}\text{ may change},\\
