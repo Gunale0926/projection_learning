@@ -257,6 +257,11 @@ James Kirkpatrick, Razvan Pascanu, Neil Rabinowitz, Joel Veness, Guillaume
 \newblock {\em Proceedings of the National Academy of Sciences},
   114(13):3521--3526, 2017.
 
+\bibitem[Kri09]{krizhevsky2009learning}
+Alex Krizhevsky.
+\newblock Learning multiple layers of features from tiny images.
+\newblock Technical report, University of Toronto, 2009.
+
 \bibitem[KVPF20]{katharopoulos2020transformers}
 Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and Fran{\c{c}}ois
   Fleuret.

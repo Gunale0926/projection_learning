@@ -408,13 +408,6 @@ INPUT .\experiments\publication_figures\bayes_gap_slope_vs_theory.pdf
 INPUT .\experiments\publication_figures\bayes_gap_slope_vs_theory.pdf
 INPUT .\experiments\publication_figures\bayes_gap_slope_vs_theory.pdf
 INPUT .\experiments\publication_figures\bayes_gap_slope_vs_theory.pdf
-INPUT C:\Users\Administrator\AppData\Local\Programs\MiKTeX\tex\latex\bbm\ubbm.fd
-INPUT C:\Users\Administrator\AppData\Local\Programs\MiKTeX\tex\latex\bbm\ubbm.fd
-INPUT C:\Users\Administrator\AppData\Local\Programs\MiKTeX\tex\latex\bbm\ubbm.fd
-INPUT C:\Users\Administrator\AppData\Local\MiKTeX\fonts\tfm\public\bbm\bbm10.tfm
-INPUT C:\Users\Administrator\AppData\Local\MiKTeX\fonts\tfm\public\bbm\bbm8.tfm
-INPUT C:\Users\Administrator\AppData\Local\MiKTeX\fonts\tfm\public\bbm\bbm6.tfm
-INPUT C:\Users\Administrator\AppData\Local\MiKTeX\fonts\tfm\public\bbm\bbm5.tfm
 INPUT .\experiments\publication_figures\hqs_online_nll.pdf
 INPUT .\experiments\publication_figures\hqs_online_nll.pdf
 INPUT .\experiments\publication_figures\hqs_online_nll.pdf
@@ -433,8 +426,6 @@ INPUT .\experiments\publication_figures\hqs_nll_vs_structure.pdf
 INPUT .\experiments\publication_figures\hqs_nll_vs_structure.pdf
 INPUT .\experiments\publication_figures\hqs_nll_vs_structure.pdf
 INPUT .\experiments\publication_figures\hqs_nll_vs_structure.pdf
-INPUT C:\Users\Administrator\AppData\Local\MiKTeX\fonts\tfm\public\bbm\bbm10.tfm
-INPUT C:\Users\Administrator\AppData\Local\MiKTeX\fonts\tfm\public\bbm\bbm7.tfm
 INPUT .\experiments\publication_figures\guarded_sample_size_curve.pdf
 INPUT .\experiments\publication_figures\guarded_sample_size_curve.pdf
 INPUT .\experiments\publication_figures\guarded_sample_size_curve.pdf
@@ -532,8 +523,6 @@ INPUT 52_ridge_bayesian_proofs.tex
 INPUT main.aux
 INPUT .\main.out
 INPUT .\main.out
-INPUT C:\Users\Administrator\AppData\Local\MiKTeX\fonts\pk\ljfour\public\bbm\dpi657\bbm10.pk
-INPUT C:\Users\Administrator\AppData\Local\MiKTeX\fonts\pk\ljfour\public\bbm\dpi657\bbm10.pk
 INPUT C:\Users\Administrator\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\tcrm1095.pk
 INPUT C:\Users\Administrator\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\tcrm1095.pk
 INPUT C:\Users\Administrator\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmbx10.pfb

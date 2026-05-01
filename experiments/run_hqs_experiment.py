@@ -106,8 +106,8 @@ def load_cifar100_hierarchy(root: Path, download: bool) -> CIFAR100Hierarchy:
 class HQSStream:
     fine: np.ndarray
     query: np.ndarray
+    bits: np.ndarray
     y: np.ndarray
-    spurious: np.ndarray
 
 
 def make_hqs_stream(
@@ -117,26 +117,34 @@ def make_hqs_stream(
     rng: np.random.Generator,
     eta: float,
     n_spurious: int,
+    variant: str,
 ) -> HQSStream:
     indices = rng.integers(0, len(fine_labels), size=n)
     fine = fine_labels[indices].astype(np.int64)
     coarse = coarse_labels[indices].astype(np.int64)
-    query = np.empty(n, dtype=np.int64)
-    y = np.empty(n, dtype=np.int64)
-    for i, c in enumerate(coarse):
-        if rng.random() < 0.5:
-            q = int(c)
-            label = 1
-        else:
-            r = int(rng.integers(0, NUM_COARSE - 1))
-            q = r if r < int(c) else r + 1
-            label = 0
-        if rng.random() < eta:
-            label = 1 - label
-        query[i] = q
-        y[i] = label
+    query = np.full(n, -1, dtype=np.int64)
+    candidate_bits = np.zeros((n, NUM_COARSE), dtype=np.int8)
+
+    if variant == "single_query":
+        for i, c in enumerate(coarse):
+            if rng.random() < 0.5:
+                q = int(c)
+            else:
+                r = int(rng.integers(0, NUM_COARSE - 1))
+                q = r if r < int(c) else r + 1
+            query[i] = q
+            candidate_bits[i, q] = 1
+    elif variant == "balanced_mask":
+        candidate_bits = rng.integers(0, 2, size=(n, NUM_COARSE), dtype=np.int8)
+    else:
+        raise ValueError(f"unknown HQS variant: {variant}")
+
+    y = candidate_bits[np.arange(n), coarse].astype(np.int64)
+    flips = rng.random(n) < eta
+    y[flips] = 1 - y[flips]
     spurious = rng.integers(0, 2, size=(n, n_spurious), dtype=np.int8)
-    return HQSStream(fine=fine, query=query, y=y, spurious=spurious)
+    bits = np.concatenate([candidate_bits, spurious], axis=1)
+    return HQSStream(fine=fine, query=query, bits=bits, y=y)
 
 
 class BetaMemory:
@@ -180,10 +188,12 @@ class OracleRefinedMemory:
         self.neg = [BetaMemory(alpha) for _ in range(NUM_FINE)]
 
     def predict(self, z: int, q: int, spurious: np.ndarray | None = None) -> float:
-        return self.pos[int(z)].prob() if int(q) == int(self.fine_to_coarse[int(z)]) else self.neg[int(z)].prob()
+        assert spurious is not None
+        return self.pos[int(z)].prob() if int(spurious[int(self.fine_to_coarse[int(z)])]) == 1 else self.neg[int(z)].prob()
 
     def observe(self, z: int, q: int, y: int, spurious: np.ndarray | None = None) -> None:
-        mem = self.pos[int(z)] if int(q) == int(self.fine_to_coarse[int(z)]) else self.neg[int(z)]
+        assert spurious is not None
+        mem = self.pos[int(z)] if int(spurious[int(self.fine_to_coarse[int(z)])]) == 1 else self.neg[int(z)]
         mem.update(int(y))
 
     def structure_size(self) -> dict[str, int]:
@@ -195,9 +205,13 @@ class CrossProductMemory:
         self.mem = [[BetaMemory(alpha) for _ in range(NUM_COARSE)] for _ in range(NUM_FINE)]
 
     def predict(self, z: int, q: int, spurious: np.ndarray | None = None) -> float:
+        if int(q) < 0:
+            return 0.5
         return self.mem[int(z)][int(q)].prob()
 
     def observe(self, z: int, q: int, y: int, spurious: np.ndarray | None = None) -> None:
+        if int(q) < 0:
+            return
         self.mem[int(z)][int(q)].update(int(y))
 
     def structure_size(self) -> dict[str, int]:
@@ -215,17 +229,20 @@ class AdditiveLogistic:
         self.lr = float(lr)
 
     def predict(self, z: int, q: int, spurious: np.ndarray | None = None) -> float:
-        return sigmoid(self.bias + self.w_z[int(z)] + self.w_q[int(q)])
+        assert spurious is not None
+        return sigmoid(self.bias + self.w_z[int(z)] + float(np.dot(self.w_q, spurious[:NUM_COARSE])))
 
     def observe(self, z: int, q: int, y: int, spurious: np.ndarray | None = None) -> None:
+        assert spurious is not None
         p = self.predict(z, q, spurious)
         grad = p - int(y)
         self.g_bias += grad * grad
         self.g_z[int(z)] += grad * grad
-        self.g_q[int(q)] += grad * grad
+        active = spurious[:NUM_COARSE].astype(float)
+        self.g_q += (grad * active) ** 2
         self.bias -= self.lr * grad / math.sqrt(self.g_bias)
         self.w_z[int(z)] -= self.lr * grad / math.sqrt(self.g_z[int(z)])
-        self.w_q[int(q)] -= self.lr * grad / math.sqrt(self.g_q[int(q)])
+        self.w_q -= self.lr * grad * active / np.sqrt(self.g_q)
 
     def structure_size(self) -> dict[str, int]:
         params = NUM_FINE + NUM_COARSE + 1
@@ -241,15 +258,18 @@ class CrossedLogistic:
         self.lr = float(lr)
 
     def predict(self, z: int, q: int, spurious: np.ndarray | None = None) -> float:
-        return sigmoid(self.bias + self.w[int(z), int(q)])
+        assert spurious is not None
+        return sigmoid(self.bias + float(np.dot(self.w[int(z)], spurious[:NUM_COARSE])))
 
     def observe(self, z: int, q: int, y: int, spurious: np.ndarray | None = None) -> None:
+        assert spurious is not None
         p = self.predict(z, q, spurious)
         grad = p - int(y)
+        active = spurious[:NUM_COARSE].astype(float)
         self.g_bias += grad * grad
-        self.g[int(z), int(q)] += grad * grad
+        self.g[int(z)] += (grad * active) ** 2
         self.bias -= 0.02 * self.lr * grad / math.sqrt(self.g_bias)
-        self.w[int(z), int(q)] -= self.lr * grad / math.sqrt(self.g[int(z), int(q)])
+        self.w[int(z)] -= self.lr * grad * active / np.sqrt(self.g[int(z)])
 
     def structure_size(self) -> dict[str, int]:
         params = NUM_FINE * NUM_COARSE + 1
@@ -260,25 +280,39 @@ class BudgetedCache:
     def __init__(self, budget: int | None, alpha: float = 1.0) -> None:
         self.budget = budget
         self.alpha = float(alpha)
-        self.queue: deque[tuple[int, int, int]] = deque()
-        self.counts = np.zeros((NUM_FINE, NUM_COARSE, 2), dtype=np.int64)
+        self.queue: deque[tuple[tuple[int, int], int]] = deque()
+        self.counts: dict[tuple[int, int], np.ndarray] = {}
         self.global_counts = np.zeros(2, dtype=np.int64)
 
+    def _key(self, z: int, q: int, spurious: np.ndarray | None) -> tuple[int, int]:
+        if int(q) >= 0:
+            return int(z), int(q)
+        assert spurious is not None
+        signature = 0
+        for k, bit in enumerate(spurious[:NUM_COARSE]):
+            signature |= int(bit) << k
+        return int(z), signature
+
     def predict(self, z: int, q: int, spurious: np.ndarray | None = None) -> float:
-        counts = self.counts[int(z), int(q)]
+        counts = self.counts.get(self._key(z, q, spurious), np.zeros(2, dtype=np.int64))
         total = int(counts.sum())
         if total == 0:
             counts = self.global_counts
         return float((counts[1] + self.alpha) / (counts.sum() + 2.0 * self.alpha))
 
     def observe(self, z: int, q: int, y: int, spurious: np.ndarray | None = None) -> None:
-        item = (int(z), int(q), int(y))
-        self.queue.append(item)
-        self.counts[item[0], item[1], item[2]] += 1
-        self.global_counts[item[2]] += 1
+        key = self._key(z, q, spurious)
+        y = int(y)
+        if key not in self.counts:
+            self.counts[key] = np.zeros(2, dtype=np.int64)
+        self.queue.append((key, y))
+        self.counts[key][y] += 1
+        self.global_counts[y] += 1
         if self.budget is not None and len(self.queue) > self.budget:
-            old_z, old_q, old_y = self.queue.popleft()
-            self.counts[old_z, old_q, old_y] -= 1
+            old_key, old_y = self.queue.popleft()
+            self.counts[old_key][old_y] -= 1
+            if int(self.counts[old_key].sum()) == 0:
+                del self.counts[old_key]
             self.global_counts[old_y] -= 1
 
     def structure_size(self) -> dict[str, int]:
@@ -364,9 +398,9 @@ class DGMHierarchyQuery:
         kind = self.accepted_kind[int(z)]
         value = self.accepted_value[int(z)]
         if kind == "query":
-            return int(int(q) == int(value))
-        if kind == "spurious":
             return int(spurious[int(value)])
+        if kind == "spurious":
+            return int(spurious[NUM_COARSE + int(value)])
         return 0
 
     def predict(self, z: int, q: int, spurious: np.ndarray | None = None) -> float:
@@ -402,9 +436,9 @@ class DGMHierarchyQuery:
 
         candidates: list[tuple[str, int, Any]] = []
         for k in range(NUM_COARSE):
-            candidates.append(("query", k, lambda q, s, kk=k: int(int(q) == kk)))
+            candidates.append(("query", k, lambda q, s, kk=k: int(s[kk])))
         for i in range(self.n_spurious):
-            candidates.append(("spurious", i, lambda q, s, ii=i: int(s[ii])))
+            candidates.append(("spurious", i, lambda q, s, ii=i: int(s[NUM_COARSE + ii])))
 
         best_kind = ""
         best_value = -1
@@ -427,9 +461,9 @@ class DGMHierarchyQuery:
             self.accepted_kind[z] = best_kind
             self.accepted_value[z] = best_value
             bit_fn = (
-                (lambda q, s, kk=best_value: int(int(q) == kk))
+                (lambda q, s, kk=best_value: int(s[kk]))
                 if best_kind == "query"
-                else (lambda q, s, ii=best_value: int(s[ii]))
+                else (lambda q, s, ii=best_value: int(s[NUM_COARSE + ii]))
             )
             child_counts = counts_from_rows(self.proposal[z], bit_fn)
             assert isinstance(child_counts, dict)
@@ -482,12 +516,107 @@ class DGMHierarchyQuery:
         return mat
 
 
+class LocalStumpBaseline(DGMHierarchyQuery):
+    """Per-fine one-level decision stump using the same held-out split score."""
+
+    def __init__(
+        self,
+        alpha: float = 1.0,
+        proposal_size: int = 64,
+        score_size: int = 64,
+        m_min: int = 10,
+        tau: float = 0.05,
+        lambda_edge: float = 0.01,
+    ) -> None:
+        super().__init__(
+            alpha=alpha,
+            proposal_size=proposal_size,
+            score_size=score_size,
+            m_min=m_min,
+            tau=tau,
+            lambda_edge=lambda_edge,
+            n_spurious=0,
+        )
+
+
+class FrequencyOnlyEdge:
+    """Recover one candidate bit per fine class using only marginal bit frequency."""
+
+    def __init__(self, alpha: float = 1.0, min_samples: int = 128) -> None:
+        self.alpha = float(alpha)
+        self.min_samples = int(min_samples)
+        self.parent = [BetaMemory(alpha) for _ in range(NUM_FINE)]
+        self.pos = [BetaMemory(alpha) for _ in range(NUM_FINE)]
+        self.neg = [BetaMemory(alpha) for _ in range(NUM_FINE)]
+        self.counts = np.zeros((NUM_FINE, NUM_COARSE), dtype=np.int64)
+        self.n_seen = np.zeros(NUM_FINE, dtype=np.int64)
+        self.accepted_value: list[int | None] = [None for _ in range(NUM_FINE)]
+
+    def predict(self, z: int, q: int, spurious: np.ndarray | None = None) -> float:
+        z = int(z)
+        edge = self.accepted_value[z]
+        if edge is None:
+            return self.parent[z].prob()
+        assert spurious is not None
+        return self.pos[z].prob() if int(spurious[int(edge)]) == 1 else self.neg[z].prob()
+
+    def observe(self, z: int, q: int, y: int, spurious: np.ndarray | None = None) -> None:
+        z = int(z)
+        y = int(y)
+        assert spurious is not None
+        edge = self.accepted_value[z]
+        if edge is None:
+            self.parent[z].update(y)
+            self.counts[z] += spurious[:NUM_COARSE].astype(np.int64)
+            self.n_seen[z] += 1
+            if self.n_seen[z] >= self.min_samples:
+                self.accepted_value[z] = int(np.argmax(self.counts[z]))
+        elif int(spurious[int(edge)]) == 1:
+            self.pos[z].update(y)
+        else:
+            self.neg[z].update(y)
+
+    def structure_size(self) -> dict[str, int]:
+        edges = sum(edge is not None for edge in self.accepted_value)
+        return {"atoms": NUM_FINE + edges, "edges": edges, "cells": NUM_FINE + edges}
+
+    def edge_metrics(self, fine_to_coarse: np.ndarray) -> dict[str, float]:
+        tp = 0
+        fp = 0
+        for z, edge in enumerate(self.accepted_value):
+            if edge is None:
+                continue
+            if int(edge) == int(fine_to_coarse[z]):
+                tp += 1
+            else:
+                fp += 1
+        fn = NUM_FINE - tp
+        precision = tp / (tp + fp) if tp + fp > 0 else 0.0
+        recall = tp / (tp + fn) if tp + fn > 0 else 0.0
+        f1 = 2.0 * precision * recall / (precision + recall) if precision + recall > 0 else 0.0
+        return {
+            "edge_precision": precision,
+            "edge_recall": recall,
+            "edge_f1": f1,
+            "true_edges": float(tp),
+            "false_edges": float(fp),
+            "spurious_splits": 0.0,
+        }
+
+    def adjacency(self) -> np.ndarray:
+        mat = np.zeros((NUM_FINE, NUM_COARSE), dtype=np.int64)
+        for z, edge in enumerate(self.accepted_value):
+            if edge is not None:
+                mat[z, int(edge)] = 1
+        return mat
+
+
 def evaluate_model(model: Any, stream: HQSStream) -> dict[str, float]:
     losses = []
     briers = []
     correct = 0
-    for z, q, y, spurious in zip(stream.fine, stream.query, stream.y, stream.spurious, strict=True):
-        p = model.predict(int(z), int(q), spurious)
+    for z, q, bits, y in zip(stream.fine, stream.query, stream.bits, stream.y, strict=True):
+        p = model.predict(int(z), int(q), bits)
         losses.append(bernoulli_nll(int(y), p))
         briers.append((p - int(y)) ** 2)
         correct += int((p >= 0.5) == bool(int(y)))
@@ -513,19 +642,19 @@ def train_prequential(
     steps: list[dict[str, float]] = []
 
     n = len(train_stream.y)
-    for t, (z, q, y, spurious) in enumerate(
-        zip(train_stream.fine, train_stream.query, train_stream.y, train_stream.spurious, strict=True),
+    for t, (z, q, bits, y) in enumerate(
+        zip(train_stream.fine, train_stream.query, train_stream.bits, train_stream.y, strict=True),
         start=1,
     ):
         for name, model in models.items():
-            p = model.predict(int(z), int(q), spurious)
+            p = model.predict(int(z), int(q), bits)
             loss = bernoulli_nll(int(y), p)
             totals[name]["loss"] += loss
             totals[name]["brier"] += (p - int(y)) ** 2
             totals[name]["correct"] += int((p >= 0.5) == bool(int(y)))
             totals[name]["window_loss"] += loss
             totals[name]["window_n"] += 1.0
-            model.observe(int(z), int(q), int(y), spurious)
+            model.observe(int(z), int(q), int(y), bits)
 
         if t % checkpoint_every == 0 or t == n:
             step_record: dict[str, float] = {"step": float(t)}
@@ -550,7 +679,7 @@ def train_prequential(
             "heldout_brier": heldout["brier"],
             **model.structure_size(),
         }
-        if isinstance(model, DGMHierarchyQuery):
+        if hasattr(model, "edge_metrics"):
             metrics[name].update(model.edge_metrics(models["oracle_refined"].fine_to_coarse))
     curve_payload = {f"{name}_window_nll": vals for name, vals in curves.items()}
     curve_payload.update({f"{name}_heldout_nll": vals for name, vals in heldout_curves.items()})
@@ -618,12 +747,14 @@ def write_summary_csv(path: Path, summary: dict[str, Any], model_names: list[str
 def write_markdown_summary(path: Path, results: dict[str, Any], model_names: list[str]) -> None:
     labels = {
         "repair_only": "Repair-only",
+        "frequency_only": "Frequency-only edge",
         "additive_logistic": "Additive logistic",
         "cross_product_memory": "Cross-product memory",
         "crossed_logistic": "Crossed logistic",
         "cache_200": "Budgeted cache M=200",
         "cache_500": "Budgeted cache M=500",
         "cache_2000": "Budgeted cache M=2000",
+        "local_stump": "Per-fine local stump",
         "dgm_hqs": "DGM-HQS",
         "oracle_refined": "Oracle refined",
     }
@@ -631,7 +762,7 @@ def write_markdown_summary(path: Path, results: dict[str, Any], model_names: lis
         "# HQS CIFAR-100 Hierarchy Query Stream",
         "",
         (
-            f"eta={results['eta']}, steps={results['n_steps']}, repeats={results['repeats']}, "
+            f"variant={results['variant']}, eta={results['eta']}, steps={results['n_steps']}, repeats={results['repeats']}, "
             f"proposal={results['proposal_size']}, score={results['score_size']}"
         ),
         "",
@@ -662,23 +793,27 @@ def plot_hqs_figures(out_dir: Path, results: dict[str, Any], hierarchy: CIFAR100
 
     colors = {
         "repair_only": "#6B7280",
+        "frequency_only": "#DC2626",
         "additive_logistic": "#9CA3AF",
         "cross_product_memory": "#D55E00",
         "crossed_logistic": "#E69F00",
         "cache_200": "#A78BFA",
         "cache_500": "#8B5CF6",
         "cache_2000": "#6D28D9",
+        "local_stump": "#56B4E9",
         "dgm_hqs": "#0072B2",
         "oracle_refined": "#009E73",
     }
     labels = {
         "repair_only": "Repair only",
+        "frequency_only": "Frequency only",
         "additive_logistic": "Additive logistic",
         "cross_product_memory": "Cross-product",
         "crossed_logistic": "Crossed logistic",
         "cache_200": "Cache-200",
         "cache_500": "Cache-500",
         "cache_2000": "Cache-2000",
+        "local_stump": "Local stump",
         "dgm_hqs": "DGM-HQS",
         "oracle_refined": "Oracle refined",
     }
@@ -705,13 +840,17 @@ def plot_hqs_figures(out_dir: Path, results: dict[str, Any], hierarchy: CIFAR100
     fig, ax = plt.subplots(figsize=(4.2, 2.8))
     for name in [
         "repair_only",
+        "frequency_only",
         "additive_logistic",
         "cross_product_memory",
         "crossed_logistic",
         "cache_500",
+        "local_stump",
         "dgm_hqs",
         "oracle_refined",
     ]:
+        if name not in results["summary"]:
+            continue
         curves = []
         for run in results["runs"]:
             curves.append(np.asarray(run["curves"][f"{name}_heldout_nll"], dtype=float))
@@ -757,9 +896,11 @@ def plot_hqs_figures(out_dir: Path, results: dict[str, Any], hierarchy: CIFAR100
 
     size_names = [
         "repair_only",
+        "frequency_only",
         "additive_logistic",
         "cache_200",
         "cache_500",
+        "local_stump",
         "dgm_hqs",
         "oracle_refined",
         "cross_product_memory",
@@ -767,6 +908,8 @@ def plot_hqs_figures(out_dir: Path, results: dict[str, Any], hierarchy: CIFAR100
     ]
     fig, ax = plt.subplots(figsize=(4.2, 2.8))
     for name in size_names:
+        if name not in results["summary"]:
+            continue
         row = results["summary"][name]
         x = float(row.get("atoms_mean", row.get("cells_mean", 0.0)))
         y = float(row["heldout_nll_mean"])
@@ -790,6 +933,7 @@ def run_one(
     seed: int,
     hierarchy: CIFAR100Hierarchy,
     args: argparse.Namespace,
+    model_names: list[str],
 ) -> dict[str, Any]:
     rng = np.random.default_rng(seed)
     train_stream = make_hqs_stream(
@@ -799,6 +943,7 @@ def run_one(
         rng,
         args.eta,
         args.n_spurious,
+        args.variant,
     )
     eval_stream = make_hqs_stream(
         hierarchy.test_fine,
@@ -807,15 +952,25 @@ def run_one(
         rng,
         args.eta,
         args.n_spurious,
+        args.variant,
     )
-    models: dict[str, Any] = {
+    all_models: dict[str, Any] = {
         "repair_only": RepairOnlyMemory(args.alpha),
+        "frequency_only": FrequencyOnlyEdge(args.alpha, args.proposal_size + args.score_size),
         "additive_logistic": AdditiveLogistic(args.additive_lr),
         "cross_product_memory": CrossProductMemory(args.alpha),
         "crossed_logistic": CrossedLogistic(args.crossed_lr),
         "cache_200": BudgetedCache(200, args.alpha),
         "cache_500": BudgetedCache(500, args.alpha),
         "cache_2000": BudgetedCache(2000, args.alpha),
+        "local_stump": LocalStumpBaseline(
+            alpha=args.alpha,
+            proposal_size=args.proposal_size,
+            score_size=args.score_size,
+            m_min=args.m_min,
+            tau=args.tau,
+            lambda_edge=args.lambda_edge,
+        ),
         "dgm_hqs": DGMHierarchyQuery(
             alpha=args.alpha,
             proposal_size=args.proposal_size,
@@ -827,6 +982,7 @@ def run_one(
         ),
         "oracle_refined": OracleRefinedMemory(hierarchy.fine_to_coarse, args.alpha),
     }
+    models = {name: all_models[name] for name in model_names}
     metrics, curves, step_records = train_prequential(models, train_stream, eval_stream, args.checkpoint_every)
     dgm = models["dgm_hqs"]
     assert isinstance(dgm, DGMHierarchyQuery)
@@ -858,6 +1014,7 @@ def main() -> None:
     parser.add_argument("--n-spurious", type=int, default=20)
     parser.add_argument("--additive-lr", type=float, default=0.35)
     parser.add_argument("--crossed-lr", type=float, default=1.0)
+    parser.add_argument("--variant", choices=["single_query", "balanced_mask"], default="balanced_mask")
     parser.add_argument("--data-root", type=Path, default=Path("experiments/data"))
     parser.add_argument("--output-dir", type=Path, default=Path("experiments/hqs_results"))
     parser.add_argument("--download", action="store_true")
@@ -875,19 +1032,23 @@ def main() -> None:
     hierarchy = load_cifar100_hierarchy(args.data_root, args.download)
     model_names = [
         "repair_only",
+        "frequency_only",
         "additive_logistic",
-        "cross_product_memory",
         "crossed_logistic",
         "cache_200",
         "cache_500",
         "cache_2000",
+        "local_stump",
         "dgm_hqs",
         "oracle_refined",
     ]
-    runs = [run_one(args.seed + 1000 * i, hierarchy, args) for i in range(args.repeats)]
+    if args.variant == "single_query":
+        model_names.insert(3, "cross_product_memory")
+    runs = [run_one(args.seed + 1000 * i, hierarchy, args, model_names) for i in range(args.repeats)]
     summary = summarize_runs(runs, model_names)
     results = {
         "description": "CIFAR-100 Hierarchy Query Stream oracle-partition diagnostic.",
+        "variant": args.variant,
         "seed": args.seed,
         "repeats": args.repeats,
         "n_steps": args.n_steps,
@@ -917,7 +1078,7 @@ def main() -> None:
     write_markdown_summary(out_dir / "summary.md", results, model_names)
     plot_hqs_figures(out_dir, results, hierarchy)
 
-    print("HQS CIFAR-100 oracle-partition diagnostic")
+    print(f"HQS CIFAR-100 oracle-partition diagnostic ({args.variant})")
     print(
         f"  theory: repair={results['theory']['repair_only_nll']:.3f}, "
         f"refined={results['theory']['refined_nll']:.3f}, gap={results['theory']['gap']:.3f}"

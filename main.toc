@@ -44,12 +44,12 @@
 \contentsline {subsection}{\numberline {10.4}Calibrated log-loss trust aggregation}{30}{subsection.10.4}%
 \contentsline {subsection}{\numberline {10.5}Graph-memory ablation on contextual XOR}{31}{subsection.10.5}%
 \contentsline {subsection}{\numberline {10.6}Runtime comparison against backpropagation baselines}{31}{subsection.10.6}%
-\contentsline {paragraph}{Scope.}{32}{section*.24}%
+\contentsline {paragraph}{Scope.}{33}{section*.24}%
 \contentsline {section}{\numberline {11}Related Work}{33}{section.11}%
 \contentsline {paragraph}{Repair without refinement.}{33}{section*.25}%
 \contentsline {paragraph}{Refinement without local repair.}{33}{section*.26}%
 \contentsline {paragraph}{Routing without runtime concept creation.}{33}{section*.27}%
-\contentsline {section}{\numberline {12}Conclusion}{33}{section.12}%
+\contentsline {section}{\numberline {12}Conclusion}{34}{section.12}%
 \contentsline {section}{\numberline {A}Appendix Roadmap}{43}{appendix.A}%
 \contentsline {section}{\numberline {B}Limitations}{43}{appendix.B}%
 \contentsline {section}{\numberline {C}Related Work}{44}{appendix.C}%
