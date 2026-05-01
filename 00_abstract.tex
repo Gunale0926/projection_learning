@@ -10,4 +10,4 @@ We characterize useful refinements.
 Adding a prediction-time binary distinction has zero value exactly when the refined Bayes action is already measurable under the old information; under log loss its value is $I(Y;U\mid\calF)$, and under squared loss it is conditional variance reduction.
 
 We instantiate the escape operation as Distinction Graph Machines, a dynamic graph-memory data structure whose edges are accepted distinctions and whose nodes store repairable local memories.
-Controlled streams separate repair-only learners from refine-and-repair learners.
+On a CIFAR-100 hierarchy query stream, DGM recovers the fine-to-coarse graph with one accepted edge per fine class, while repair-only learners remain at the structural log-loss bound and cross-product memories solve the task with many more cells.

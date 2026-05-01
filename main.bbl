@@ -14,12 +14,15 @@ Leo Breiman, Jerome~H. Friedman, Richard~A. Olshen, and Charles~J. Stone.
 \bibitem[BG09]{bifet2009adaptive}
 Albert Bifet and Ricard Gavald{\`a}.
 \newblock Adaptive learning from evolving data streams.
-\newblock In {\em Advances in Intelligent Data Analysis VIII}, volume 5772 of {\em Lecture Notes in Computer Science}, pages 249--260. Springer, 2009.
+\newblock In {\em Advances in Intelligent Data Analysis VIII}, volume 5772 of
+  {\em Lecture Notes in Computer Science}, pages 249--260. Springer, 2009.
 
 \bibitem[BHM{\etalchar{+}}16]{ba2016using}
-Jimmy Ba, Geoffrey~E. Hinton, Volodymyr Mnih, Joel~Z. Leibo, and Catalin Ionescu.
+Jimmy Ba, Geoffrey~E. Hinton, Volodymyr Mnih, Joel~Z. Leibo, and Catalin
+  Ionescu.
 \newblock Using fast weights to attend to the recent past.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~29, 2016.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~29, 2016.
 
 \bibitem[Bil95]{billingsley1995probability}
 Patrick Billingsley.
@@ -32,14 +35,23 @@ David Blackwell.
 \newblock {\em The Annals of Mathematical Statistics}, 24(2):265--272, 1953.
 
 \bibitem[BMH{\etalchar{+}}22]{borgeaud2022improving}
-Sebastian Borgeaud, Arthur Mensch, Jordan Hoffmann, Trevor Cai, Eliza Rutherford, Katie Millican, George~B. van~den Driessche, Jean-Baptiste Lespiau, Bogdan Damoc, Aidan Clark, Diego de~Las~Casas, Aurelia Guy, Jacob Menick, Roman Ring, Tom Hennigan, Saffron Huang, Loren Maggiore, Chris Jones, Albin Cassirer, Andy Brock, Michela Paganini, Geoffrey Irving, Oriol Vinyals, Simon Osindero, Karen Simonyan, Jack Rae, Erich Elsen, and Laurent Sifre.
+Sebastian Borgeaud, Arthur Mensch, Jordan Hoffmann, Trevor Cai, Eliza
+  Rutherford, Katie Millican, George~B. van~den Driessche, Jean-Baptiste
+  Lespiau, Bogdan Damoc, Aidan Clark, Diego de~Las~Casas, Aurelia Guy, Jacob
+  Menick, Roman Ring, Tom Hennigan, Saffron Huang, Loren Maggiore, Chris Jones,
+  Albin Cassirer, Andy Brock, Michela Paganini, Geoffrey Irving, Oriol Vinyals,
+  Simon Osindero, Karen Simonyan, Jack Rae, Erich Elsen, and Laurent Sifre.
 \newblock Improving language models by retrieving from trillions of tokens.
-\newblock In {\em Proceedings of the 39th International Conference on Machine Learning}, volume 162 of {\em Proceedings of Machine Learning Research}, pages 2206--2240, 2022.
+\newblock In {\em Proceedings of the 39th International Conference on Machine
+  Learning}, volume 162 of {\em Proceedings of Machine Learning Research},
+  pages 2206--2240, 2022.
 
 \bibitem[Bre67]{bregman1967relaxation}
 Lev~M. Bregman.
-\newblock The relaxation method of finding the common point of convex sets and its application to the solution of problems in convex programming.
-\newblock {\em USSR Computational Mathematics and Mathematical Physics}, 7(3):200--217, 1967.
+\newblock The relaxation method of finding the common point of convex sets and
+  its application to the solution of problems in convex programming.
+\newblock {\em USSR Computational Mathematics and Mathematical Physics},
+  7(3):200--217, 1967.
 
 \bibitem[Bri50]{brier1950verification}
 Glenn~W. Brier.
@@ -58,13 +70,16 @@ Koby Crammer, Ofer Dekel, Joseph Keshet, Shai Shalev-Shwartz, and Yoram Singer.
 
 \bibitem[CG87a]{carpenter1987art2}
 Gail~A. Carpenter and Stephen Grossberg.
-\newblock {ART} 2: Self-organization of stable category recognition codes for analog input patterns.
+\newblock {ART} 2: Self-organization of stable category recognition codes for
+  analog input patterns.
 \newblock {\em Applied Optics}, 26(23):4919--4930, 1987.
 
 \bibitem[CG87b]{carpenter1987massively}
 Gail~A. Carpenter and Stephen Grossberg.
-\newblock A massively parallel architecture for a self-organizing neural pattern recognition machine.
-\newblock {\em Computer Vision, Graphics, and Image Processing}, 37(1):54--115, 1987.
+\newblock A massively parallel architecture for a self-organizing neural
+  pattern recognition machine.
+\newblock {\em Computer Vision, Graphics, and Image Processing}, 37(1):54--115,
+  1987.
 
 \bibitem[CT06]{cover2006elements}
 Thomas~M. Cover and Joy~A. Thomas.
@@ -74,15 +89,19 @@ Thomas~M. Cover and Joy~A. Thomas.
 \bibitem[Daw84]{dawid1984prequential}
 A.~P. Dawid.
 \newblock Statistical theory: The prequential approach.
-\newblock {\em Journal of the Royal Statistical Society. Series A (General)}, 147(2):278--292, 1984.
+\newblock {\em Journal of the Royal Statistical Society. Series A (General)},
+  147(2):278--292, 1984.
 
 \bibitem[DFH{\etalchar{+}}15a]{dwork2015generalization}
-Cynthia Dwork, Vitaly Feldman, Moritz Hardt, Toniann Pitassi, Omer Reingold, and Aaron Roth.
+Cynthia Dwork, Vitaly Feldman, Moritz Hardt, Toniann Pitassi, Omer Reingold,
+  and Aaron Roth.
 \newblock Generalization in adaptive data analysis and holdout reuse.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~28, pages 2350--2358, 2015.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~28, pages 2350--2358, 2015.
 
 \bibitem[DFH{\etalchar{+}}15b]{dwork2015reusable}
-Cynthia Dwork, Vitaly Feldman, Moritz Hardt, Toniann Pitassi, Omer Reingold, and Aaron Roth.
+Cynthia Dwork, Vitaly Feldman, Moritz Hardt, Toniann Pitassi, Omer Reingold,
+  and Aaron Roth.
 \newblock The reusable holdout: Preserving validity in adaptive data analysis.
 \newblock {\em Science}, 349(6248):636--638, 2015.
 
@@ -94,21 +113,25 @@ Luc Devroye, L{\'a}szl{\'o} Gy{\"o}rfi, and G{\'a}bor Lugosi.
 \bibitem[DH00]{domingos2000mining}
 Pedro Domingos and Geoff Hulten.
 \newblock Mining high-speed data streams.
-\newblock In {\em Proceedings of the Sixth ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, pages 71--80, 2000.
+\newblock In {\em Proceedings of the Sixth ACM SIGKDD International Conference
+  on Knowledge Discovery and Data Mining}, pages 71--80, 2000.
 
 \bibitem[Fri95]{fritzke1995growing}
 Bernd Fritzke.
 \newblock A growing neural gas network learns topologies.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~7, pages 625--632, 1995.
+\newblock In {\em Advances in Neural Information Processing Systems}, volume~7,
+  pages 625--632, 1995.
 
 \bibitem[FS97]{freund1997decision}
 Yoav Freund and Robert~E. Schapire.
-\newblock A decision-theoretic generalization of on-line learning and an application to boosting.
+\newblock A decision-theoretic generalization of on-line learning and an
+  application to boosting.
 \newblock {\em Journal of Computer and System Sciences}, 55(1):119--139, 1997.
 
 \bibitem[FZS22]{fedus2022switch}
 William Fedus, Barret Zoph, and Noam Shazeer.
-\newblock Switch transformers: Scaling to trillion parameter models with simple and efficient sparsity.
+\newblock Switch transformers: Scaling to trillion parameter models with simple
+  and efficient sparsity.
 \newblock {\em Journal of Machine Learning Research}, 23(120):1--39, 2022.
 
 \bibitem[GCJ17]{grave2017improving}
@@ -119,16 +142,20 @@ Edouard Grave, Moustapha~M. Cisse, and Armand Joulin.
 \bibitem[GPSW17]{guo2017calibration}
 Chuan Guo, Geoff Pleiss, Yu~Sun, and Kilian~Q. Weinberger.
 \newblock On calibration of modern neural networks.
-\newblock In {\em Proceedings of the 34th International Conference on Machine Learning}, volume~70 of {\em Proceedings of Machine Learning Research}, pages 1321--1330, 2017.
+\newblock In {\em Proceedings of the 34th International Conference on Machine
+  Learning}, volume~70 of {\em Proceedings of Machine Learning Research}, pages
+  1321--1330, 2017.
 
 \bibitem[GR07]{gneiting2007strictly}
 Tilmann Gneiting and Adrian~E. Raftery.
 \newblock Strictly proper scoring rules, prediction, and estimation.
-\newblock {\em Journal of the American Statistical Association}, 102(477):359--378, 2007.
+\newblock {\em Journal of the American Statistical Association},
+  102(477):359--378, 2007.
 
 \bibitem[Gro13]{grossberg2013adaptive}
 Stephen Grossberg.
-\newblock Adaptive resonance theory: How a brain learns to consciously attend, learn, and recognize a changing world.
+\newblock Adaptive resonance theory: How a brain learns to consciously attend,
+  learn, and recognize a changing world.
 \newblock {\em Neural Networks}, 37:1--47, 2013.
 
 \bibitem[GW99]{ganter1999formal}
@@ -141,14 +168,21 @@ Alex Graves, Greg Wayne, and Ivo Danihelka.
 \newblock Neural turing machines, 2014.
 
 \bibitem[GWR{\etalchar{+}}16]{graves2016hybrid}
-Alex Graves, Greg Wayne, Malcolm Reynolds, Tim Harley, Ivo Danihelka, Agnieszka Grabska-Barwi{\'n}ska, Sergio~G{\'o}mez Colmenarejo, Edward Grefenstette, Tiago Ramalho, John Agapiou, Adri{\`a}~Puigdom{\`e}nech Badia, Karl~Moritz Hermann, Yori Zwols, Georg Ostrovski, Adam Cain, Helen King, Christopher Summerfield, Phil Blunsom, Koray Kavukcuoglu, and Demis Hassabis.
+Alex Graves, Greg Wayne, Malcolm Reynolds, Tim Harley, Ivo Danihelka, Agnieszka
+  Grabska-Barwi{\'n}ska, Sergio~G{\'o}mez Colmenarejo, Edward Grefenstette,
+  Tiago Ramalho, John Agapiou, Adri{\`a}~Puigdom{\`e}nech Badia, Karl~Moritz
+  Hermann, Yori Zwols, Georg Ostrovski, Adam Cain, Helen King, Christopher
+  Summerfield, Phil Blunsom, Koray Kavukcuoglu, and Demis Hassabis.
 \newblock Hybrid computing using a neural network with dynamic external memory.
 \newblock {\em Nature}, 538(7626):471--476, 2016.
 
 \bibitem[HGJ{\etalchar{+}}19]{houlsby2019parameter}
-Neil Houlsby, Andrei Giurgiu, Stanislaw Jastrzebski, Bruna Morrone, Quentin de~Laroussilhe, Andrea Gesmundo, Mona Attariyan, and Sylvain Gelly.
+Neil Houlsby, Andrei Giurgiu, Stanislaw Jastrzebski, Bruna Morrone, Quentin
+  de~Laroussilhe, Andrea Gesmundo, Mona Attariyan, and Sylvain Gelly.
 \newblock Parameter-efficient transfer learning for {NLP}.
-\newblock In {\em Proceedings of the 36th International Conference on Machine Learning}, volume~97 of {\em Proceedings of Machine Learning Research}, pages 2790--2799, 2019.
+\newblock In {\em Proceedings of the 36th International Conference on Machine
+  Learning}, volume~97 of {\em Proceedings of Machine Learning Research}, pages
+  2790--2799, 2019.
 
 \bibitem[HK70]{hoerl1970ridge}
 Arthur~E. Hoerl and Robert~W. Kennard.
@@ -158,17 +192,21 @@ Arthur~E. Hoerl and Robert~W. Kennard.
 \bibitem[Hoe63]{hoeffding1963probability}
 Wassily Hoeffding.
 \newblock Probability inequalities for sums of bounded random variables.
-\newblock {\em Journal of the American Statistical Association}, 58(301):13--30, 1963.
+\newblock {\em Journal of the American Statistical Association},
+  58(301):13--30, 1963.
 
 \bibitem[HSW{\etalchar{+}}22]{hu2022lora}
-Edward~J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu~Wang, and Weizhu Chen.
+Edward~J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean
+  Wang, Lu~Wang, and Weizhu Chen.
 \newblock {LoRA}: Low-rank adaptation of large language models.
 \newblock In {\em International Conference on Learning Representations}, 2022.
 
 \bibitem[IM98]{indyk1998approximate}
 Piotr Indyk and Rajeev Motwani.
-\newblock Approximate nearest neighbors: Towards removing the curse of dimensionality.
-\newblock In {\em Proceedings of the Thirtieth Annual ACM Symposium on Theory of Computing}, pages 604--613, 1998.
+\newblock Approximate nearest neighbors: Towards removing the curse of
+  dimensionality.
+\newblock In {\em Proceedings of the Thirtieth Annual ACM Symposium on Theory
+  of Computing}, pages 604--613, 1998.
 
 \bibitem[JDJ19]{johnson2019billion}
 Jeff Johnson, Matthijs Douze, and Herv{\'e} J{\'e}gou.
@@ -187,13 +225,17 @@ Diederik~P. Kingma and Jimmy Ba.
 
 \bibitem[KLJ{\etalchar{+}}20]{khandelwal2020generalization}
 Urvashi Khandelwal, Omer Levy, Dan Jurafsky, Luke Zettlemoyer, and Mike Lewis.
-\newblock Generalization through memorization: Nearest neighbor language models.
+\newblock Generalization through memorization: Nearest neighbor language
+  models.
 \newblock In {\em International Conference on Learning Representations}, 2020.
 
 \bibitem[KNT{\etalchar{+}}20]{koh2020concept}
-Pang~Wei Koh, Thao Nguyen, Yew~Siang Tang, Stephen Mussmann, Emma Pierson, Been Kim, and Percy Liang.
+Pang~Wei Koh, Thao Nguyen, Yew~Siang Tang, Stephen Mussmann, Emma Pierson, Been
+  Kim, and Percy Liang.
 \newblock Concept bottleneck models.
-\newblock In {\em Proceedings of the 37th International Conference on Machine Learning}, volume 119 of {\em Proceedings of Machine Learning Research}, pages 5338--5348, 2020.
+\newblock In {\em Proceedings of the 37th International Conference on Machine
+  Learning}, volume 119 of {\em Proceedings of Machine Learning Research},
+  pages 5338--5348, 2020.
 
 \bibitem[Koh90]{kohonen1990self}
 Teuvo Kohonen.
@@ -202,18 +244,27 @@ Teuvo Kohonen.
 
 \bibitem[Koh95]{kohonen1995self}
 Teuvo Kohonen.
-\newblock {\em Self-Organizing Maps}, volume~30 of {\em Springer Series in Information Sciences}.
+\newblock {\em Self-Organizing Maps}, volume~30 of {\em Springer Series in
+  Information Sciences}.
 \newblock Springer, 1995.
 
 \bibitem[KPR{\etalchar{+}}17]{kirkpatrick2017overcoming}
-James Kirkpatrick, Razvan Pascanu, Neil Rabinowitz, Joel Veness, Guillaume Desjardins, Andrei~A. Rusu, Kieran Milan, John Quan, Tiago Ramalho, Agnieszka Grabska-Barwinska, Demis Hassabis, Claudia Clopath, Dharshan Kumaran, and Raia Hadsell.
+James Kirkpatrick, Razvan Pascanu, Neil Rabinowitz, Joel Veness, Guillaume
+  Desjardins, Andrei~A. Rusu, Kieran Milan, John Quan, Tiago Ramalho, Agnieszka
+  Grabska-Barwinska, Demis Hassabis, Claudia Clopath, Dharshan Kumaran, and
+  Raia Hadsell.
 \newblock Overcoming catastrophic forgetting in neural networks.
-\newblock {\em Proceedings of the National Academy of Sciences}, 114(13):3521--3526, 2017.
+\newblock {\em Proceedings of the National Academy of Sciences},
+  114(13):3521--3526, 2017.
 
 \bibitem[KVPF20]{katharopoulos2020transformers}
-Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and Fran{\c{c}}ois Fleuret.
-\newblock Transformers are {RNNs}: Fast autoregressive transformers with linear attention.
-\newblock In {\em Proceedings of the 37th International Conference on Machine Learning}, volume 119 of {\em Proceedings of Machine Learning Research}, pages 5156--5165, 2020.
+Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and Fran{\c{c}}ois
+  Fleuret.
+\newblock Transformers are {RNNs}: Fast autoregressive transformers with linear
+  attention.
+\newblock In {\em Proceedings of the 37th International Conference on Machine
+  Learning}, volume 119 of {\em Proceedings of Machine Learning Research},
+  pages 5156--5165, 2020.
 
 \bibitem[LBBH98]{lecun1998gradient}
 Yann LeCun, L{\'e}on Bottou, Yoshua Bengio, and Patrick Haffner.
@@ -221,24 +272,31 @@ Yann LeCun, L{\'e}on Bottou, Yoshua Bengio, and Patrick Haffner.
 \newblock {\em Proceedings of the IEEE}, 86(11):2278--2324, 1998.
 
 \bibitem[LPP{\etalchar{+}}20]{lewis2020retrieval}
-Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich K{\"u}ttler, Mike Lewis, Wen-tau Yih, Tim Rockt{\"a}schel, Sebastian Riedel, and Douwe Kiela.
+Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir
+  Karpukhin, Naman Goyal, Heinrich K{\"u}ttler, Mike Lewis, Wen-tau Yih, Tim
+  Rockt{\"a}schel, Sebastian Riedel, and Douwe Kiela.
 \newblock Retrieval-augmented generation for knowledge-intensive {NLP} tasks.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~33, pages 9459--9474, 2020.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~33, pages 9459--9474, 2020.
 
 \bibitem[LPR17]{lopezpaz2017gradient}
 David Lopez-Paz and Marc'Aurelio Ranzato.
 \newblock Gradient episodic memory for continual learning.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~30, 2017.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~30, 2017.
 
 \bibitem[LRT14]{lakshminarayanan2014mondrian}
 Balaji Lakshminarayanan, Daniel~M. Roy, and Yee~Whye Teh.
 \newblock Mondrian forests: Efficient online random forests.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~27, 2014.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~27, 2014.
 
 \bibitem[LSR{\etalchar{+}}19]{lample2019large}
-Guillaume Lample, Alexandre Sablayrolles, Marc'Aurelio Ranzato, Ludovic Denoyer, and Herve Jegou.
+Guillaume Lample, Alexandre Sablayrolles, Marc'Aurelio Ranzato, Ludovic
+  Denoyer, and Herve Jegou.
 \newblock Large memory layers with product keys.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~32, 2019.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~32, 2019.
 
 \bibitem[MS91]{martinetz1991neural}
 Thomas~M. Martinetz and Klaus~J. Schulten.
@@ -248,17 +306,22 @@ Thomas~M. Martinetz and Klaus~J. Schulten.
 \bibitem[MWS18]{manapragada2018extremely}
 Chaitanya Manapragada, Geoffrey~I. Webb, and Mahsa Salehi.
 \newblock Extremely fast decision tree.
-\newblock In {\em Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, pages 1953--1962, 2018.
+\newblock In {\em Proceedings of the 24th ACM SIGKDD International Conference
+  on Knowledge Discovery and Data Mining}, pages 1953--1962, 2018.
 
 \bibitem[NWZ{\etalchar{+}}22]{niu2022eata}
-Shuaicheng Niu, Jiaxiang Wu, Yifan Zhang, Yaofo Chen, Shihua Zheng, Peilin Zhao, and Mingkui Tan.
+Shuaicheng Niu, Jiaxiang Wu, Yifan Zhang, Yaofo Chen, Shihua Zheng, Peilin
+  Zhao, and Mingkui Tan.
 \newblock Efficient test-time model adaptation without forgetting.
-\newblock In {\em Proceedings of the 39th International Conference on Machine Learning}, volume 162 of {\em Proceedings of Machine Learning Research}, pages 16888--16905, 2022.
+\newblock In {\em Proceedings of the 39th International Conference on Machine
+  Learning}, volume 162 of {\em Proceedings of Machine Learning Research},
+  pages 16888--16905, 2022.
 
 \bibitem[Pen55]{penrose1955generalized}
 Roger Penrose.
 \newblock A generalized inverse for matrices.
-\newblock {\em Mathematical Proceedings of the Cambridge Philosophical Society}, 51(3):406--413, 1955.
+\newblock {\em Mathematical Proceedings of the Cambridge Philosophical
+  Society}, 51(3):406--413, 1955.
 
 \bibitem[Qui86]{quinlan1986induction}
 J.~R. Quinlan.
@@ -266,9 +329,12 @@ J.~R. Quinlan.
 \newblock {\em Machine Learning}, 1(1):81--106, 1986.
 
 \bibitem[RHH{\etalchar{+}}16]{rae2016scaling}
-Jack~W. Rae, Jonathan~J. Hunt, Tim Harley, Ivo Danihelka, Andrew Senior, Greg Wayne, Alex Graves, and Timothy Lillicrap.
-\newblock Scaling memory-augmented neural networks with sparse reads and writes.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~29, 2016.
+Jack~W. Rae, Jonathan~J. Hunt, Tim Harley, Ivo Danihelka, Andrew Senior, Greg
+  Wayne, Alex Graves, and Timothy Lillicrap.
+\newblock Scaling memory-augmented neural networks with sparse reads and
+  writes.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~29, 2016.
 
 \bibitem[RHW86]{rumelhart1986learning}
 David~E. Rumelhart, Geoffrey~E. Hinton, and Ronald~J. Williams.
@@ -276,43 +342,60 @@ David~E. Rumelhart, Geoffrey~E. Hinton, and Ronald~J. Williams.
 \newblock {\em Nature}, 323(6088):533--536, 1986.
 
 \bibitem[RRD{\etalchar{+}}16]{rusu2016progressive}
-Andrei~A. Rusu, Neil~C. Rabinowitz, Guillaume Desjardins, Hubert Soyer, James Kirkpatrick, Koray Kavukcuoglu, Razvan Pascanu, and Raia Hadsell.
+Andrei~A. Rusu, Neil~C. Rabinowitz, Guillaume Desjardins, Hubert Soyer, James
+  Kirkpatrick, Koray Kavukcuoglu, Razvan Pascanu, and Raia Hadsell.
 \newblock Progressive neural networks, 2016.
 
 \bibitem[SIS21]{schlag2021linear}
 Imanol Schlag, Kazuki Irie, and J{\"u}rgen Schmidhuber.
 \newblock Linear transformers are secretly fast weight programmers.
-\newblock In {\em Proceedings of the 38th International Conference on Machine Learning}, volume 139 of {\em Proceedings of Machine Learning Research}, pages 9355--9366, 2021.
+\newblock In {\em Proceedings of the 38th International Conference on Machine
+  Learning}, volume 139 of {\em Proceedings of Machine Learning Research},
+  pages 9355--9366, 2021.
 
 \bibitem[SLD{\etalchar{+}}25]{sun2025learning}
-Yu~Sun, Xinhao Li, Karan Dalal, Jiarui Xu, Arjun Vikram, Genghan Zhang, Yann Dubois, Xinlei Chen, Xiaolong Wang, Sanmi Koyejo, Tatsunori Hashimoto, and Carlos Guestrin.
-\newblock Learning to (learn at test time): {RNNs} with expressive hidden states.
-\newblock In {\em Proceedings of the 42nd International Conference on Machine Learning}, volume 267 of {\em Proceedings of Machine Learning Research}, pages 57503--57522, 2025.
+Yu~Sun, Xinhao Li, Karan Dalal, Jiarui Xu, Arjun Vikram, Genghan Zhang, Yann
+  Dubois, Xinlei Chen, Xiaolong Wang, Sanmi Koyejo, Tatsunori Hashimoto, and
+  Carlos Guestrin.
+\newblock Learning to (learn at test time): {RNNs} with expressive hidden
+  states.
+\newblock In {\em Proceedings of the 42nd International Conference on Machine
+  Learning}, volume 267 of {\em Proceedings of Machine Learning Research},
+  pages 57503--57522, 2025.
 
 \bibitem[SMM{\etalchar{+}}17]{shazeer2017outrageously}
-Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le, Geoffrey Hinton, and Jeff Dean.
-\newblock Outrageously large neural networks: The sparsely-gated mixture-of-experts layer.
+Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le,
+  Geoffrey Hinton, and Jeff Dean.
+\newblock Outrageously large neural networks: The sparsely-gated
+  mixture-of-experts layer.
 \newblock In {\em International Conference on Learning Representations}, 2017.
 
 \bibitem[SS12]{shalev2012online}
 Shai Shalev-Shwartz.
 \newblock Online learning and online convex optimization.
-\newblock {\em Foundations and Trends in Machine Learning}, 4(2):107--194, 2012.
+\newblock {\em Foundations and Trends in Machine Learning}, 4(2):107--194,
+  2012.
 
 \bibitem[SSZ17]{snell2017prototypical}
 Jake Snell, Kevin Swersky, and Richard~S. Zemel.
 \newblock Prototypical networks for few-shot learning.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~30, 2017.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~30, 2017.
 
 \bibitem[SWF{\etalchar{+}}15]{sukhbaatar2015end}
 Sainbayar Sukhbaatar, Jason Weston, Rob Fergus, et~al.
 \newblock End-to-end memory networks.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~28, 2015.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~28, 2015.
 
 \bibitem[SWL{\etalchar{+}}20]{sun2020test}
-Yu~Sun, Xiaolong Wang, Zhuang Liu, John Miller, Alexei~A. Efros, and Moritz Hardt.
-\newblock Test-time training with self-supervision for generalization under distribution shifts.
-\newblock In {\em Proceedings of the 37th International Conference on Machine Learning}, volume 119 of {\em Proceedings of Machine Learning Research}, pages 9229--9248, 2020.
+Yu~Sun, Xiaolong Wang, Zhuang Liu, John Miller, Alexei~A. Efros, and Moritz
+  Hardt.
+\newblock Test-time training with self-supervision for generalization under
+  distribution shifts.
+\newblock In {\em Proceedings of the 37th International Conference on Machine
+  Learning}, volume 119 of {\em Proceedings of Machine Learning Research},
+  pages 9229--9248, 2020.
 
 \bibitem[TA77]{tikhonov1977solutions}
 Andrey~N. Tikhonov and Vasiliy~Y. Arsenin.
@@ -322,17 +405,21 @@ Andrey~N. Tikhonov and Vasiliy~Y. Arsenin.
 \bibitem[Vov90]{vovk1990aggregating}
 Vladimir~G. Vovk.
 \newblock Aggregating strategies.
-\newblock In {\em Proceedings of the Third Annual Workshop on Computational Learning Theory}, pages 371--383. Morgan Kaufmann, 1990.
+\newblock In {\em Proceedings of the Third Annual Workshop on Computational
+  Learning Theory}, pages 371--383. Morgan Kaufmann, 1990.
 
 \bibitem[Vov97]{vovk1997competitive}
 Volodya Vovk.
 \newblock Competitive on-line linear regression.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~10, 1997.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~10, 1997.
 
 \bibitem[VSP{\etalchar{+}}17]{vaswani2017attention}
-Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan~N. Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N. Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
 \newblock Attention is all you need.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~30, 2017.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~30, 2017.
 
 \bibitem[WCB15]{weston2015memory}
 Jason Weston, Sumit Chopra, and Antoine Bordes.
@@ -356,12 +443,15 @@ Jaehong Yoon, Eunho Yang, Jeongtae Lee, and Sung~Ju Hwang.
 
 \bibitem[Zin03]{zinkevich2003online}
 Martin Zinkevich.
-\newblock Online convex programming and generalized infinitesimal gradient ascent.
-\newblock In {\em Proceedings of the 20th International Conference on Machine Learning}, pages 928--936, 2003.
+\newblock Online convex programming and generalized infinitesimal gradient
+  ascent.
+\newblock In {\em Proceedings of the 20th International Conference on Machine
+  Learning}, pages 928--936, 2003.
 
 \bibitem[ZLF22]{zhang2022memo}
 Marvin Zhang, Sergey Levine, and Chelsea Finn.
 \newblock {MEMO}: Test time robustness via adaptation and augmentation.
-\newblock In {\em Advances in Neural Information Processing Systems}, volume~35, pages 38629--38642, 2022.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~35, pages 38629--38642, 2022.
 
 \end{thebibliography}

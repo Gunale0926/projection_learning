@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 THEORY_RESULTS = ROOT / "experiments" / "refinement_theory_results" / "results_refinement_theory.json"
 DPM_RESULTS = ROOT / "experiments" / "results_dpm.json"
 ADAPTER_RESULTS = ROOT / "experiments" / "results_dgm_adaptation_quick.json"
+HQS_RESULTS_DIR = ROOT / "experiments" / "hqs_results"
 OUT_DIR = ROOT / "experiments" / "publication_figures"
 
 COLORS = {
@@ -69,6 +71,15 @@ def save_vector(fig: plt.Figure, stem: str) -> None:
     for ext in ("pdf", "svg"):
         fig.savefig(OUT_DIR / f"{stem}.{ext}", bbox_inches="tight")
     plt.close(fig)
+
+
+def copy_hqs_figures() -> None:
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    for stem in ("hqs_online_nll", "hqs_hierarchy_heatmap", "hqs_nll_vs_structure"):
+        for ext in ("pdf", "svg"):
+            src = HQS_RESULTS_DIR / f"{stem}.{ext}"
+            if src.exists():
+                shutil.copy2(src, OUT_DIR / f"{stem}.{ext}")
 
 
 def mean_std(row: dict[str, Any], key: str) -> tuple[float, float]:
@@ -338,6 +349,7 @@ def main() -> None:
     theory = load_json(THEORY_RESULTS)
     dpm_results = load_json(DPM_RESULTS)
     adapter = load_json(ADAPTER_RESULTS)
+    copy_hqs_figures()
     plot_bayes_gap(theory)
     plot_guarded_curve(theory)
     plot_contextual_xor(theory)
