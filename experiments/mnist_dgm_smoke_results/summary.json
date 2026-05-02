@@ -1,0 +1,45 @@
+{
+  "alpha": 1.0,
+  "description": "MNIST smoke tests for the PyTorch CategoricalDGM reference implementation.",
+  "embed_seconds": 0.002263300004415214,
+  "embedding_dim": 48,
+  "eta": 0.02,
+  "k": 8,
+  "max_concepts": 256,
+  "n_eval": 500,
+  "n_train": 1200,
+  "seed": 0,
+  "source": "MNIST",
+  "tasks": {
+    "image_balanced_mask_hqs": {
+      "concept_purity_eval": 0.602,
+      "concept_purity_train": 0.5241666666666667,
+      "concepts": 256.0,
+      "edges": 255.0,
+      "global_prequential_accuracy": 0.5275,
+      "global_prequential_nll": 0.6943086650346716,
+      "heldout_accuracy": 0.616,
+      "heldout_nll": 0.6591673493385315,
+      "heldout_query_seconds": 0.019710199994733557,
+      "prequential_accuracy": 0.61,
+      "prequential_nll": 0.6678828263096511,
+      "routing_margin_eval": 0.22736376523971558,
+      "train_seconds": 10.796777699986706
+    },
+    "one_pass_digit_classification": {
+      "concept_purity_eval": 0.806,
+      "concept_purity_train": 0.9008333333333334,
+      "concepts": 248.0,
+      "edges": 247.0,
+      "global_prequential_accuracy": 0.1075,
+      "global_prequential_nll": 2.31512016226848,
+      "heldout_accuracy": 0.78,
+      "heldout_nll": 0.9727519154548645,
+      "heldout_query_seconds": 0.01991860000998713,
+      "prequential_accuracy": 0.7933333333333333,
+      "prequential_nll": 1.0322840583821138,
+      "routing_margin_eval": 0.09560544788837433,
+      "train_seconds": 8.14763240001048
+    }
+  }
+}
