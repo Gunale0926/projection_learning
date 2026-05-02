@@ -573,9 +573,14 @@ class ImageOnlyMaskPosteriorDGM:
         centroid_lr: float,
         max_concepts: int,
         concept_radius: float,
+        route_on: str,
         device: torch.device,
     ) -> None:
         self.image_dim = int(image_dim)
+        if route_on not in {"image", "image_mask"}:
+            raise ValueError("route_on must be 'image' or 'image_mask'")
+        self.route_on = route_on
+        self.route_dim = self.image_dim if route_on == "image" else self.image_dim + NUM_COARSE
         self.k = int(k)
         self.eta = float(eta)
         self.posterior_lr = float(posterior_lr)
@@ -585,7 +590,7 @@ class ImageOnlyMaskPosteriorDGM:
         self.max_concepts = int(max_concepts)
         self.concept_radius = float(concept_radius)
         self.device = device
-        self.centroids = torch.empty(0, self.image_dim, device=device)
+        self.centroids = torch.empty(0, self.route_dim, device=device)
         self.totals = torch.empty(0, device=device)
         self.theta = torch.empty(0, NUM_COARSE, device=device)
         self.grad_sq = torch.empty(0, NUM_COARSE, device=device)
@@ -601,10 +606,13 @@ class ImageOnlyMaskPosteriorDGM:
     def _posterior(self, idx: torch.Tensor) -> torch.Tensor:
         return F.softmax(self.theta[idx], dim=-1)
 
+    def _route_features(self, h: torch.Tensor) -> torch.Tensor:
+        return h[:, : self.image_dim] if self.route_on == "image" else h[:, : self.image_dim + NUM_COARSE]
+
     def predict(self, h: torch.Tensor, *, return_aux: bool = False, p0_logits: torch.Tensor | None = None) -> torch.Tensor | tuple[torch.Tensor, dict[str, torch.Tensor]]:
         del p0_logits
         h = h.to(self.device)
-        z = h[:, : self.image_dim]
+        route = self._route_features(h)
         mask = (h[:, self.image_dim :] > 0).to(h.dtype)
         if self.num_concepts == 0:
             probs = torch.full((h.shape[0], 2), 0.5, device=self.device)
@@ -617,7 +625,7 @@ class ImageOnlyMaskPosteriorDGM:
             }
             return (probs, aux) if return_aux else probs
 
-        distances = torch.cdist(z, self.centroids, p=2).square()
+        distances = torch.cdist(route, self.centroids, p=2).square()
         kk = min(self.k, self.num_concepts)
         neg_dist, cand_idx = torch.topk(-distances, k=kk, dim=1, sorted=True)
         weights = F.softmax(neg_dist / self.distance_temperature, dim=1)
@@ -652,26 +660,26 @@ class ImageOnlyMaskPosteriorDGM:
         y = y.to(self.device).long().flatten()
         if aux is None:
             _, aux = self.predict(h, return_aux=True)
-        z = h[:, : self.image_dim]
+        route = self._route_features(h)
         mask = h[:, self.image_dim :] > 0
         for row in range(h.shape[0]):
             y_i = int(y[row].item())
             selected = int(aux["selected_idx"][row].item())
             selected_distance = float(aux["selected_distance"][row].item())
             if self.num_concepts == 0 or selected < 0:
-                self._add_concept(z[row], mask[row], y_i)
+                self._add_concept(route[row], mask[row], y_i)
             elif selected_distance > self.concept_radius and self.num_concepts < self.max_concepts:
-                self._add_concept(z[row], mask[row], y_i)
+                self._add_concept(route[row], mask[row], y_i)
             else:
                 cand_idx = aux["candidate_idx"][row]
                 weights = aux["routing_weights"][row]
                 for cand, weight in zip(cand_idx, weights, strict=True):
                     self._repair(int(cand.item()), mask[row], y_i, float(weight.item()))
                 if self.centroid_lr > 0.0:
-                    self.centroids[selected].mul_(1.0 - self.centroid_lr).add_(z[row], alpha=self.centroid_lr)
+                    self.centroids[selected].mul_(1.0 - self.centroid_lr).add_(route[row], alpha=self.centroid_lr)
 
-    def _add_concept(self, z: torch.Tensor, mask: torch.Tensor, y: int) -> None:
-        self.centroids = torch.cat([self.centroids, z.detach().reshape(1, -1)], dim=0)
+    def _add_concept(self, route: torch.Tensor, mask: torch.Tensor, y: int) -> None:
+        self.centroids = torch.cat([self.centroids, route.detach().reshape(1, -1)], dim=0)
         self.totals = torch.cat([self.totals, torch.zeros(1, device=self.device)], dim=0)
         self.theta = torch.cat([self.theta, torch.zeros(1, NUM_COARSE, device=self.device)], dim=0)
         self.grad_sq = torch.cat([self.grad_sq, torch.full((1, NUM_COARSE), 1e-8, device=self.device)], dim=0)
@@ -928,6 +936,9 @@ def mask_bit_diagnostics(assignments: torch.Tensor, mask: torch.Tensor, coarse: 
         return {
             "true_mask_bit_rank_mean": float(np.mean(ranks)),
             "true_mask_bit_rank_median": float(np.median(ranks)),
+            "true_bit_hit_at_1": float(np.mean([rank <= 1 for rank in ranks])),
+            "true_bit_hit_at_3": float(np.mean([rank <= 3 for rank in ranks])),
+            "true_bit_hit_at_5": float(np.mean([rank <= 5 for rank in ranks])),
             "avg_local_mi_true_bit": float(np.mean(true_mi)),
             "avg_local_mi_best_spurious_bit": float(np.mean(best_spurious_mi)),
             "edge_precision": precision,
@@ -938,6 +949,9 @@ def mask_bit_diagnostics(assignments: torch.Tensor, mask: torch.Tensor, coarse: 
     return {
         "true_mask_bit_rank_mean": None,
         "true_mask_bit_rank_median": None,
+        "true_bit_hit_at_1": None,
+        "true_bit_hit_at_3": None,
+        "true_bit_hit_at_5": None,
         "avg_local_mi_true_bit": None,
         "avg_local_mi_best_spurious_bit": None,
         "edge_precision": None,
@@ -947,7 +961,37 @@ def mask_bit_diagnostics(assignments: torch.Tensor, mask: torch.Tensor, coarse: 
     }
 
 
-def oracle_coarse_posterior_metrics(
+def coarse_posterior_from_assignments(train_assignments: torch.Tensor, train_coarse: torch.Tensor, n_concepts: int) -> tuple[torch.Tensor, torch.Tensor]:
+    global_counts = torch.bincount(train_coarse.detach().cpu(), minlength=NUM_COARSE).float()
+    global_pi = global_counts / global_counts.sum().clamp_min(EPS)
+    if n_concepts <= 0:
+        return torch.empty(0, NUM_COARSE), global_pi
+    counts = torch.zeros(n_concepts, NUM_COARSE)
+    for concept, coarse in zip(train_assignments.detach().cpu(), train_coarse.detach().cpu(), strict=True):
+        idx = int(concept.item())
+        if idx >= 0:
+            counts[idx, int(coarse.item())] += 1.0
+    totals = counts.sum(dim=1, keepdim=True)
+    pi = torch.where(totals > 0, counts / totals.clamp_min(EPS), global_pi.expand_as(counts))
+    return pi, global_pi
+
+
+def posterior_mask_probs(row_pi: torch.Tensor, mask: torch.Tensor, eta: float) -> torch.Tensor:
+    mask = (mask.detach().cpu() > 0.5).float()
+    return (float(eta) + (1.0 - 2.0 * float(eta)) * (row_pi * mask).sum(dim=1)).clamp(EPS, 1.0 - EPS)
+
+
+def binary_metrics_from_p1(p1: torch.Tensor, y: torch.Tensor, prefix: str) -> dict[str, float]:
+    y = y.detach().cpu().long()
+    probs = torch.stack([1.0 - p1, p1], dim=1)
+    loss, correct = nll_and_correct(probs, y)
+    return {
+        f"{prefix}_nll": float(loss.mean().item()),
+        f"{prefix}_accuracy": correct / float(y.shape[0]),
+    }
+
+
+def oracle_coarse_posterior_hard_metrics(
     train_assignments: torch.Tensor,
     train_coarse: torch.Tensor,
     eval_assignments: torch.Tensor,
@@ -957,34 +1001,143 @@ def oracle_coarse_posterior_metrics(
     eta: float,
     prefix: str,
 ) -> dict[str, float]:
+    pi, global_pi = coarse_posterior_from_assignments(train_assignments, train_coarse, n_concepts)
     if n_concepts <= 0:
-        p1 = torch.full((eval_y.shape[0],), 0.5)
+        row_pi = global_pi.expand(eval_y.shape[0], -1)
     else:
-        counts = torch.zeros(n_concepts, NUM_COARSE)
-        global_counts = torch.bincount(train_coarse.detach().cpu(), minlength=NUM_COARSE).float()
-        global_pi = global_counts / global_counts.sum().clamp_min(EPS)
-        train_coarse_cpu = train_coarse.detach().cpu()
-        for concept, coarse in zip(train_assignments.cpu(), train_coarse_cpu, strict=True):
-            idx = int(concept.item())
-            if idx >= 0:
-                counts[idx, int(coarse.item())] += 1.0
-        totals = counts.sum(dim=1, keepdim=True)
-        pi = torch.where(totals > 0, counts / totals.clamp_min(EPS), global_pi.expand_as(counts))
         eval_idx = eval_assignments.detach().cpu().long()
         valid = (eval_idx >= 0) & (eval_idx < n_concepts)
         row_pi = global_pi.expand(eval_idx.shape[0], -1).clone()
         if bool(valid.any()):
             row_pi[valid] = pi[eval_idx[valid]]
-        mask = (eval_mask.detach().cpu() > 0.5).float()
-        p1 = float(eta) + (1.0 - 2.0 * float(eta)) * (row_pi * mask).sum(dim=1)
-        p1 = p1.clamp(EPS, 1.0 - EPS)
-    y = eval_y.detach().cpu().long()
-    probs = torch.stack([1.0 - p1, p1], dim=1)
-    loss, correct = nll_and_correct(probs, y)
+    metrics = binary_metrics_from_p1(posterior_mask_probs(row_pi, eval_mask, eta), eval_y, f"oracle_hard_route_coarse_posterior_under_dgm_concepts_{prefix}")
+    metrics[f"oracle_coarse_posterior_under_dgm_concepts_{prefix}_nll"] = metrics[f"oracle_hard_route_coarse_posterior_under_dgm_concepts_{prefix}_nll"]
+    metrics[f"oracle_coarse_posterior_under_dgm_concepts_{prefix}_accuracy"] = metrics[f"oracle_hard_route_coarse_posterior_under_dgm_concepts_{prefix}_accuracy"]
+    return metrics
+
+
+@torch.no_grad()
+def oracle_coarse_posterior_soft_metrics(
+    model: Any,
+    train_assignments: torch.Tensor,
+    train_coarse: torch.Tensor,
+    h_eval: torch.Tensor,
+    eval_mask: torch.Tensor,
+    eval_y: torch.Tensor,
+    n_concepts: int,
+    eta: float,
+    batch_size: int,
+    device: torch.device,
+    prefix: str,
+) -> dict[str, float]:
+    pi, global_pi = coarse_posterior_from_assignments(train_assignments, train_coarse, n_concepts)
+    if n_concepts <= 0:
+        row_pi = global_pi.expand(eval_y.shape[0], -1)
+    else:
+        pi_device = pi.to(device)
+        global_device = global_pi.to(device)
+        chunks = []
+        for begin in range(0, h_eval.shape[0], batch_size):
+            hb = h_eval[begin : begin + batch_size].to(device)
+            _, aux = model.predict(hb, return_aux=True)
+            cand_idx = aux["candidate_idx"]
+            weights = aux["routing_weights"]
+            if cand_idx.numel() == 0:
+                chunks.append(global_device.expand(hb.shape[0], -1))
+                continue
+            safe_idx = cand_idx.clamp(0, max(0, n_concepts - 1))
+            cand_pi = pi_device[safe_idx]
+            valid = (cand_idx >= 0) & (cand_idx < n_concepts)
+            cand_pi = torch.where(valid[:, :, None], cand_pi, global_device[None, None, :])
+            chunks.append((weights[:, :, None] * cand_pi).sum(dim=1))
+        row_pi = torch.cat(chunks, dim=0).detach().cpu()
+    return binary_metrics_from_p1(posterior_mask_probs(row_pi, eval_mask, eta), eval_y, f"oracle_soft_route_coarse_posterior_under_dgm_concepts_{prefix}")
+
+
+def posterior_quality_diagnostics(model: Any, assignments: torch.Tensor, coarse: torch.Tensor, n_concepts: int) -> dict[str, float | None]:
+    theta = getattr(model, "theta", None)
+    if theta is None or n_concepts <= 0:
+        return {
+            "posterior_true_bit_hit_at_1": None,
+            "posterior_true_bit_hit_at_3": None,
+            "posterior_true_bit_hit_at_5": None,
+            "posterior_mass_on_true_coarse": None,
+            "posterior_empirical_coarse_kl": None,
+            "posterior_empirical_coarse_tv": None,
+        }
+    learned = F.softmax(theta.detach().cpu(), dim=1).clamp_min(EPS)
+    coarse_cpu = coarse.detach().cpu()
+    ranks = []
+    masses = []
+    kls = []
+    tvs = []
+    for concept in range(min(n_concepts, learned.shape[0])):
+        rows = assignments == concept
+        if int(rows.sum().item()) < 8:
+            continue
+        concept_coarse = coarse_cpu[rows]
+        counts = torch.bincount(concept_coarse, minlength=NUM_COARSE).float()
+        empirical = counts / counts.sum().clamp_min(EPS)
+        majority = int(torch.argmax(counts).item())
+        ordered = torch.argsort(learned[concept], descending=True).tolist()
+        ranks.append(ordered.index(majority) + 1)
+        masses.append(float(learned[concept, majority].item()))
+        kls.append(float((empirical * torch.log((empirical / learned[concept]).clamp_min(EPS))).sum().item()))
+        tvs.append(float(0.5 * torch.abs(empirical - learned[concept]).sum().item()))
+    if not ranks:
+        return {
+            "posterior_true_bit_hit_at_1": None,
+            "posterior_true_bit_hit_at_3": None,
+            "posterior_true_bit_hit_at_5": None,
+            "posterior_mass_on_true_coarse": None,
+            "posterior_empirical_coarse_kl": None,
+            "posterior_empirical_coarse_tv": None,
+        }
     return {
-        f"oracle_coarse_posterior_under_dgm_concepts_{prefix}_nll": float(loss.mean().item()),
-        f"oracle_coarse_posterior_under_dgm_concepts_{prefix}_accuracy": correct / float(y.shape[0]),
+        "posterior_true_bit_hit_at_1": float(np.mean([rank <= 1 for rank in ranks])),
+        "posterior_true_bit_hit_at_3": float(np.mean([rank <= 3 for rank in ranks])),
+        "posterior_true_bit_hit_at_5": float(np.mean([rank <= 5 for rank in ranks])),
+        "posterior_mass_on_true_coarse": float(np.mean(masses)),
+        "posterior_empirical_coarse_kl": float(np.mean(kls)),
+        "posterior_empirical_coarse_tv": float(np.mean(tvs)),
     }
+
+
+@torch.no_grad()
+def knn_coarse_posterior_ceiling_metrics(
+    z_train: torch.Tensor,
+    coarse_train: torch.Tensor,
+    z_eval: torch.Tensor,
+    coarse_eval: torch.Tensor,
+    eval_mask: torch.Tensor,
+    eval_y: torch.Tensor,
+    *,
+    k: int,
+    eta: float,
+    batch_size: int,
+    device: torch.device,
+    prefix: str,
+) -> dict[str, float]:
+    if k <= 0:
+        return {}
+    train = z_train.to(device)
+    train_coarse = coarse_train.to(device)
+    one_hot = F.one_hot(train_coarse.long(), NUM_COARSE).float()
+    p1_chunks = []
+    coarse_correct = 0
+    for begin in range(0, z_eval.shape[0], batch_size):
+        zb = z_eval[begin : begin + batch_size].to(device)
+        maskb = eval_mask[begin : begin + batch_size].to(device)
+        coarseb = coarse_eval[begin : begin + batch_size].to(device)
+        distances = torch.cdist(zb, train, p=2).square()
+        nn_idx = torch.topk(-distances, k=min(k, train.shape[0]), dim=1).indices
+        pi = one_hot[nn_idx].mean(dim=1)
+        coarse_correct += int((torch.argmax(pi, dim=1) == coarseb).sum().item())
+        p1_chunks.append((float(eta) + (1.0 - 2.0 * float(eta)) * (pi * (maskb > 0.5).float()).sum(dim=1)).clamp(EPS, 1.0 - EPS).detach().cpu())
+    p1 = torch.cat(p1_chunks, dim=0)
+    metrics = binary_metrics_from_p1(p1, eval_y, f"knn_coarse_posterior_ceiling_{prefix}")
+    metrics[f"knn_coarse_probe_{prefix}_accuracy"] = coarse_correct / float(z_eval.shape[0])
+    return metrics
 
 
 def summarize_concept_sizes(model: Any) -> dict[str, float]:
@@ -1049,17 +1202,18 @@ def build_dgm(args: argparse.Namespace, image_dim: int, device: torch.device) ->
             lambda_edge=args.lambda_edge,
             device=device,
         )
-    if args.dgm_variant == "image_only_mask_posterior":
+    if args.dgm_variant in {"image_only_mask_posterior", "global_mask_posterior"}:
         return ImageOnlyMaskPosteriorDGM(
             image_dim=image_dim,
-            k=args.k,
-            eta=args.eta,
+            k=1 if args.dgm_variant == "global_mask_posterior" else args.k,
+            eta=args.eta if getattr(args, "posterior_eta", None) is None else args.posterior_eta,
             posterior_lr=args.posterior_lr,
             posterior_l2=args.posterior_l2,
             distance_temperature=args.distance_temperature,
-            centroid_lr=args.centroid_lr,
-            max_concepts=args.max_concepts,
-            concept_radius=args.concept_radius,
+            centroid_lr=0.0 if args.dgm_variant == "global_mask_posterior" else args.centroid_lr,
+            max_concepts=1 if args.dgm_variant == "global_mask_posterior" else args.max_concepts,
+            concept_radius=float("inf") if args.dgm_variant == "global_mask_posterior" else args.concept_radius,
+            route_on=getattr(args, "posterior_route_on", "image"),
             device=device,
         )
     raise ValueError(f"unknown dgm_variant: {args.dgm_variant}")
@@ -1182,8 +1336,37 @@ def run_prequential(
         "edge_mask_fraction": edge_mask_fraction(dgm, image_dim),
         "posterior_entropy": posterior_entropy(dgm),
         **mask_bit_diagnostics(assignments, mask_train, coarse_train, y_train, getattr(dgm, "num_concepts", 0), accepted_bits),
-        **oracle_coarse_posterior_metrics(assignments, coarse_train, dev_assignments, mask_dev, y_dev, getattr(dgm, "num_concepts", 0), args.eta, "dev"),
-        **oracle_coarse_posterior_metrics(assignments, coarse_train, test_assignments, mask_test, y_test, getattr(dgm, "num_concepts", 0), args.eta, "test"),
+        **posterior_quality_diagnostics(dgm, assignments, coarse_train, getattr(dgm, "num_concepts", 0)),
+        **oracle_coarse_posterior_hard_metrics(assignments, coarse_train, dev_assignments, mask_dev, y_dev, getattr(dgm, "num_concepts", 0), args.eta, "dev"),
+        **oracle_coarse_posterior_hard_metrics(assignments, coarse_train, test_assignments, mask_test, y_test, getattr(dgm, "num_concepts", 0), args.eta, "test"),
+        **oracle_coarse_posterior_soft_metrics(dgm, assignments, coarse_train, h_dev, mask_dev, y_dev, getattr(dgm, "num_concepts", 0), args.eta, args.batch_size, device, "dev"),
+        **oracle_coarse_posterior_soft_metrics(dgm, assignments, coarse_train, h_test, mask_test, y_test, getattr(dgm, "num_concepts", 0), args.eta, args.batch_size, device, "test"),
+        **knn_coarse_posterior_ceiling_metrics(
+            h_train[:, :image_dim],
+            coarse_train,
+            h_dev[:, :image_dim],
+            coarse_dev,
+            mask_dev,
+            y_dev,
+            k=getattr(args, "probe_k", 20),
+            eta=args.eta,
+            batch_size=args.batch_size,
+            device=device,
+            prefix="dev",
+        ),
+        **knn_coarse_posterior_ceiling_metrics(
+            h_train[:, :image_dim],
+            coarse_train,
+            h_test[:, :image_dim],
+            coarse_test,
+            mask_test,
+            y_test,
+            k=getattr(args, "probe_k", 20),
+            eta=args.eta,
+            batch_size=args.batch_size,
+            device=device,
+            prefix="test",
+        ),
     }
     diagnostics["concept_purity_fine_heldout"] = diagnostics["concept_purity_fine_test"]
     diagnostics["concept_purity_coarse_heldout"] = diagnostics["concept_purity_coarse_test"]
@@ -1266,7 +1449,48 @@ def aggregate_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
             arr = np.asarray(vals, dtype=float)
             aggregate["diagnostics"][f"{key}_mean"] = float(arr.mean())
             aggregate["diagnostics"][f"{key}_std"] = float(arr.std(ddof=0))
+    aggregate["paired_comparisons"] = paired_comparisons(runs)
     return aggregate
+
+
+def bootstrap_ci(values: np.ndarray, *, seed: int, n_bootstrap: int = 10000) -> tuple[float, float]:
+    if values.size == 0:
+        return float("nan"), float("nan")
+    generator = np.random.default_rng(seed)
+    idx = generator.integers(0, values.size, size=(n_bootstrap, values.size))
+    means = values[idx].mean(axis=1)
+    return float(np.quantile(means, 0.025)), float(np.quantile(means, 0.975))
+
+
+def paired_comparisons(runs: list[dict[str, Any]]) -> dict[str, Any]:
+    comparisons: dict[str, Any] = {}
+    baselines = ["online_logistic", "crossed_logistic", "global_frequency", "logistic_dgm_trust"]
+    metric_names = ["test_heldout_nll", "test_heldout_accuracy", "dev_heldout_nll", "prequential_nll"]
+    for baseline in baselines:
+        comparisons[baseline] = {}
+        for metric in metric_names:
+            vals = []
+            for run in runs:
+                dgm_val = run["metrics"].get("dgm", {}).get(metric)
+                base_val = run["metrics"].get(baseline, {}).get(metric)
+                if isinstance(dgm_val, (int, float)) and isinstance(base_val, (int, float)):
+                    vals.append(float(dgm_val) - float(base_val))
+            if not vals:
+                continue
+            arr = np.asarray(vals, dtype=float)
+            ci_low, ci_high = bootstrap_ci(arr, seed=17 + len(comparisons) * 101 + len(metric))
+            std = float(arr.std(ddof=1)) if arr.size > 1 else 0.0
+            sem = std / math.sqrt(float(arr.size)) if arr.size > 1 else 0.0
+            comparisons[baseline][metric] = {
+                "dgm_minus_baseline_mean": float(arr.mean()),
+                "dgm_minus_baseline_std": std,
+                "dgm_minus_baseline_sem": sem,
+                "bootstrap_ci95_low": ci_low,
+                "bootstrap_ci95_high": ci_high,
+                "paired_t": float(arr.mean() / sem) if sem > 0.0 else None,
+                "n": int(arr.size),
+            }
+    return comparisons
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
@@ -1300,12 +1524,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "prototype_fit": args.prototype_fit,
         "encoder_epochs": args.encoder_epochs if args.encoder == "convnet" else 0,
         "eta": args.eta,
+        "posterior_eta": getattr(args, "posterior_eta", None),
         "mask_scale": args.mask_scale,
         "max_concepts": args.max_concepts,
         "k": args.k,
         "alpha": args.alpha,
         "posterior_lr": getattr(args, "posterior_lr", None),
         "posterior_l2": getattr(args, "posterior_l2", None),
+        "posterior_route_on": getattr(args, "posterior_route_on", None),
+        "probe_k": getattr(args, "probe_k", None),
         "lambda_grid": args.lambda_grid,
         "fine_names": data.fine_names,
         "coarse_names": data.coarse_names,
@@ -1346,7 +1573,7 @@ def main() -> None:
     parser.add_argument("--encoder-batch-size", type=int, default=256)
     parser.add_argument("--encoder-lr", type=float, default=2e-3)
     parser.add_argument("--batch-size", type=int, default=1024)
-    parser.add_argument("--dgm-variant", choices=["categorical", "image_only_mask", "image_only_mask_posterior"], default="categorical")
+    parser.add_argument("--dgm-variant", choices=["categorical", "image_only_mask", "image_only_mask_posterior", "global_mask_posterior"], default="categorical")
     parser.add_argument("--max-concepts", type=int, default=256)
     parser.add_argument("--concept-radius", type=float, default=0.32)
     parser.add_argument("--k", type=int, default=8)
@@ -1364,11 +1591,14 @@ def main() -> None:
     parser.add_argument("--lambda-edge", type=float, default=0.0)
     parser.add_argument("--posterior-lr", type=float, default=0.5)
     parser.add_argument("--posterior-l2", type=float, default=1e-4)
+    parser.add_argument("--posterior-eta", type=float, default=None)
+    parser.add_argument("--posterior-route-on", choices=["image", "image_mask"], default="image")
     parser.add_argument("--eta", type=float, default=0.02)
     parser.add_argument("--mask-scale", type=float, default=0.20)
     parser.add_argument("--logistic-lr", type=float, default=0.4)
     parser.add_argument("--crossed-lr", type=float, default=0.15)
     parser.add_argument("--logistic-l2", type=float, default=1e-5)
+    parser.add_argument("--probe-k", type=int, default=20)
     parser.add_argument("--lambda-grid", type=parse_lambda_grid, default=parse_lambda_grid("0,0.02,0.05,0.1,0.2,0.4,0.7,1.0"))
     args = parser.parse_args()
 
