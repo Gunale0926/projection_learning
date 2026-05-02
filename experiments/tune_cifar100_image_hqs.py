@@ -36,6 +36,8 @@ def base_config() -> dict[str, Any]:
         "m_min": 4,
         "split_tau": 0.005,
         "lambda_edge": 0.0,
+        "posterior_lr": 0.5,
+        "posterior_l2": 1e-4,
         "eta": 0.02,
         "mask_scale": 0.20,
         "logistic_lr": 0.4,
@@ -64,9 +66,13 @@ def candidate_configs() -> list[dict[str, Any]]:
         {"alpha": 0.1},
         {"alpha": 0.3},
         {"alpha": 3.0},
-        {"dgm_variant": "image_only_mask", "mask_scale": 0.0, "max_concepts": 400},
-        {"dgm_variant": "image_only_mask", "mask_scale": 0.0, "max_concepts": 768, "concept_radius": 0.25},
-        {"dgm_variant": "image_only_mask", "mask_scale": 0.0, "max_concepts": 768, "concept_radius": 0.40},
+        {"dgm_variant": "image_only_mask", "mask_scale": 0.20, "max_concepts": 400},
+        {"dgm_variant": "image_only_mask", "mask_scale": 0.20, "max_concepts": 768, "concept_radius": 0.25},
+        {"dgm_variant": "image_only_mask", "mask_scale": 0.20, "max_concepts": 768, "concept_radius": 0.40},
+        {"dgm_variant": "image_only_mask_posterior", "mask_scale": 0.20, "max_concepts": 256, "concept_radius": 0.32, "posterior_lr": 0.2},
+        {"dgm_variant": "image_only_mask_posterior", "mask_scale": 0.20, "max_concepts": 400, "concept_radius": 0.32, "posterior_lr": 0.5},
+        {"dgm_variant": "image_only_mask_posterior", "mask_scale": 0.20, "max_concepts": 768, "concept_radius": 0.25, "posterior_lr": 0.5},
+        {"dgm_variant": "image_only_mask_posterior", "mask_scale": 0.20, "max_concepts": 768, "concept_radius": 0.40, "posterior_lr": 1.0},
     ]
     out = []
     for idx, override in enumerate(overrides):
@@ -84,9 +90,14 @@ def main() -> None:
     parser.add_argument("--data-root", type=Path, default=Path("experiments/data"))
     parser.add_argument("--output-dir", type=Path, default=Path("experiments/cifar100_image_hqs_results"))
     parser.add_argument("--n-train", type=int, default=2000)
-    parser.add_argument("--n-eval", type=int, default=800)
+    parser.add_argument("--n-eval", type=int, default=None, help="legacy alias for both dev and test")
+    parser.add_argument("--n-dev", type=int, default=800)
+    parser.add_argument("--n-test", type=int, default=800)
     parser.add_argument("--max-runs", type=int, default=0)
     args = parser.parse_args()
+    if args.n_eval is not None:
+        args.n_dev = args.n_eval
+        args.n_test = args.n_eval
 
     device = select_device(args.device)
     data = load_cifar100(args.data_root)
@@ -98,7 +109,9 @@ def main() -> None:
     for cfg in configs:
         cfg["seed"] = args.seed
         cfg["n_train"] = args.n_train
-        cfg["n_eval"] = args.n_eval
+        cfg["n_dev"] = args.n_dev
+        cfg["n_test"] = args.n_test
+        cfg["n_eval"] = args.n_test
         cfg["quick"] = False
         cfg["data_root"] = args.data_root
         ns = SimpleNamespace(**cfg)
@@ -109,18 +122,19 @@ def main() -> None:
         trust = result["metrics"]["logistic_dgm_trust"]
         logistic = result["metrics"]["online_logistic"]
         print(
-            f"{cfg['name']}: dgm_nll={dgm['heldout_nll']:.3f} dgm_acc={dgm['heldout_accuracy']:.3f} "
-            f"trust_nll={trust['heldout_nll']:.3f} logistic_nll={logistic['heldout_nll']:.3f}"
+            f"{cfg['name']}: dgm_dev={dgm['dev_heldout_nll']:.3f} dgm_test={dgm['test_heldout_nll']:.3f} "
+            f"trust_dev={trust['dev_heldout_nll']:.3f} logistic_dev={logistic['dev_heldout_nll']:.3f}"
         )
-        if best is None or trust["heldout_nll"] < best["metrics"]["logistic_dgm_trust"]["heldout_nll"]:
+        if best is None or trust["dev_heldout_nll"] < best["metrics"]["logistic_dgm_trust"]["dev_heldout_nll"]:
             best = row
     assert best is not None
     payload = {
         "description": "CUDA hyperparameter sweep for CIFAR-100 Image-BalancedMask-HQS. The task and labels are unchanged.",
         "seed": args.seed,
         "n_train": args.n_train,
-        "n_eval": args.n_eval,
-        "selection_metric": "logistic_dgm_trust.heldout_nll",
+        "n_dev": args.n_dev,
+        "n_test": args.n_test,
+        "selection_metric": "logistic_dgm_trust.dev_heldout_nll",
         "best_name": best["name"],
         "best_config": best["config"],
         "best_metrics": best["metrics"],
@@ -129,8 +143,8 @@ def main() -> None:
     }
     args.output_dir.mkdir(parents=True, exist_ok=True)
     output = args.output_dir / "tuning_summary.json"
-    output.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    print(f"best={best['name']} trust_nll={best['metrics']['logistic_dgm_trust']['heldout_nll']:.3f}")
+    output.write_text(json.dumps(payload, indent=2, sort_keys=True, default=str), encoding="utf-8")
+    print(f"best={best['name']} trust_dev_nll={best['metrics']['logistic_dgm_trust']['dev_heldout_nll']:.3f}")
     print(f"wrote {output}")
 
 
