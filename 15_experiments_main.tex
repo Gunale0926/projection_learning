@@ -1,32 +1,101 @@
 \section{Experiments}
 \label{sec:main-experiments}
 
-The experiments are organized by claim strength.
-The synthetic Bayes-gap stream tests the repair-only theorem numerically.
-BalancedMask-HQS tests consequence-sensitive edge discovery with known oracle structure.
-Image-HQS tests predictive usefulness under frozen image embeddings without exposing hierarchy labels.
-All online learners use a prequential protocol: predict, observe the consequence, then update \citep{dawid1984prequential}.
-We report the strongest completed non-DGM baselines in the main text; the appendix keeps the full tables, ablations, and the larger budget-matched baseline grid that should be completed before broader SOTA claims.
-The main claims are therefore mechanism claims, not leaderboard claims.
-For each experiment we state the population distinction that should matter, the learner's allowed observations, and the interpretation of the result.
+The main empirical section is organized for two audiences.  First, we report
+standard online-adaptation metrics under a shared frozen representation:
+prequential prediction, held-out negative log likelihood, accuracy, memory
+state size, and ordinary baselines.  Second, we keep controlled diagnostics
+that test the paper's mechanism claims: repair-only lower bounds,
+consequence-sensitive refinement, and sparse hierarchy recovery.  All online
+learners use the same prequential order: predict, observe the consequence, then
+update \citep{dawid1984prequential}.  Labels used to define CIFAR hierarchy
+diagnostics are never supplied to the non-oracle predictor or update rule.
 
-\subsection{Bayes-gap calibration}
+The experiments should be read as mechanism evidence plus frozen-backbone
+adaptation evidence, not as a broad SOTA benchmark.  We nevertheless include
+two small scaling pilots at the end of the section because they show where the
+method could become competitive after systems work and stronger baselines.
 
+\subsection{ML-facing online adaptation: CIFAR-100 Image-HQS}
+
+The most ML-like experiment is non-oracle CIFAR-100 Image-HQS.  Each round gives
+a frozen image embedding $z=\phi(x)$ and a random query mask
+$s\in\{0,1\}^{20}$.  The binary consequence is
+\[
+Y=s_{c(x)}
+\]
+with label flip probability $\eta=0.02$, where $c(x)$ is the CIFAR-100 coarse
+class \citep{krizhevsky2009learning}.  The learner observes the image embedding,
+the mask, and the revealed binary consequence, but never observes the fine or
+coarse CIFAR label.  The goal is not image classification; it is online
+adaptation to a structured binary prediction problem under a frozen visual
+representation.
+
+DGM uses image-only routing with a local mask-coordinate posterior memory,
+\[
+P(Y=1\mid j,s)
+\approx
+\eta+(1-2\eta)\sum_{c=1}^{20}\pi_{j,c}s_c,
+\]
+and updates $\pi_j$ only from the binary outcome, the mask, and the soft routing
+weights.  The comparison set is deliberately ordinary: a global frequency
+model, an online logistic head on $[z,s]$, and an online crossed logistic head
+on $[z,s,z\otimes s]$.  Table~\ref{tab:main-results} shows that DGM improves
+test NLL over online logistic by $0.0180$ nats with paired bootstrap 95\% CI
+$[0.0148,0.0212]$, and over crossed logistic by $0.0085$ nats with CI
+$[0.0047,0.0122]$.  Accuracy gains are $2.75$ percentage points over online
+logistic and $0.94$ points over crossed logistic.
+
+This result supports local posterior repair under learned visual concepts.  It
+does not claim exact recovery of the CIFAR hierarchy graph from images.  Indeed,
+the learned image concepts are not coarse-pure enough for a single local split
+bit to be the right action; the posterior memory is the appropriate local
+repair.  Appendix~\ref{app:image-hqs-audit} gives leakage checks, posterior
+ablations, and representation ceilings.
+
+\subsection{Mechanism diagnostic: BalancedMask-HQS}
+
+BalancedMask-HQS isolates graph recovery from visual recognition.  The stream
+reveals the true fine label $z$ as the current atom and hides the CIFAR coarse
+label $c(z)$.  Each round samples a mask $s\in\{0,1\}^{20}$ with iid
+$s_k\sim\operatorname{Bernoulli}(1/2)$ and sets
+\[
+Y=s_{c(z)}
+\]
+before flipping with probability $\eta=0.02$.  Since $P(Y=1\mid z)=1/2$, a
+repair-only learner that conditions only on $z$ has Bayes log-risk $\log 2$.
+The refined oracle that observes the single bit $s_{c(z)}$ has risk
+$H_{\rm bin}(\eta)$.  All mask coordinates have identical marginal frequency,
+so a frequency-only edge selector has no reliable shortcut; only the
+consequence-valued coordinate matters.
+
+The result in Table~\ref{tab:main-results} is intentionally not framed as
+"DGM beats every model."  Crossed logistic and a per-fine local stump can fit
+the task.  The point is structural: DGM-HQS recovers exactly one
+fine-to-coarse edge per fine class, accepts no spurious edges, and reaches the
+oracle refined risk with about 200 atoms rather than a full crossed interaction
+table.  Budgeted cache baselines, reported in Appendix~\ref{sec:experiments},
+store examples but do not recover the reusable mask-coordinate rule under the
+reported budgets.
+
+\subsection{Mechanism diagnostic: Bayes-gap calibration}
+
+The Bayes-gap experiment checks the numerical scale of the repair obstruction.
 We sample
 \[
 Z\sim\operatorname{Unif}\{1,\ldots,K\},
 \qquad
 U\sim\operatorname{Bernoulli}(1/2),
 \]
-and let the old partition observe $Z$ while the refined partition observes $(Z,U)$.
-Consequences follow
+let the old partition observe only $Z$, and let the refined partition observe
+$(Z,U)$.  Consequences follow
 \[
 Y\mid Z=z,U=u
 \sim
 \operatorname{Bernoulli}(0.5+(-1)^{1-u}\delta).
 \]
-Thus the repair-only partition has risk $\log 2$ and the refined oracle has risk $H_{\rm bin}(0.5+\delta)$.
-The predicted regret slope is
+Thus the repair-only risk is $\log 2$, the refined oracle risk is
+$H_{\rm bin}(0.5+\delta)$, and the predicted regret slope is
 \[
 \Delta_{\rm theory}
 =
@@ -34,45 +103,10 @@ The predicted regret slope is
 =
 I(Y;U\mid Z).
 \]
-Figure~\ref{fig:main-evidence}A shows that the estimated repair-only slope matches this value; the $\delta=0$ control accepts no noise split.
-This experiment checks the scale of the theorem rather than DGM engineering: when $U$ carries no consequence information, refinement has zero value; when $\delta$ grows, the observed repair-only regret slope grows as the conditional mutual information predicts.
-The refined count learner and the one-bit DGM learner use the same information once the bit is accepted, so agreement with the oracle slope is expected.
-The purpose of the plot is to show that the observed asymptotic error of repair-only prediction is the Bayes-risk gap, not a failure of a particular optimizer.
-
-\subsection{CIFAR-100 BalancedMask-HQS}
-
-This diagnostic isolates hierarchy edge recovery from visual recognition.
-CIFAR-100 supplies fine label $z$ and coarse label $c(z)$ \citep{krizhevsky2009learning}.
-Each round samples a mask $s\in\{0,1\}^{20}$ with iid $s_k\sim\operatorname{Bernoulli}(1/2)$ and sets
-\[
-Y=s_{c(z)}
-\]
-before flipping with probability $\eta=0.02$.
-The old atom observes only $z$, so $P(Y=1\mid z)=1/2$ and $R_{\rm repair}=\log 2$.
-The refined oracle observes $s_{c(z)}$, so $R_{\rm refined}=H_{\rm bin}(\eta)$.
-All mask coordinates have the same marginal frequency; only the true coarse coordinate has positive conditional consequence value.
-Repair-only memory remains at the $\log 2$ structure bound, frequency-only edge selection is exposed by the balanced mask marginals, and DGM-HQS recovers one fine-to-coarse edge per fine class.
-Crossed logistic and a per-fine local stump also solve the task; they are included to show that the stream is learnable.
-The DGM claim is structural efficiency: it reaches the oracle refined risk with the intended sparse hierarchy graph, not that no other model can fit the labels.
-Budgeted cache baselines fail on the balanced-mask version because storing individual masks does not recover the reusable coordinate rule under the reported budgets.
-The appendix also reports the easier single-query variant, where frequency cues are available and therefore less diagnostic.
-
-\subsection{Non-oracle CIFAR-100 Image-HQS}
-
-The non-oracle stream removes the fine-label atom.
-The predictor and update observe a frozen image embedding $z=\phi(x)$, the mask $s$, and the binary outcome $Y=s_{c(x)}$ with the same flip probability; they never observe fine or coarse labels.
-DGM uses image-only routing with a local mask-coordinate posterior memory,
-\[
-P(Y=1\mid j,s)
-\approx
-\eta+(1-2\eta)\sum_{c=1}^{20}\pi_{j,c}s_c,
-\]
-and updates $\pi_j$ only from the binary outcome, the mask, and the soft routing weights.
-This experiment supports local posterior repair under learned visual concepts, not exact recovery of the CIFAR hierarchy graph from images.
-The posterior memory is deliberately weaker than an oracle hierarchy lookup: it must infer which mask coordinates tend to matter for a routed image concept from binary outcomes alone.
-The reported gain therefore tests whether local graph-memory routing provides useful specialization beyond a global frequency model and online linear heads under the same frozen encoder.
-The table omits hierarchy F1 for this block because no edge-recovery claim is made in the non-oracle image setting.
-Fine and coarse CIFAR labels are used only for diagnostics and representation ceilings, not in the prequential predictor or update.
+Figure~\ref{fig:main-evidence}A shows that the estimated repair-only regret
+slope matches this conditional mutual information.  At $\delta=0$, the bit has
+zero consequence value and the DGM split rule accepts no noise split.  This is
+the calibration check for the theorem, not an engineering benchmark.
 
 \begin{figure}[t]
 \centering
@@ -91,38 +125,114 @@ Fine and coarse CIFAR labels are used only for diagnostics and representation ce
 \subfloat[Image-HQS evidence.]{
     \includegraphics[width=0.47\linewidth]{cifar100_image_hqs_evidence.pdf}
 }
-\caption{Main empirical evidence. A: repair-only regret slope tracks the theoretical refinement gap. B-C: BalancedMask-HQS recovers the consequence-relevant CIFAR hierarchy edges and drops to the oracle refined risk. D: non-oracle Image-HQS shows predictive gains under a shared frozen encoder.}
+\caption{Main empirical evidence. A: repair-only regret slope tracks the
+theoretical refinement gap. B-C: BalancedMask-HQS recovers the
+consequence-relevant CIFAR hierarchy edges and drops to the oracle refined
+risk. D: non-oracle Image-HQS shows predictive gains under a shared frozen
+encoder without exposing hierarchy labels.}
 \label{fig:main-evidence}
 \end{figure}
 
 \begin{table}[t]
 \centering
 \small
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{lcccc}
 \toprule
 BalancedMask-HQS & NLL $\downarrow$ & Acc. $\uparrow$ & Structure & Edge F1 \\
 \midrule
-Repair-only & $0.694$ & $0.502$ & $100$ atoms & -- \\
-Frequency-only & $0.646$ & $0.540$ & $100$ edges & $0.08$ \\
-Crossed logistic & $0.117$ & $0.980$ & $2001$ params & -- \\
-Local stump & $0.099$ & $0.980$ & $200$ atoms & $1.00$ \\
-\textbf{DGM-HQS} & $\mathbf{0.099}$ & $\mathbf{0.980}$ & $\mathbf{100}$ edges & $\mathbf{1.00}$ \\
-Oracle refined & $0.099$ & $0.980$ & $100$ edges & $1.00$ \\
+Repair-only & $0.694\pm0.000$ & $0.502\pm0.005$ & $100$ atoms & -- \\
+Frequency-only & $0.646\pm0.012$ & $0.540\pm0.012$ & $100$ edges & $0.08\pm0.02$ \\
+Crossed logistic & $0.117\pm0.002$ & $0.980\pm0.001$ & $2001$ params & -- \\
+Local stump & $0.099\pm0.003$ & $0.980\pm0.001$ & $200$ atoms & $1.00\pm0.00$ \\
+\textbf{DGM-HQS} & $\mathbf{0.099\pm0.003}$ & $\mathbf{0.980\pm0.001}$ & $\mathbf{100}$ edges & $\mathbf{1.00\pm0.00}$ \\
+Oracle refined & $0.099\pm0.003$ & $0.980\pm0.001$ & $100$ edges & $1.00\pm0.00$ \\
 \midrule
 Image-HQS & NLL $\downarrow$ & Acc. $\uparrow$ & Structure & Edge F1 \\
 \midrule
-Global frequency & $0.6931$ & $0.5034$ & global & -- \\
-Online logistic & $0.6780$ & $0.5743$ & linear & -- \\
-Crossed logistic & $0.6685$ & $0.5924$ & crossed & -- \\
-\textbf{DGM posterior} & $\mathbf{0.6599}$ & $\mathbf{0.6018}$ & local posterior & -- \\
+Global frequency & $0.6931\pm0.0001$ & $0.503\pm0.010$ & global & -- \\
+Online logistic & $0.6780\pm0.0057$ & $0.574\pm0.009$ & linear & -- \\
+Crossed logistic & $0.6685\pm0.0071$ & $0.592\pm0.014$ & crossed & -- \\
+\textbf{DGM posterior} & $\mathbf{0.6599\pm0.0039}$ & $\mathbf{0.602\pm0.010}$ & local posterior & -- \\
 \bottomrule
 \end{tabular}
-\caption{Main quantitative results. BalancedMask-HQS uses 5 seeds and 60k online rounds per seed; Image-HQS uses 10 seeds. Full standard errors, budgeted cache baselines, guarded-decision curves, contextual XOR, trust aggregation, and runtime checks are in Appendix~\ref{sec:experiments}.}
+\caption{Main quantitative results. BalancedMask-HQS uses 5 seeds and 60k
+online rounds per seed; Image-HQS uses 10 seeds. Full cache baselines,
+guarded-decision curves, contextual XOR, trust aggregation, runtime checks, and
+additional ablations are in Appendix~\ref{sec:experiments} and
+Appendix~\ref{app:additional-checks}.}
 \label{tab:main-results}
 \end{table}
 
-In Image-HQS, paired bootstrap intervals support the NLL gaps: DGM improves over online logistic by about $0.0180$ nats with 95\% CI $[0.0148,0.0212]$, and over crossed logistic by about $0.0085$ nats with CI $[0.0047,0.0122]$.
-These are limited frozen-embedding results, not a full loss-latency-memory frontier against all nonparametric and gradient baselines.
-The guarded-decision and contextual XOR diagnostics are moved to Appendix~\ref{sec:experiments}; they show that the guard repairs stale local statistics when no distinction has consequence value and that local repair and edge-generated refinement are both needed on a hidden-context task.
-Those diagnostics are secondary because they are synthetic, but they are important for failure analysis: without them, a positive CIFAR result could be explained by generic memory growth rather than by the refine-or-repair decision rule.
+\subsection{Scaling and SOTA-readiness pilots}
+
+The following pilots are not SOTA claims, but they answer a more concrete
+question: is DGM only a diagnostic mechanism, or is there a plausible path to a
+competitive ML system without turning the method into ordinary backpropagation?
+The current evidence favors the pure route.  Raw pixels and unsupervised PCA are
+too weak on CIFAR-10, but a fixed non-neural visual basis plus DGM-style
+read/write memory gives a large gain without training a representation.  The
+trainable-CNN row is kept only as a non-pure reference for how much headroom
+there is when learned features are allowed.
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccc>{\raggedright\arraybackslash}p{0.30\linewidth}}
+\toprule
+Pilot & Baseline & DGM variant & Observed result & Interpretation \\
+\midrule
+Pure DGM, MNIST fixed features, 500-shot support &
+200-step linear head on PCA features: lower than memory baseline &
+PureDGM-kNN on raw/PCA features: $94.6$--$94.9\%$ acc. &
+Strong no-backprop sanity check &
+Pure DGM can be a useful memory method when the fixed geometry is already adequate. \\
+Pure DGM, CIFAR-10 raw/PCA features, 500-shot support &
+200-step linear head: $28.9$--$29.4\%$ acc. &
+Best PureDGM variant: $35.8\%$ acc. on PCA features &
+Improves over a linear head but remains weak &
+This is a negative control: pixel geometry alone is not the right pure visual basis. \\
+Pure DGM, CIFAR-10 fixed handcraft features, no augmentation &
+Same fixed features, no gradient baseline in the memory path &
+PureDGM-ridge: $49.5\%$ at 500-shot, $51.6\%$ at 1000-shot, $54.0\%$ at 4000-shot &
+$+14$--$18$ pp over raw/PCA memory &
+Most of the apparent weakness was feature engineering, not the absence of backprop. \\
+Pure FullDGM-refine, CIFAR-10 fixed HOG/color/DCT/LBP basis with fixed support/query views &
+No trained encoder, no backward pass, fixed flip/shift views &
+PureFullDGM-refine: $54.9\%$ acc., $1.381$ NLL at 2000-shot, $\sim 6.2$k concepts &
+Actual graph/refine memory improves with a better fixed distinction basis &
+This is the main mechanism result for the pure route; the next target is better graph readout and memory selection. \\
+Pure DGM readout upper reference, same fixed basis and views &
+No trained encoder, ridge readout over stored memory views &
+PureDGM-ridge: $61.9\%$ at 1000-shot, $\mathbf{62.4\%}$ at 2000-shot &
+Shows available pure-feature headroom &
+The gap between ridge and FullDGM is an engineering target for the graph memory, not evidence that CNNs are required. \\
+Non-pure reference: CIFAR-10, trainable small CNN, 50k train, 4 epochs, 2 seeds &
+Backprop CNN: $68.17\%$ acc., $0.888$ NLL &
+Tuned Full-DGM layer: $\mathbf{70.68\%}$ acc., $\mathbf{0.821}$ NLL &
+$+2.52$ pp, $-0.067$ NLL &
+Shows headroom when learned features are allowed, but it is not the pure claim. \\
+\bottomrule
+\end{tabular}
+}
+\caption{Small pilots showing potential beyond diagnostics. The pure route is
+not competitive from raw pixels, but it becomes substantially stronger with a
+fixed non-neural visual basis and fixed memory/query views. The best current
+pure configuration uses HOG/color/DCT/LBP distinctions plus fixed flip/shift
+views; those CIFAR-10 rows use three seeds. FullDGM-refine still trails a ridge
+readout on the same memory views, which identifies the next engineering target.
+These runs justify a larger pure-DGM benchmark campaign, but they do not establish state-of-the-art
+performance.}
+\label{tab:potential-pilots}
+\end{table}
+
+The empirical bar for a future pure-DGM SOTA-ready claim is therefore clear:
+run the same prequential contract with matched memory bytes and adaptation time
+against strong cache, $k$NN, online ridge/RLS, online tree, prototype-growth,
+handcrafted-feature SVM/ridge, and gradient-adapter baselines; report latency
+and memory as primary metrics; and show that the gain persists under better
+fixed bases and memory-selection policies.  Until that grid is complete, the
+main claim remains narrower: DGM implements the refine-or-repair decision and
+shows that pure, no-backprop memory can improve sharply once the fixed
+distinction basis is not impoverished.

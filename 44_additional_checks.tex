@@ -82,6 +82,95 @@ are the only tiers that should support empirical claims.}
 \label{tab:single-workstation-run-tiers}
 \end{table}
 
+\subsection{Completed SOTA-readiness pilots}
+\label{app:sota-readiness-pilots}
+
+The main paper includes small pilots because they test whether the graph-memory
+mechanism has a path beyond controlled diagnostics. These pilots are not
+leaderboard results. They use small local models and incomplete baseline grids,
+so they should be read as evidence for where to spend the next benchmarking
+effort.
+For the pure route we separate three questions. First, the fixed-basis ladder
+tests whether the distinction basis, rather than backpropagation, is the main
+bottleneck: raw/PCA, handcraft HOG/color, and HOG/color/DCT/LBP use no labels and
+no trained encoder. Second, PureFullDGM-refine tests the actual graph-memory
+mechanism on those fixed distinctions. Third, ridge readout over the same stored
+memory views is reported as an upper reference for what the fixed basis and
+memory views can support; it is not counted as the FullDGM mechanism.
+
+\begin{table}[h]
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Pilot & Method & Test NLL $\downarrow$ & Test acc./ppl & Train/adapt time & Eval/query time & Runtime state \\
+\midrule
+Pure MNIST, PCA/raw fixed features, 500-shot & PureDGM-kNN &
+-- & $94.6$--$94.9\%$ acc. &
+$0$s backward & $<0.01$s query & $5000$ support items \\
+Pure CIFAR-10, PCA fixed features, 500-shot & PureDGM-ridge &
+$2.196$ & $35.8\%$ acc. &
+$0$s backward & $0.001$s query & $5000$ support items \\
+Pure CIFAR-10, fixed handcraft features, 1000-shot & PureDGM-ridge &
+$2.103$ & $51.6\%$ acc. &
+$0$s backward & $<0.01$s query & $10000$ support items \\
+Pure CIFAR-10, fixed handcraft features, 4000-shot & PureDGM-ridge &
+$2.094$ & $54.0\%$ acc. &
+$0$s backward & $<0.01$s query & $40000$ support items \\
+Pure CIFAR-10, handcraft + support/query views, 2000-shot & PureFullDGM-refine &
+$1.565$ & $47.6\%$ acc. &
+$0$s backward & $10.4$s eval & $6668$ concepts \\
+Pure CIFAR-10, handcraft + support/query views, 2000-shot & PureDGM-ridge &
+$2.100$ & $\mathbf{56.4\%}$ acc. &
+$0$s backward & $6$ fixed query views & $120000$ memory views \\
+Pure CIFAR-10, HOG/color/DCT/LBP + views, 2000-shot & PureFullDGM-refine &
+$1.380\pm0.003$ & $54.91\pm0.08\%$ acc. &
+$0$s backward & $10.5$s eval & $6210$ concepts \\
+Pure CIFAR-10, HOG/color/DCT/LBP + views, 2000-shot & PureDGM-ridge &
+$2.066$ & $\mathbf{62.4\%}$ acc. &
+$0$s backward & $6$ fixed query views & $120000$ memory views \\
+CIFAR-10, 50k train, 4 epochs, 2 seeds & CNN head &
+$0.888$ & $68.17\%$ acc. &
+$46.5$s & $1.1$s & -- \\
+CIFAR-10, 50k train, 4 epochs, 2 seeds & CNN + tuned Full-DGM layer &
+$0.821$ & $70.68\%$ acc. &
+$307.5$s & $84.8$s & $768$ concepts, $51.6$MB \\
+Repository-text char LM, 254k chars & GRU &
+$3.489\pm0.014$ & $32.7\pm0.4$ ppl &
+$7.5\pm0.5$s & $0.27\pm0.02$s & -- \\
+Repository-text char LM, 254k chars & GRU + DGM-Embedding &
+$3.197\pm0.029$ & $24.5\pm0.7$ ppl &
+$58.4\pm5.4$s & $60.3\pm3.3$s & $444$ concepts, $26.0$MB \\
+\bottomrule
+\end{tabular}
+}
+\caption{Completed pilots. The gains are real within these small runs, but the
+overheads and missing baselines keep them below the standard needed for a SOTA
+claim.}
+\label{tab:sota-readiness-pilots}
+\end{table}
+
+The source artifacts are
+\path{experiments/results_pure_dgm_50_500shot_mps.json},
+\path{experiments/results_pure_dgm_cifar10_handcraft_mps.json},
+\path{experiments/results_pure_dgm_cifar10_handcraft_scale_mps.json},
+\path{experiments/results_pure_dgm_cifar10_handcraft_aug_tta_mps.json},
+\path{experiments/results_pure_full_dgm_cifar10_handcraft_aug_tuned_2000_mps.json},
+\path{experiments/results_pure_dgm_cifar10_vision2_pca_aug_tta_mps.json},
+\path{experiments/results_pure_full_dgm_cifar10_vision2_pca_aug_tuned_mps.json},
+\path{experiments/results_trainable_dgm_cifar10_seed5_tuned_mps.json},
+\path{experiments/results_trainable_dgm_cifar10_seed6_tuned_mps.json}, and
+\path{experiments/results_full_dgm_lm_repo_text_stride8_mps.json}.
+
+The one completed inference-time CIFAR-10 pilot is a useful negative control.
+With a shared frozen CNN and one seed, an online backpropagation head obtains
+$1.116$ post-adaptation NLL and $59.8\%$ accuracy, while full DGM obtains
+$1.194$ NLL and $58.8\%$ accuracy with substantially larger adaptation time.
+We therefore do not use that run as positive evidence. It shows that the
+current DGM implementation is not automatically better than a small gradient
+head when the head can adapt cheaply and the memory path is unoptimized.
+
 \subsection{Hardware and accounting}
 
 The hardware report must include CPU, accelerator, accelerator memory or unified

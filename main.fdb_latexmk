@@ -1,14 +1,13 @@
 # Fdb version 4
-["bibtex main"] 1777747069.21818 "main.aux" "main.bbl" "main" 1777747070.96951 0
+["bibtex main"] 1777756085.54529 "main.aux" "main.bbl" "main" 1777756110.60055 0
   "./ref.bib" 1777654270.54838 25863 0b20781199fe740276bbdce1c980dafd ""
   "/usr/local/texlive/2026/texmf-dist/bibtex/bst/base/alpha.bst" 1292289607 23907 a5f93555796fb564b924339521f10a7c ""
-  "main.aux" 1777747070.71482 60319 d8de05f74065c6cdefbbcd25d096879e "pdflatex"
+  "main.aux" 1777756110.28847 62761 c969275c91bc314066fb405a8c1f4e02 "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1777747069.31184 "/Users/gunale/works/silifen-works/bye_backprop/main.tex" "main.pdf" "main" 1777747070.96971 0
-  "/Users/gunale/works/silifen-works/bye_backprop/main.tex" 1777575072.18877 4176 6f80b271a185ac679cfec597d4914612 ""
+["pdflatex"] 1777756108.85191 "main.tex" "main.pdf" "main" 1777756110.60077 0
   "/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1136849721 2971 def0b6c1f0b107b3b936def894055589 ""
   "/usr/local/texlive/2026/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -268,14 +267,14 @@
   "12_value_distinction.tex" 1777746923.01482 3755 68d75d2aa1332ad240febcfdc626d3fc ""
   "13_guarded_refinement.tex" 1777746923.04825 3878 07a3407edf60ac98f2902aafe3e5c735 ""
   "14_dgm_main.tex" 1777746923.08083 4984 ff03d5cc4dfb370313b5f5103ac3834a ""
-  "15_experiments_main.tex" 1777746923.1141 7969 9c1332f3bd945bfca772ab92316187f7 ""
+  "15_experiments_main.tex" 1777756103.42445 11721 dbd88bda5ff23adb29c7b19afa9e15ab ""
   "16_related_main.tex" 1777746974.89891 2334 81c155f021a254fb85b30809e64ea131 ""
-  "17_limitations_conclusion.tex" 1777746974.93309 1722 156607130cc719bf9e8d60513c2ac982 ""
+  "17_limitations_conclusion.tex" 1777755747.44447 2364 dec79297fbc2334953c76186edcca76c ""
   "40_appendix_roadmap.tex" 1777746645.35608 1661 d7b3bc734edf5b9ef372b78a7ae22311 ""
   "41_limitations.tex" 1777746355.55981 4061 adf78134a8cbd8f3f7274884326132da ""
   "42_related_work.tex" 1777640055.48306 6317 9fa2afca06ed70d74e591c2cc3f74454 ""
   "43_dgm_extensions.tex" 1777640023.65082 10289 9318819e4627a24dcb03f2eceac3795e ""
-  "44_additional_checks.tex" 1777746355.56005 12114 155785e14d18330b9d07981c84d0f592 ""
+  "44_additional_checks.tex" 1777756078.13603 16578 1e2915a59823040514334997a0b1295a ""
   "50_projection_proofs.tex" 1777640084.94663 4137 1163980b59dd708a410bd280e755d5d5 ""
   "51_memory_proofs.tex" 1777640092.60515 8696 840aac87cdb89c98677071896ab1f2b7 ""
   "52_ridge_bayesian_proofs.tex" 1777746761.08663 25731 e6a0724c7c06ca791c2784247a984dcf ""
@@ -292,9 +291,9 @@
   "experiments/publication_figures/hqs_nll_vs_structure.pdf" 1777654270.54112 15567 c4bc15b451c45220605dac672020ab41 ""
   "experiments/publication_figures/hqs_online_nll.pdf" 1777654270.54163 20998 f5fa3b8505f21ed89662467741eaee2f ""
   "figs/cifar100_image_hqs_evidence.pdf" 1777746355.56165 26524 7f4c9dc450af15fcde73012223090f40 ""
-  "main.aux" 1777747070.71482 60319 d8de05f74065c6cdefbbcd25d096879e "pdflatex"
-  "main.bbl" 1777747069.30871 18880 5cefdbf5ddd2312ebd3a0ac3da977db0 "bibtex main"
-  "main.out" 1777747070.71728 16733 09a4d8fd1e05a1a1db715e12c4f7b2de "pdflatex"
+  "main.aux" 1777756110.28847 62761 c969275c91bc314066fb405a8c1f4e02 "pdflatex"
+  "main.bbl" 1777756085.64944 19056 dd9cf297ddf4660cc8fd9f1978fd3b31 "bibtex main"
+  "main.out" 1777756110.2909 17461 45d2ff139a23a42e9c60696311e4725e "pdflatex"
   "main.tex" 1777575072.18877 4176 6f80b271a185ac679cfec597d4914612 ""
   "natbib.sty" 1775563188 45154 40088ce024445d7ee2bca59e704cdd01 ""
   "neurips_2026.sty" 1775563188 13462 818d80447f57703e59b8270885421e82 ""
