@@ -2,10 +2,10 @@
 \label{app:additional-checks}
 
 This appendix fixes the intended scale of the empirical program in
-Section~\ref{sec:experiments}. It is a design constraint, not a result claim.
-All numbers below are single-workstation targets; a smaller smoke run may be
-used for code validation, but the paper should not treat smoke results as
-evidence for DGM.
+Section~\ref{sec:experiments} and records implementation checks for the
+non-oracle CIFAR-100 Image-HQS run. The run-tier grid is a design constraint;
+the Image-HQS audit below summarizes the completed evidence package used in
+Table~\ref{tab:cifar100-image-hqs}.
 
 \subsection{Run tiers}
 
@@ -80,6 +80,53 @@ The main table should include frozen, online head SGD/Adam, online ridge or RLS,
 budgeted $k$NN/cache, repair-only DGM, edge-free DGM, and full DGM. Report
 prequential NLL, prequential accuracy, post-adaptation test NLL and accuracy,
 adaptation seconds per 10k examples, peak memory, and accepted concepts/edges.
+
+\subsection{Non-oracle Image-HQS audit and ablations}
+\label{app:image-hqs-audit}
+
+The Image-HQS implementation was audited for label leakage. The online DGM
+update in the prequential loop calls the memory with only the current feature
+vector and revealed binary consequence. For the posterior variant, the repair
+routine receives only the query mask, the binary label, and the soft-routing
+weight. The CIFAR fine and coarse labels enter only after training, inside
+purity, true-coordinate rank, oracle diagnostic, and representation-ceiling
+computations. Thus the headline non-oracle result does not update
+$\pi_{j,c}$ from the true coarse label.
+
+The small ablation suite in Table~\ref{tab:image-hqs-ablation} uses
+$n_{\mathrm{train}}=2000$, $n_{\mathrm{dev}}=800$, and $n_{\mathrm{test}}=800$.
+It is not the headline 10-seed result, but it checks whether the gain comes from
+the posterior local memory rather than from a trivial global statistic.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Variant & Test NLL $\downarrow$ & Test accuracy $\uparrow$ \\
+\midrule
+Categorical DGM & $0.6878$ & $0.5450$ \\
+Single-bit image-only DGM & $0.6911$ & $0.5325$ \\
+Global posterior memory & $0.6695$ & $0.5925$ \\
+Image-route posterior DGM & $0.6627$ & $0.5850$ \\
+Image-route posterior DGM, $\eta_{\mathrm{read}}=0$ & $0.6629$ & $0.5850$ \\
+Image+mask-route posterior DGM & $0.6623$ & $0.5913$ \\
+\bottomrule
+\end{tabular}
+\caption{Posterior-memory ablations for non-oracle CIFAR-100 Image-HQS. The
+known-noise readout is not driving the result: fixing the posterior readout
+noise to zero changes NLL by only $0.0002$ in this ablation.}
+\label{tab:image-hqs-ablation}
+\end{table}
+
+The global posterior is stronger than frequency because it can learn mask
+coordinate biases from the binary stream, but it remains worse than local
+posterior DGM. The categorical and single-bit variants fail because learned
+image concepts are not coarse-pure enough for one accepted mask bit to represent
+the local Bayes action. The image+mask routing ablation is included as a
+diagnostic only; the main result uses image-only routing because it most closely
+matches the causal structure ``image chooses a coarse coordinate, mask queries
+that coordinate.''
 
 \subsection{Language-stream grid}
 
