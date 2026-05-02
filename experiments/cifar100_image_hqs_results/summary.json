@@ -22,9 +22,11 @@
     "vehicles_1",
     "vehicles_2"
   ],
+  "concept_radius": 0.32,
   "description": "CIFAR-100 Image-BalancedMask-HQS with image embeddings plus query masks; no oracle fine label is exposed to the learner.",
-  "embed_seconds": 0.028258199978154153,
-  "embedding_dim": 64,
+  "dgm_variant": "categorical",
+  "embed_seconds": 0.09350570000242442,
+  "embedding_dim": 128,
   "encoder": "prototype",
   "eta": 0.02,
   "fine_names": [
@@ -232,39 +234,41 @@
     13
   ],
   "k": 8,
-  "mask_scale": 0.35,
-  "max_concepts": 256,
+  "mask_scale": 0.2,
+  "max_concepts": 768,
   "metrics": {
     "dgm": {
-      "coarse_purity_eval": 0.385,
-      "coarse_purity_train": 0.249,
-      "concepts": 256,
-      "edge_mask_fraction": 0.7045854330062866,
-      "edges": 255,
-      "fine_purity_eval": 0.3125,
-      "fine_purity_train": 0.17,
-      "heldout_accuracy": 0.54625,
-      "heldout_nll": 0.699333906173706,
-      "heldout_query_seconds": 0.02505399999790825,
-      "prequential_accuracy": 0.513,
-      "prequential_nll": 0.74612943059206,
-      "routing_margin_eval": 0.31621941924095154
+      "coarse_purity_eval": 0.39,
+      "coarse_purity_train": 0.2231,
+      "concepts": 768,
+      "edge_mask_fraction": 0.6569551229476929,
+      "edges": 767,
+      "fine_purity_eval": 0.3225,
+      "fine_purity_train": 0.1379,
+      "heldout_accuracy": 0.5565,
+      "heldout_nll": 0.6864776611328125,
+      "heldout_query_seconds": 0.12065860000438988,
+      "prequential_accuracy": 0.5347,
+      "prequential_nll": 0.6958494550541043,
+      "routing_margin_eval": 0.07396987080574036
     },
     "global_frequency": {
-      "prequential_accuracy": 0.5065,
-      "prequential_nll": 0.6947902625203133
+      "prequential_accuracy": 0.5086,
+      "prequential_nll": 0.6934231327354908
     },
     "online_logistic": {
-      "heldout_accuracy": 0.58375,
-      "heldout_nll": 0.6865181922912598,
-      "heldout_query_seconds": 7.460001506842673e-05,
-      "prequential_accuracy": 0.565,
-      "prequential_nll": 0.7177861348204315
+      "heldout_accuracy": 0.608,
+      "heldout_nll": 0.6626845598220825,
+      "heldout_query_seconds": 0.00016039999900385737,
+      "prequential_accuracy": 0.5667,
+      "prequential_nll": 0.687715498297941
     },
-    "train_seconds": 16.950225600012345
+    "train_seconds": 242.81805160001386
   },
-  "n_eval": 800,
-  "n_train": 2000,
-  "prototype_fit": 10000,
+  "min_refine_total": 0.0,
+  "n_eval": 2000,
+  "n_train": 10000,
+  "prototype_fit": 50000,
+  "refine_loss_threshold": 0.0,
   "seed": 0
 }

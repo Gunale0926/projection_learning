@@ -40,6 +40,8 @@ class CategoricalDGM(nn.Module):
         edge_weight: float = 1.0,
         centroid_lr: float = 0.2,
         refine_on_error: bool = True,
+        min_refine_total: float = 0.0,
+        refine_loss_threshold: float = 0.0,
         max_concepts: int | None = None,
         eps: float = 1e-12,
     ) -> None:
@@ -58,6 +60,10 @@ class CategoricalDGM(nn.Module):
             raise ValueError("edge_temperature must be positive")
         if not (0.0 <= centroid_lr <= 1.0):
             raise ValueError("centroid_lr must lie in [0, 1]")
+        if min_refine_total < 0.0:
+            raise ValueError("min_refine_total must be nonnegative")
+        if refine_loss_threshold < 0.0:
+            raise ValueError("refine_loss_threshold must be nonnegative")
 
         self.dim = int(dim)
         self.n_classes = int(n_classes)
@@ -68,6 +74,8 @@ class CategoricalDGM(nn.Module):
         self.edge_weight = float(edge_weight)
         self.centroid_lr = float(centroid_lr)
         self.refine_on_error = bool(refine_on_error)
+        self.min_refine_total = float(min_refine_total)
+        self.refine_loss_threshold = float(refine_loss_threshold)
         self.max_concepts = None if max_concepts is None else int(max_concepts)
         self.eps = float(eps)
 
@@ -261,6 +269,7 @@ class CategoricalDGM(nn.Module):
         if aux is None:
             _, aux = self.predict(h_batch, p0_logits=p0_logits, return_aux=True)
         probs = aux.get("probs")
+        target_prob = aux.get("target_prob")
         selected_idx = aux.get("selected_idx")
         candidate_idx = aux.get("candidate_idx")
         routing_weights = aux.get("routing_weights")
@@ -274,7 +283,18 @@ class CategoricalDGM(nn.Module):
 
             pred_i = int(torch.argmax(probs[row]).item()) if probs is not None else y_i
             selected = int(selected_idx[row].item())
-            can_refine = self.refine_on_error and pred_i != y_i and self._has_concept_capacity()
+            selected_total = float(self.totals[selected].item())
+            if target_prob is None:
+                sample_loss = float("inf")
+            else:
+                sample_loss = float(-torch.log(target_prob[row].clamp_min(self.eps)).item())
+            can_refine = (
+                self.refine_on_error
+                and pred_i != y_i
+                and selected_total >= self.min_refine_total
+                and sample_loss >= self.refine_loss_threshold
+                and self._has_concept_capacity()
+            )
             if can_refine:
                 new_idx = self.add_concept(h_i, y_i)
                 if selected != new_idx:
@@ -360,4 +380,3 @@ class CategoricalDGM(nn.Module):
 
 
 DGMClassifier = CategoricalDGM
-

@@ -155,6 +155,235 @@ class OnlineLogistic:
         self.b -= self.lr * grad_b / torch.sqrt(self.g_b)
 
 
+def smoothed_binary_probs(counts: torch.Tensor, alpha: float) -> torch.Tensor:
+    return (counts + float(alpha) / 2.0) / (counts.sum(dim=-1, keepdim=True) + float(alpha)).clamp_min(EPS)
+
+
+class ImageHQSDGM:
+    def __init__(
+        self,
+        image_dim: int,
+        *,
+        k: int,
+        alpha: float,
+        distance_temperature: float,
+        centroid_lr: float,
+        max_concepts: int,
+        concept_radius: float,
+        proposal_size: int,
+        score_size: int,
+        m_min: int,
+        split_tau: float,
+        lambda_edge: float,
+    ) -> None:
+        self.image_dim = int(image_dim)
+        self.k = int(k)
+        self.alpha = float(alpha)
+        self.distance_temperature = float(distance_temperature)
+        self.centroid_lr = float(centroid_lr)
+        self.max_concepts = int(max_concepts)
+        self.concept_radius = float(concept_radius)
+        self.proposal_size = int(proposal_size)
+        self.score_size = int(score_size)
+        self.m_min = int(m_min)
+        self.split_tau = float(split_tau)
+        self.lambda_edge = float(lambda_edge)
+        self.centroids = torch.empty(0, self.image_dim)
+        self.counts = torch.empty(0, 2)
+        self.totals = torch.empty(0)
+        self.accepted_bits: list[int | None] = []
+        self.child_counts = torch.empty(0, NUM_COARSE, 2, 2)
+        self.buffers: list[list[tuple[torch.Tensor, int]]] = []
+
+    @property
+    def num_concepts(self) -> int:
+        return int(self.centroids.shape[0])
+
+    @property
+    def num_edges(self) -> int:
+        return sum(bit is not None for bit in self.accepted_bits)
+
+    def predict(
+        self,
+        h: torch.Tensor,
+        *,
+        return_aux: bool = False,
+        p0_logits: torch.Tensor | None = None,
+    ) -> torch.Tensor | tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        del p0_logits
+        h = self._batch_h(h)
+        z = h[:, : self.image_dim]
+        mask = h[:, self.image_dim :] > 0
+        if self.num_concepts == 0:
+            probs = torch.full((h.shape[0], 2), 0.5, dtype=h.dtype)
+            aux = {
+                "candidate_idx": torch.empty(h.shape[0], 0, dtype=torch.long),
+                "routing_weights": torch.empty(h.shape[0], 0, dtype=h.dtype),
+                "selected_idx": torch.full((h.shape[0],), -1, dtype=torch.long),
+                "selected_distance": torch.full((h.shape[0],), float("inf"), dtype=h.dtype),
+                "probs": probs,
+            }
+            return (probs, aux) if return_aux else probs
+
+        distances = torch.cdist(z, self.centroids, p=2) ** 2
+        kk = min(self.k, self.num_concepts)
+        values, cand_idx = torch.topk(-distances, k=kk, dim=1, sorted=True)
+        weights = F.softmax(values / self.distance_temperature, dim=1)
+        candidate_probs = []
+        for row in range(h.shape[0]):
+            row_probs = []
+            for concept in cand_idx[row]:
+                idx = int(concept.item())
+                bit = self.accepted_bits[idx]
+                if bit is None:
+                    probs_i = smoothed_binary_probs(self.counts[idx].unsqueeze(0), self.alpha).squeeze(0)
+                else:
+                    side = int(mask[row, bit].item())
+                    probs_i = smoothed_binary_probs(self.child_counts[idx, bit, side].unsqueeze(0), self.alpha).squeeze(0)
+                row_probs.append(probs_i)
+            candidate_probs.append(torch.stack(row_probs, dim=0))
+        cand_probs = torch.stack(candidate_probs, dim=0)
+        probs = (weights[:, :, None] * cand_probs).sum(dim=1).clamp_min(EPS)
+        probs = probs / probs.sum(dim=1, keepdim=True)
+        selected_pos = torch.argmax(weights, dim=1)
+        selected_idx = cand_idx.gather(1, selected_pos[:, None]).squeeze(1)
+        selected_distance = (-values).gather(1, selected_pos[:, None]).squeeze(1)
+        aux = {
+            "candidate_idx": cand_idx,
+            "routing_weights": weights,
+            "selected_pos": selected_pos,
+            "selected_idx": selected_idx,
+            "selected_distance": selected_distance,
+            "probs": probs,
+        }
+        return (probs, aux) if return_aux else probs
+
+    def loss(
+        self,
+        h: torch.Tensor,
+        y: torch.Tensor,
+        *,
+        return_aux: bool = False,
+        reduction: str = "mean",
+        p0_logits: torch.Tensor | None = None,
+    ) -> torch.Tensor | tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        probs, aux = self.predict(h, return_aux=True, p0_logits=p0_logits)
+        y = torch.as_tensor(y, dtype=torch.long).flatten()
+        target_prob = probs.gather(1, y[:, None]).squeeze(1).clamp_min(EPS)
+        losses = -torch.log(target_prob)
+        if reduction == "none":
+            out = losses
+        elif reduction == "sum":
+            out = losses.sum()
+        elif reduction == "mean":
+            out = losses.mean()
+        else:
+            raise ValueError(f"unknown reduction: {reduction}")
+        aux["target_prob"] = target_prob
+        return (out, aux) if return_aux else out
+
+    @torch.no_grad()
+    def observe(self, h: torch.Tensor, y: torch.Tensor, *, aux: dict[str, torch.Tensor] | None = None) -> None:
+        h = self._batch_h(h)
+        y = torch.as_tensor(y, dtype=torch.long).flatten()
+        if aux is None:
+            _, aux = self.predict(h, return_aux=True)
+        z = h[:, : self.image_dim]
+        mask = h[:, self.image_dim :] > 0
+        selected_idx = aux["selected_idx"]
+        selected_distance = aux["selected_distance"]
+        for row in range(h.shape[0]):
+            y_i = int(y[row].item())
+            if self.num_concepts == 0 or int(selected_idx[row].item()) < 0:
+                self._add_concept(z[row], mask[row], y_i)
+                continue
+            selected = int(selected_idx[row].item())
+            if (
+                float(selected_distance[row].item()) > self.concept_radius
+                and self.num_concepts < self.max_concepts
+            ):
+                self._add_concept(z[row], mask[row], y_i)
+                continue
+            self._repair(selected, z[row], mask[row], y_i)
+
+    def _add_concept(self, z: torch.Tensor, mask: torch.Tensor, y: int) -> None:
+        self.centroids = torch.cat([self.centroids, z.detach().reshape(1, -1)], dim=0)
+        self.counts = torch.cat([self.counts, torch.zeros(1, 2)], dim=0)
+        self.totals = torch.cat([self.totals, torch.zeros(1)], dim=0)
+        self.child_counts = torch.cat([self.child_counts, torch.zeros(1, NUM_COARSE, 2, 2)], dim=0)
+        self.accepted_bits.append(None)
+        self.buffers.append([])
+        self._repair(self.num_concepts - 1, z, mask, y)
+
+    def _repair(self, idx: int, z: torch.Tensor, mask: torch.Tensor, y: int) -> None:
+        self.counts[idx, int(y)] += 1.0
+        self.totals[idx] += 1.0
+        bit = self.accepted_bits[idx]
+        if bit is not None:
+            side = int(mask[int(bit)].item())
+            self.child_counts[idx, int(bit), side, int(y)] += 1.0
+        else:
+            self.buffers[idx].append((mask.detach().cpu(), int(y)))
+            max_buffer = self.proposal_size + self.score_size
+            if len(self.buffers[idx]) > max_buffer:
+                self.buffers[idx] = self.buffers[idx][-max_buffer:]
+            self._try_split(idx)
+        if self.centroid_lr > 0.0:
+            self.centroids[idx].mul_(1.0 - self.centroid_lr).add_(z, alpha=self.centroid_lr)
+
+    def _try_split(self, idx: int) -> None:
+        rows = self.buffers[idx]
+        if len(rows) < self.proposal_size + self.score_size:
+            return
+        proposal = rows[: self.proposal_size]
+        scoring = rows[self.proposal_size : self.proposal_size + self.score_size]
+        parent_counts = torch.zeros(2)
+        for _, y in proposal:
+            parent_counts[int(y)] += 1.0
+        parent_prob = smoothed_binary_probs(parent_counts.unsqueeze(0), self.alpha).squeeze(0)
+        best_bit = None
+        best_gain = -float("inf")
+        best_counts = None
+        for bit in range(NUM_COARSE):
+            child = torch.zeros(2, 2)
+            score_child_counts = torch.zeros(2, 2)
+            for mask, y in proposal:
+                child[int(mask[bit].item()), int(y)] += 1.0
+            for mask, y in scoring:
+                score_child_counts[int(mask[bit].item()), int(y)] += 1.0
+            if child.sum(dim=1).min().item() < self.m_min:
+                continue
+            if score_child_counts.sum(dim=1).min().item() < self.m_min:
+                continue
+            child_prob = smoothed_binary_probs(child, self.alpha)
+            parent_loss = 0.0
+            split_loss = 0.0
+            for mask, y in scoring:
+                side = int(mask[bit].item())
+                parent_loss += float(-torch.log(parent_prob[int(y)].clamp_min(EPS)).item())
+                split_loss += float(-torch.log(child_prob[side, int(y)].clamp_min(EPS)).item())
+            gain = parent_loss / len(scoring) - split_loss / len(scoring)
+            if gain > best_gain:
+                best_gain = gain
+                best_bit = bit
+                best_counts = child
+        if best_bit is not None and best_gain - self.lambda_edge > self.split_tau:
+            self.accepted_bits[idx] = int(best_bit)
+            assert best_counts is not None
+            all_child = torch.zeros(2, 2)
+            for mask, y in rows:
+                all_child[int(mask[best_bit].item()), int(y)] += 1.0
+            self.child_counts[idx, int(best_bit)] = all_child
+
+    def _batch_h(self, h: torch.Tensor) -> torch.Tensor:
+        h = torch.as_tensor(h, dtype=torch.float32)
+        if h.ndim == 1:
+            h = h.unsqueeze(0)
+        if h.ndim != 2 or h.shape[1] != self.image_dim + NUM_COARSE:
+            raise ValueError(f"expected h with shape [B, {self.image_dim + NUM_COARSE}]")
+        return h
+
+
 def cifar_tensor(raw: np.ndarray) -> torch.Tensor:
     x = raw.reshape(-1, 3, 32, 32).astype("float32") / 255.0
     return torch.from_numpy(x)
@@ -313,6 +542,8 @@ def mean_routing_margin(model: CategoricalDGM, h: torch.Tensor, batch_size: int)
 def edge_mask_fraction(model: CategoricalDGM, image_dim: int) -> float:
     if model.num_edges == 0:
         return 0.0
+    if hasattr(model, "accepted_bits"):
+        return 1.0
     edge_u = model.edge_u.detach()
     image_norm = torch.linalg.vector_norm(edge_u[:, :image_dim], dim=1)
     mask_norm = torch.linalg.vector_norm(edge_u[:, image_dim:], dim=1)
@@ -331,18 +562,38 @@ def run_prequential(
     image_dim: int,
     args: argparse.Namespace,
 ) -> dict[str, Any]:
-    dgm = CategoricalDGM(
-        dim=h_train.shape[1],
-        n_classes=2,
-        k=args.k,
-        alpha=args.alpha,
-        distance_temperature=args.distance_temperature,
-        edge_temperature=args.edge_temperature,
-        edge_weight=args.edge_weight,
-        centroid_lr=args.centroid_lr,
-        refine_on_error=True,
-        max_concepts=args.max_concepts,
-    )
+    if args.dgm_variant == "categorical":
+        dgm = CategoricalDGM(
+            dim=h_train.shape[1],
+            n_classes=2,
+            k=args.k,
+            alpha=args.alpha,
+            distance_temperature=args.distance_temperature,
+            edge_temperature=args.edge_temperature,
+            edge_weight=args.edge_weight,
+            centroid_lr=args.centroid_lr,
+            min_refine_total=args.min_refine_total,
+            refine_loss_threshold=args.refine_loss_threshold,
+            refine_on_error=True,
+            max_concepts=args.max_concepts,
+        )
+    elif args.dgm_variant == "image_hqs":
+        dgm = ImageHQSDGM(
+            image_dim=image_dim,
+            k=args.k,
+            alpha=args.alpha,
+            distance_temperature=args.distance_temperature,
+            centroid_lr=args.centroid_lr,
+            max_concepts=args.max_concepts,
+            concept_radius=args.concept_radius,
+            proposal_size=args.proposal_size,
+            score_size=args.score_size,
+            m_min=args.m_min,
+            split_tau=args.split_tau,
+            lambda_edge=args.lambda_edge,
+        )
+    else:
+        raise ValueError(f"unknown dgm_variant: {args.dgm_variant}")
     logistic = OnlineLogistic(h_train.shape[1], lr=args.logistic_lr)
     global_freq = GlobalFrequency(args.alpha)
     totals = {
@@ -489,13 +740,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "n_train": args.n_train,
         "n_eval": args.n_eval,
         "encoder": args.encoder,
+        "dgm_variant": args.dgm_variant,
         "embedding_dim": args.embedding_dim,
         "prototype_fit": args.prototype_fit if args.encoder == "prototype" else 0,
         "eta": args.eta,
         "mask_scale": args.mask_scale,
         "max_concepts": args.max_concepts,
+        "concept_radius": args.concept_radius,
         "k": args.k,
         "alpha": args.alpha,
+        "min_refine_total": args.min_refine_total,
+        "refine_loss_threshold": args.refine_loss_threshold,
         "embed_seconds": embed_seconds,
         "fine_names": data.fine_names,
         "coarse_names": data.coarse_names,
@@ -513,19 +768,28 @@ def main() -> None:
     parser.add_argument("--n-train", type=int, default=10000)
     parser.add_argument("--n-eval", type=int, default=2000)
     parser.add_argument("--encoder", choices=["prototype", "random_projection"], default="prototype")
+    parser.add_argument("--dgm-variant", choices=["categorical", "image_hqs"], default="categorical")
     parser.add_argument("--embedding-dim", type=int, default=128)
     parser.add_argument("--prototype-fit", type=int, default=50000)
     parser.add_argument("--pool", type=int, default=4)
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--max-concepts", type=int, default=768)
+    parser.add_argument("--concept-radius", type=float, default=0.32)
     parser.add_argument("--k", type=int, default=8)
     parser.add_argument("--alpha", type=float, default=1.0)
     parser.add_argument("--distance-temperature", type=float, default=0.35)
     parser.add_argument("--edge-temperature", type=float, default=8.0)
     parser.add_argument("--edge-weight", type=float, default=1.0)
     parser.add_argument("--centroid-lr", type=float, default=0.04)
+    parser.add_argument("--min-refine-total", type=float, default=0.0)
+    parser.add_argument("--refine-loss-threshold", type=float, default=0.0)
+    parser.add_argument("--proposal-size", type=int, default=32)
+    parser.add_argument("--score-size", type=int, default=32)
+    parser.add_argument("--m-min", type=int, default=4)
+    parser.add_argument("--split-tau", type=float, default=0.005)
+    parser.add_argument("--lambda-edge", type=float, default=0.0)
     parser.add_argument("--eta", type=float, default=0.02)
-    parser.add_argument("--mask-scale", type=float, default=0.35)
+    parser.add_argument("--mask-scale", type=float, default=0.20)
     parser.add_argument("--logistic-lr", type=float, default=0.4)
     args = parser.parse_args()
 
