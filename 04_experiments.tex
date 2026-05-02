@@ -1,113 +1,270 @@
-\section{Evaluation Design: Inference-Time Adaptation}
+\section{Experiments}
 \label{sec:experiments}
 
-The empirical test of DGM should be as sharp as the theory: it must expose the
-difference between repairing a fixed information structure and refining that
-structure when the current state has collapsed consequence-relevant cases. We
-therefore use a prequential inference-time protocol \citep{dawid1984prequential}
-with a shared frozen backbone. All mandatory runs are sized for one Apple M4 Max
-workstation: no distributed training, no server-side retrieval service, and no
-offline hyperparameter search that would be unavailable to the compared methods
-at runtime.
+The experiments have two roles. The controlled diagnostics test the formal
+claims: each stream is designed so that Bayes-optimal repair inside an existing
+atom is different from a refinement that changes the information structure, or
+so that untrusted memory can be separated from calibrated log-loss aggregation.
+The CIFAR hierarchy experiments then test the same distinction on real image
+semantics. All online learners use a prequential protocol: predict first,
+observe the consequence, then update \citep{dawid1984prequential}. The
+implementation scripts live in \path{experiments/}; vector figures are generated
+from saved JSON and CSV artifacts.
 
-\subsection{Runtime contract}
-\label{sec:runtime-contract}
+\subsection{Known Bayes-gap calibration}
 
-Every method receives the same frozen encoder or language model. The cost of
-training or loading this shared model is reported but not charged to runtime
-adaptation. At round $t$, the method receives $x_t$, computes the shared hidden
-state $h_t=\phi_\theta(x_t)$, predicts $\hat y_t$, then observes the consequence
-$y_t$ and may update only its declared runtime state:
+The first experiment tests the numerical prediction of the repair-only lower
+bound. We sample
 \[
-x_t \longrightarrow h_t \longrightarrow \hat y_t,
-\qquad
-y_t \longrightarrow \text{runtime update}.
+Z\sim \mathrm{Unif}\{1,\ldots,K\},\qquad U\sim \mathrm{Bernoulli}(1/2),
 \]
-DGM updates by detached graph-memory repair or by guarded refinement. Test-time
-training baselines update a head, prompt, adapter, normalization state, or other
-declared adaptation parameters by inference-time gradient steps. The reported
-adaptation overhead excludes the shared frozen forward pass and includes all
-extra reads, writes, backward passes, activation storage, optimizer state,
-synchronization, and memory-index maintenance.
+and the old partition observes only $Z$, while the refined partition observes
+$(Z,U)$. Consequences follow
+\[
+Y\mid Z=z,U=u\sim \mathrm{Bernoulli}(p_{z,u}),\qquad
+p_{z,0}=0.5-\delta,\quad p_{z,1}=0.5+\delta .
+\]
+Thus $P(Y=1\mid Z=z)=0.5$, so the old atom has log-risk $\log 2$, while the
+refined risk is $H(0.5+\delta)$. The predicted slope of repair-only cumulative
+regret is
+\[
+\Delta_{\mathrm{theory}}=\log 2-H(0.5+\delta)=I(Y;U\mid Z).
+\]
+We compare smoothed count predictors for the old and refined partitions, plus a
+one-bit DGM count learner whose candidate distinction is either the true bit
+$U$ or an independent noise bit.
 
-\subsection{Questions}
-\label{sec:experiment-questions}
-
-The suite is organized around four falsifiable questions.
-\begin{enumerate}
-    \item \textbf{Structural necessity.} On streams with a positive refinement
-    gap, does full DGM reduce prequential loss where repair-only memories,
-    caches, online ridge, and head-only backpropagation are stuck under the same
-    frozen information map?
-    \item \textbf{Non-gratuitous refinement.} On streams whose errors are
-    repairable inside the current concepts, does DGM mostly repair rather than
-    create unnecessary nodes and edges?
-    \item \textbf{Natural frozen-model adaptation.} On image and language
-    streams with revealed labels or next tokens, does DGM improve the
-    loss--latency--memory frontier relative to inference-time gradient
-    adaptation and nonparametric memory baselines?
-    \item \textbf{Scaling on one workstation.} How far can concept count, edge
-    count, stream length, and hidden dimension be pushed on an M4 Max before
-    latency or unified-memory use becomes the limiting factor?
-\end{enumerate}
-
-\subsection{Benchmarks}
-\label{sec:experiment-benchmarks}
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\linewidth]{experiments/publication_figures/bayes_gap_slope_vs_theory.pdf}
+\caption{Known Bayes-gap calibration. The estimated repair-only regret slope
+matches the theoretical refinement gap $I(Y;U\mid Z)$ under log loss.}
+\label{fig:bayes-gap-slope}
+\end{figure}
 
 \begin{table}[t]
 \centering
-\footnotesize
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.18\linewidth}
->{\raggedright\arraybackslash}p{0.28\linewidth}
->{\raggedright\arraybackslash}p{0.24\linewidth}
->{\raggedright\arraybackslash}p{0.18\linewidth}}
+\small
+\begin{tabular}{ccccc}
 \toprule
-Benchmark & What it tests & M4 Max scale target & Primary success condition \\
+$\delta$ & Theory gap & Repair/refined slope & Bayes-oracle slope & Accepted noise splits \\
 \midrule
-Hidden-context control & The frozen state intentionally collapses regimes that require different predictions. The oracle refined partition is known. & $10^6$--$10^7$ stream rounds, $K\in\{8,32,128\}$ regimes, label noise grid, 5 seeds. & DGM approaches the refined oracle and beats repair-only regret slope. \\
-Repair-only control & Same stream geometry but no hidden consequence conflict. Errors come from stale local statistics. & Matched stream length and concept budget. & DGM accepts few refinements and matches the best repair baseline. \\
-Frozen vision streams & CIFAR-10/100-style frozen-encoder classification \citep{krizhevsky2009learning} with class/domain bursts, corruptions, and replay-free label reveal. & Full CIFAR-10 and CIFAR-100 streams; optional resized ImageNet-100 or local image subset if available. & Better prequential NLL or accuracy at matched adaptation time and memory. \\
-Frozen LM streams & A frozen next-token model processes document continuations; the observed next token is the consequence. & $5$M--$50$M tokens with cached fp16 hidden states; char/word small model for smoke, GPT-style frozen model for max run. & Lower prequential NLL than cache and gradient-update adapters at lower backward cost. \\
-Systems scaling & Synthetic hidden states plus labels isolate data-structure cost from model forward cost. & $N=10^3$--$10^6$ concepts, $d=128$--$2048$, top-$k=8$--$64$, edge degree $q=0$--$32$. & Report latency, memory, candidate recall, and refinement throughput. \\
+$0.0$ & $0.0000$ & $-0.0000\pm0.0000$ & $0.0000\pm0.0000$ & $0.00$ \\
+$0.1$ & $0.0201$ & $0.0206\pm0.0013$ & $0.0206\pm0.0013$ & $0.00$ \\
+$0.2$ & $0.0823$ & $0.0824\pm0.0012$ & $0.0824\pm0.0012$ & $0.00$ \\
+$0.3$ & $0.1927$ & $0.1928\pm0.0041$ & $0.1929\pm0.0041$ & $0.00$ \\
+$0.4$ & $0.3681$ & $0.3682\pm0.0037$ & $0.3682\pm0.0038$ & $0.00$ \\
 \bottomrule
 \end{tabular}
-\caption{Evaluation suite. The controlled streams test the theorem-level
-separation; the image and language streams test practical frozen-backbone
-adaptation; the systems benchmark establishes the largest single-workstation
-operating envelope.}
-\label{tab:dgm-evaluation-suite}
+\caption{Regret-slope calibration over 16 seeds. Slopes are in nats per sample,
+estimated from the second half of each stream. At $\delta=0$, $U$ carries no
+consequence information and no refinement is accepted.}
+\label{tab:bayes-gap-calibration}
 \end{table}
 
-\paragraph{Controlled hidden-context streams.}
-The cleanest experiment makes the repair obstruction visible. A stream contains
-a hidden regime $z_t$ and an observed feature $x_t$ whose frozen representation
-collapses multiple regimes into the same current atom. Labels are generated so
-that $P(y\mid x,z)$ differs across hidden regimes while $P(y\mid x)$ is mixed.
-The refined oracle observes the regime bit or an equivalent distinction; repair
-baselines do not. DGM receives only the frozen hidden state and consequences, so
-it must discover distinction edges from repeated local contradictions. We report
-regret slope against the refined oracle, accepted concepts and edges, and the
-empirical mutual-information gain of accepted distinctions. A matched
-repair-only control removes the hidden conflict while preserving marginal
-difficulty; DGM should then repair without growing a large graph.
+The agreement is the important point: the error made by repair-only counts is
+not an optimizer artifact. Its asymptotic slope is the information-structure gap
+predicted by the theorem. The $\delta=0$ row is the corresponding negative
+control.
 
-\paragraph{Frozen vision adaptation.}
-The image benchmark uses a frozen encoder trained once on a disjoint pretraining
-split or loaded from a fixed checkpoint. The adaptation stream is predict-then-
-observe: labels arrive after each prediction. We use three stream orders:
-class-balanced random order, class-burst order, and domain/corruption-burst
-order. Class bursts test rapid local memory updates; domain bursts test whether
-refinement creates consequence-relevant concepts instead of only appending
-examples to a cache. The largest mandatory run uses all CIFAR-100 train examples
-as the adaptation stream and the official test split as held-out evaluation;
-CIFAR-10 is retained for fast ablations and debugging.
+\subsection{Oracle-partition CIFAR-100 BalancedMask-HQS}
+\label{sec:hqs-experiment}
+
+The oracle-partition CIFAR-100 hierarchy query stream isolates graph recovery
+from visual recognition. CIFAR-100 supplies 100 fine labels and 20 coarse labels
+\citep{krizhevsky2009learning}; the online state receives the true fine label
+$z$ as its current atom and must discover which coarse coordinate is
+consequence-relevant.
+
+The intuitive single-query version asks whether the image belongs to one coarse
+class $q$, with
+\[
+q=c(z)\text{ with probability }1/2,\qquad
+q\sim\mathrm{Unif}(\{1,\ldots,20\}\setminus\{c(z)\})\text{ otherwise},
+\]
+but this sampler makes the parent query marginally frequent. We therefore use a
+frequency-controlled mask-query version as the main diagnostic. In
+BalancedMask-HQS, each round samples $s\in\{0,1\}^{20}$ with iid
+$s_k\sim\mathrm{Bernoulli}(1/2)$ and sets
+\[
+Y=s_{c(z)}
+\]
+before flipping the label with probability $\eta=0.02$. Thus
+$P(Y=1\mid z)=1/2$, so a repair-only learner that conditions only on $z$ has
+Bayes log-risk $\log 2$, while the refined split $s_{c(z)}=1$ versus
+$s_{c(z)}=0$ has risk $H_{\mathrm{bin}}(\eta)=0.098$. Crucially, every
+candidate bit $g_k(s)=s_k$ has the same marginal frequency, and only
+$g_{c(z)}$ changes the conditional consequence distribution.
+
+DGM-HQS keeps a repairable Bernoulli memory at each fine node and scores
+candidate edges using disjoint proposal and scoring buffers of size 64, with 20
+independent spurious Bernoulli candidates in the pool. An edge is accepted only
+when its held-out log-loss gain exceeds the edge penalty and threshold.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Method & Held-out NLL $\downarrow$ & Held-out acc. $\uparrow$ & Atoms/cells $\downarrow$ & Edges $\downarrow$ & Edge F1 $\uparrow$ \\
+\midrule
+Repair-only memory & $0.694$ & $0.502$ & $100$ & $0$ & -- \\
+Frequency-only edge & $0.646$ & $0.540$ & $200$ & $100$ & $0.080$ \\
+Additive logistic & $0.674$ & $0.581$ & $121$ params & $0$ & -- \\
+Crossed logistic & $0.117$ & $0.980$ & $2001$ params & -- & -- \\
+Budgeted cache, $M=200$ & $0.699$ & $0.497$ & $200$ examples & -- & -- \\
+Budgeted cache, $M=500$ & $0.695$ & $0.499$ & $500$ examples & -- & -- \\
+Budgeted cache, $M=2000$ & $0.693$ & $0.499$ & $2000$ examples & -- & -- \\
+Per-fine local stump & $0.099$ & $0.980$ & $200$ & $100$ & $1.000$ \\
+\textbf{DGM-HQS} & $\mathbf{0.099}$ & $\mathbf{0.980}$ & $\mathbf{200}$ & $\mathbf{100}$ & $\mathbf{1.000}$ \\
+Oracle refined & $0.099$ & $0.980$ & $200$ & $100$ & $1.000$ \\
+\bottomrule
+\end{tabular}
+}
+\caption{Frequency-controlled CIFAR-100 BalancedMask-HQS over 5 seeds, 60k
+online rounds per seed, and 12k held-out query samples. Repair-only remains at
+the $\log 2$ structure bound. Frequency-only edge recovery fails because all
+candidate bits have identical marginal frequency. Crossed logistic solves the
+task with $100\times20$ interaction parameters. DGM-HQS recovers all 100 true
+fine-to-coarse edges with zero false or spurious accepted edges, matching the
+oracle refined risk with about 200 atoms.}
+\label{tab:hqs}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.72\linewidth]{experiments/publication_figures/hqs_online_nll.pdf}
+\caption{BalancedMask-HQS online adaptation. Held-out NLL stays at the
+repair-only bound for learners without the consequence-relevant bit, while
+DGM-HQS drops to the oracle refined risk after accepting the hierarchy edges.
+Shading is one standard deviation over 5 seeds.}
+\label{fig:hqs-online}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\subfloat[Recovered hierarchy graph.]{
+    \includegraphics[width=0.40\linewidth]{experiments/publication_figures/hqs_hierarchy_heatmap.pdf}
+}
+\hfill
+\subfloat[Loss versus structure size.]{
+    \includegraphics[width=0.54\linewidth]{experiments/publication_figures/hqs_nll_vs_structure.pdf}
+}
+\caption{DGM-HQS learns the CIFAR-100 hierarchy as a sparse consequence graph.
+In the heatmap, every accepted edge coincides with the true fine-to-coarse
+label; accepted-only and true-only entries are zero. The structure-size plot
+shows the main comparison: repair-only is compact but structurally wrong,
+frequency-only is exposed by the controlled marginals, crossed interactions are
+accurate but over-refined, and DGM reaches oracle loss with the minimal two-atom
+split per fine class.}
+\label{fig:hqs-structure}
+\end{figure}
+
+This result is not a claim that DGM beats every possible learner; crossed
+interaction features and a local stump also succeed. The point is structural
+efficiency and consequence-sensitive refinement. DGM accepts one edge per fine
+class and pools the two outcomes of the relevant bit, while crossed logistic
+allocates one interaction parameter for every fine-query pair and exact caches
+cannot compress the rule across random masks.
+
+\subsection{Guarded decisions and graph-memory ablations}
+
+The guarded refine-or-repair experiment tests whether refinement is
+consequence-sensitive rather than novelty-sensitive. We create two old atoms. In
+the repair atom, $Y\sim\mathrm{Bernoulli}(0.8)$ and all candidate distinctions
+are independent of $Y$, but the current local prediction is deliberately stale
+at $q(Y=1)=0.2$. The correct action is repair. In the refinement atom,
+$Y\mid U=0\sim\mathrm{Bernoulli}(0.1)$ and
+$Y\mid U=1\sim\mathrm{Bernoulli}(0.9)$, so the correct action is to refine by
+$U$. The candidate pool contains the true distinction $U$, twenty independent
+noise bits, and six geometry-only bits that are visually separable but
+independent of $Y$. Candidate proposal and validation use separate buffers.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{ccccc}
+\toprule
+Scoring buffer & True recall & False refinement & Spurious acceptance & Repair accuracy \\
+\midrule
+$32$ & $0.956$ & $0.001$ & $0.001$ & $0.999$ \\
+$64$ & $0.991$ & $0.000$ & $0.000$ & $1.000$ \\
+$128$ & $1.000$ & $0.000$ & $0.000$ & $1.000$ \\
+$256$ & $1.000$ & $0.000$ & $0.000$ & $1.000$ \\
+$512$ & $1.000$ & $0.000$ & $0.000$ & $1.000$ \\
+\bottomrule
+\end{tabular}
+\caption{Guarded refinement decisions over 800 trials per cell type and buffer
+size. The learner accepts the consequence-useful distinction and rejects noise
+or geometry-only distinctions.}
+\label{tab:guarded-refinement}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\linewidth]{experiments/publication_figures/guarded_sample_size_curve.pdf}
+\caption{Sample-size curve for the guarded decision rule. Larger scoring
+buffers preserve true-refinement recall while driving false refinement and
+spurious acceptance to zero.}
+\label{fig:guarded-refinement}
+\end{figure}
+
+The contextual XOR experiment checks the data-structure claim. The stream is
+$Y=b_1\oplus b_2\oplus c$, where the initial atoms are keyed by the two visible
+signs $(b_1,b_2)$ and the useful edge-generated distinction is the context bit
+$c$. We add nuisance coordinates so that prototype growth and cache baselines
+can create geometrically distinct states without obtaining the
+consequence-relevant partition.
+
+\begin{table}[t]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Model & Preq. acc. & Preq. NLL & Test acc. & Concepts & Context edges & Purity \\
+\midrule
+Full DGM refine+repair+edges & $\mathbf{0.959\pm0.002}$ & $\mathbf{0.073}$ & $\mathbf{0.998}$ & $8.0$ & $4.0$ & $0.997$ \\
+DGM repair only & $0.503\pm0.007$ & $0.696$ & $0.502$ & $4.0$ & $0.0$ & $0.514$ \\
+DGM refine only, no repair & $0.501\pm0.007$ & $0.693$ & $0.496$ & $8.0$ & $4.0$ & $0.997$ \\
+No-edge centroid growth & $0.504\pm0.004$ & $0.698$ & $0.502$ & $8.0$ & -- & $0.155$ \\
+$k$NN/cache, same budget & $0.497\pm0.006$ & $0.785$ & $0.499$ & $8.0$ & -- & -- \\
+$k$NN/cache, larger budget & $0.494\pm0.005$ & $0.788$ & $0.498$ & $64.0$ & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\caption{Contextual XOR graph-memory ablation over 10 seeds. Full DGM accepts
+all four context edges and no spurious edges. Repair-only cannot separate
+incompatible consequences; refine-only recovers the structure but has no local
+memory repair; no-edge and cache baselines do not recover the consequence
+partition under the same stream.}
+\label{tab:contextual-xor-ablation}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{experiments/publication_figures/contextual_xor_ablation.pdf}
+\caption{Contextual XOR ablation as a vector summary. Full DGM is the only
+model in this suite that obtains high prequential accuracy, low prequential
+NLL, and the intended eight-concept structure.}
+\label{fig:contextual-xor-ablation}
+\end{figure}
+
+Together, these diagnostics separate the two mechanisms. The guarded rule
+repairs stale local statistics when no candidate bit has stable consequence
+value, while the contextual XOR ablation shows that local repair and
+edge-generated refinement are both needed.
 
 \subsection{Non-oracle CIFAR-100 Image-HQS}
 \label{sec:image-hqs}
 
-We also instantiate a harder CIFAR-100 hierarchy-query stream that removes the
-oracle fine-label atom. Each round provides a frozen image embedding $z=\phi(x)$
-and an independently sampled mask $s\in\{0,1\}^{20}$. The binary consequence is
+We next instantiate a harder CIFAR-100 hierarchy-query stream that removes the
+oracle fine-label atom. Each round provides a frozen image embedding
+$z=\phi(x)$ and an independently sampled mask $s\in\{0,1\}^{20}$. The binary
+consequence is
 \[
 Y=s_{c(x)}
 \]
@@ -126,8 +283,11 @@ P(Y=1\mid j,s)
 \approx
 \eta+(1-2\eta)\sum_{c=1}^{20}\pi_{j,c}s_c .
 \]
-The posterior memory is updated only from the current hidden state, the query
-mask, and the revealed binary consequence.
+After prediction, each selected concept $j$ receives soft credit $\alpha_j$ and
+updates logits $\theta_j$, with $\pi_j=\mathrm{softmax}(\theta_j)$, by one
+online gradient step on the Bernoulli NLL of
+$\eta+(1-2\eta)\pi_j^\top s$. No fine label, coarse label, or true coordinate is
+used in this update.
 
 \begin{table}[t]
 \centering
@@ -143,8 +303,8 @@ DGM posterior & $\mathbf{0.6599 \pm 0.0039}$ & $\mathbf{0.6018 \pm 0.0096}$ \\
 \bottomrule
 \end{tabular}
 \caption{Non-oracle CIFAR-100 Image-HQS over 10 seeds. DGM posterior uses
-image-only routing and local mask-coordinate posterior repair; no fine or coarse
-label is exposed to the predictor or update rule.}
+image-only routing and local mask-coordinate posterior repair; no fine or
+coarse label is exposed to the predictor or update rule.}
 \label{tab:cifar100-image-hqs}
 \end{table}
 
@@ -169,70 +329,65 @@ coarse-posterior ceiling is $0.6522$, and the posterior hit rates for the true
 mask coordinate are $0.2808/0.5440/0.6599$ at ranks $1/3/5$ versus random
 $0.05/0.15/0.25$. Thus this result supports local posterior repair under
 learned visual concepts, not exact recovery of the CIFAR hierarchy graph from
-images.
+images. A small ablation in Appendix~\ref{app:image-hqs-audit} shows that
+categorical and single-bit memories fail, global posterior memory is weaker
+than local DGM posterior, and setting $\eta=0$ barely changes NLL.
 
-\paragraph{Frozen language-model adaptation.}
-For language modeling, the consequence is the next observed token. The model
-predicts token $x_{t+1}$ from prefix $x_{\le t}$, then uses the revealed token to
-repair or refine DGM-Embedding. The main stream uses long contiguous documents
-so that local entities, notation, formatting, and topic shifts create repeated
-contexts. Free generations are not used as observations. To make the M4 Max run
-large enough without conflating model forward cost with memory cost, the
-largest run may cache frozen hidden states in fp16 and replay the prequential
-adaptation layer over $5$M--$50$M tokens. A smaller end-to-end run recomputes
-the frozen model forward pass to verify that the cached-hidden protocol matches
-online execution.
+\subsection{Trust aggregation and runtime baselines}
 
-\subsection{Baselines and ablations}
-\label{sec:experiment-baselines}
+The calibration diagnostic isolates the calibration issue. We run a controlled
+next-token stream with repeated contexts and a phase drift. The base predictor
+is the phase-level unigram law, while the DGM memory routes by context and
+stores token counts. An unsmoothed, overconfident memory improves accuracy but
+can assign catastrophic probability to unseen post-drift tokens; a smoothed
+memory is safer, and the trust aggregator mixes a grid
+$\Lambda=\{0,0.05,0.1,0.2,0.4,0.7,1\}$ containing the frozen base predictor.
+In the 4000-step run used as a smoke check, the base average NLL is $3.865$,
+the unsmoothed overconfident memory average NLL is $5.173$, the smoothed
+memory-only average NLL is $2.815$, and Hedge trust aggregation obtains
+$2.763$. The logged trajectory satisfies the theorem's fallback bound with
+numerical slack.
 
-The core baselines are deliberately close competitors rather than weak offline
-training comparisons:
-\begin{itemize}
-    \item \textbf{Frozen predictor:} no runtime adaptation.
-    \item \textbf{Repair-only memories:} calibrated class/token counts, online
-    ridge/RLS, passive-aggressive updates, and CPM-style projection memory under
-    the same frozen features.
-    \item \textbf{Cache and $k$NN memories:} budgeted example stores with the
-    same key dimension, retrieval budget, and memory cap as DGM.
-    \item \textbf{Online tree baselines:} Hoeffding-style or Mondrian-style
-    online partitions on the frozen hidden states, where applicable.
-    \item \textbf{Inference-time gradient baselines:} one-step and multi-step
-    updates to a linear head, soft prompt, adapter, LoRA block, or normalization
-    state, with optimizer state and activation memory counted.
-    \item \textbf{Full DGM:} guarded repair, candidate-recall retrieval,
-    consequence-sensitive refinement, and edge-gated routing.
-\end{itemize}
-The mandatory DGM ablations are repair-only DGM, refine-only DGM, edge-free
-DGM, no anchor-recall candidates, no graph-neighbor candidates, unguarded
-refinement, and fixed trust weight versus online-selected trust weight. These
-ablations identify whether gains come from refinement, edge gating, better
-candidate recall, or merely extra memory capacity.
+The relevant backpropagation baseline depends on the runtime contract. Full
+offline backpropagation is a batch upper bound: it can revisit all examples and
+change the representation quotient. The direct runtime baseline is online
+backpropagation, which sees each example once and makes one gradient update
+after the prequential prediction
+\citep{rumelhart1986learning,zinkevich2003online,shalev2012online}.
+Figure~\ref{fig:dgm-vs-backprop} reports both, so the comparison boundary is
+explicit.
 
-\subsection{Metrics and reporting}
-\label{sec:experiment-metrics}
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{experiments/publication_figures/dgm_vs_backprop.pdf}
+\caption{Runtime baselines against backpropagation. (A) On contextual XOR and
+synthetic sequence-map streams, DGM memory has lower prequential NLL than
+one-step online backpropagation. (B) DGM also has higher test accuracy; offline
+backpropagation is shown as a batch upper bound. (C) On frozen embeddings with
+five support examples per class, closed-form ridge memory obtains higher
+accuracy than a 200-step backpropagation head at lower adapter time. Circles
+denote MNIST and triangles denote CIFAR-10.}
+\label{fig:dgm-vs-backprop}
+\end{figure}
 
-Each run reports prequential loss, prequential accuracy when applicable,
-held-out post-adaptation loss, and regret to the known oracle on controlled
-streams. Systems measurements are separated into shared forward time, adaptation
-read time, adaptation write time, backward time, synchronization time, peak
-unified-memory use, optimizer-state memory, activation memory, concept memory,
-and index memory. We also report number of backward passes, trainable
-adaptation parameters, accepted concepts, accepted edges, average degree,
-refinement acceptance rate, candidate-recall rate for controlled streams,
-calibration error for probabilistic outputs, and the validation gain of accepted
-versus rejected refinements.
+On the two-context XOR stream, online backpropagation obtains
+$0.569\pm0.065$ prequential accuracy, $0.689\pm0.019$ prequential NLL, and
+$0.654\pm0.038$ test accuracy. DGM obtains $0.804\pm0.025$ prequential
+accuracy, $0.458\pm0.038$ prequential NLL, and $0.944\pm0.026$ test accuracy.
+On the synthetic sequence-map stream, online backpropagation obtains
+$0.113\pm0.029$ prequential accuracy, $3.065\pm0.061$ prequential NLL, and
+$0.125\pm0.021$ test accuracy, while DGM obtains $0.862\pm0.005$,
+$2.067\pm0.082$, and $0.912\pm0.077$, respectively. In the frozen-embedding
+adapter check, ridge memory reaches $0.623\pm0.003$ MNIST accuracy in
+$0.0018\,\mathrm{s}$ and $0.397\pm0.010$ CIFAR-10 accuracy in
+$0.0004\,\mathrm{s}$, compared with $0.332\pm0.009$ and $0.359\pm0.009$ for a
+200-step backpropagation head taking about $0.032\,\mathrm{s}$.
 
-\subsection{Decision rule for claiming evidence}
-\label{sec:experiment-claim-rule}
-
-The experiment supports the DGM claim only if three outcomes hold together.
-First, on hidden-context streams, full DGM must reduce the repair-only regret
-slope and move toward the refined oracle with a graph whose accepted distinctions
-have positive held-out value. Second, on repair-only controls, DGM must avoid
-unnecessary growth and remain competitive with the best fixed-information
-repair method. Third, on natural frozen-model streams, DGM must improve the
-prequential loss--latency--memory frontier against cache and inference-time
-gradient baselines. If DGM only wins by using more memory, by seeing labels
-before prediction, or by hiding backbone/gradient cost, the experiment does not
-validate the theory.
+\paragraph{Scope.}
+These experiments do not claim that DGM is a finished competitive
+language-modeling system, that runtime memory dominates unconstrained offline
+training, or that the non-oracle Image-HQS result establishes a full
+loss-latency-memory frontier against nonparametric and gradient baselines. They
+test the mechanisms required by the theory and provide predictive evidence
+under a shared frozen encoder; stronger nonparametric baselines and full
+systems accounting remain future work.

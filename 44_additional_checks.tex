@@ -1,11 +1,57 @@
-\section{M4 Max Evaluation Grid and Diagnostics}
+\section{Single-Workstation Evaluation Grid and Diagnostics}
 \label{app:additional-checks}
 
-This appendix fixes the intended scale of the empirical program in
-Section~\ref{sec:experiments} and records implementation checks for the
-non-oracle CIFAR-100 Image-HQS run. The run-tier grid is a design constraint;
-the Image-HQS audit below summarizes the completed evidence package used in
-Table~\ref{tab:cifar100-image-hqs}.
+This appendix records the evaluation protocol that was moved out of the main
+experiment section, fixes the intended single-workstation scale of the empirical
+program, and records implementation checks for the non-oracle CIFAR-100
+Image-HQS run. The run-tier grid is a design constraint; the Image-HQS audit
+below summarizes the completed evidence package used in
+Table~\ref{tab:cifar100-image-hqs}. The headline Image-HQS table was run as a
+CUDA single-workstation experiment on an NVIDIA GeForce RTX 5090 Laptop GPU; the
+method claim does not depend on Apple-specific hardware.
+
+\subsection{Runtime contract and evaluation suite}
+
+Every method receives the same frozen encoder or language model. The cost of
+training or loading this shared model is reported but not charged to runtime
+adaptation. At round $t$, the method receives $x_t$, computes the shared hidden
+state $h_t=\phi_\theta(x_t)$, predicts $\hat y_t$, then observes the consequence
+$y_t$ and may update only its declared runtime state:
+\[
+x_t \longrightarrow h_t \longrightarrow \hat y_t,
+\qquad
+y_t \longrightarrow \text{runtime update}.
+\]
+DGM updates by detached graph-memory repair or by guarded refinement. Test-time
+training baselines update a head, prompt, adapter, normalization state, or other
+declared adaptation parameters by inference-time gradient steps. The reported
+adaptation overhead excludes the shared frozen forward pass and includes all
+extra reads, writes, backward passes, activation storage, optimizer state,
+synchronization, and memory-index maintenance.
+
+\begin{table}[h]
+\centering
+\footnotesize
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.18\linewidth}
+>{\raggedright\arraybackslash}p{0.28\linewidth}
+>{\raggedright\arraybackslash}p{0.24\linewidth}
+>{\raggedright\arraybackslash}p{0.18\linewidth}}
+\toprule
+Benchmark & What it tests & Single-workstation scale target & Primary success condition \\
+\midrule
+Hidden-context control & Frozen states intentionally collapse regimes that require different predictions. The oracle refined partition is known. & $10^6$--$10^7$ stream rounds, $K\in\{8,32,128\}$ regimes, label-noise grid, 5 seeds. & DGM approaches the refined oracle and beats repair-only regret slope. \\
+Repair-only control & Same stream geometry but no hidden consequence conflict. Errors come from stale local statistics. & Matched stream length and concept budget. & DGM accepts few refinements and matches the best repair baseline. \\
+Frozen vision streams & CIFAR-10/100-style frozen-encoder classification with class/domain bursts, corruptions, and replay-free label reveal. & Full CIFAR-10 and CIFAR-100 streams; optional larger local image subset if available. & Better prequential NLL or accuracy at matched adaptation time and memory. \\
+Frozen LM streams & A frozen next-token model processes document continuations; the observed next token is the consequence. & $5$M--$50$M tokens with cached fp16 hidden states; char/word small model for smoke, GPT-style frozen model for max run. & Lower prequential NLL than cache and gradient-update adapters at lower backward cost. \\
+Systems scaling & Synthetic hidden states plus labels isolate data-structure cost from model forward cost. & $N=10^3$--$10^6$ concepts, $d=128$--$2048$, top-$k=8$--$64$, edge degree $q=0$--$32$. & Report latency, memory, candidate recall, and refinement throughput. \\
+\bottomrule
+\end{tabular}
+\caption{Evaluation suite. The controlled streams test the theorem-level
+separation; the image and language streams test practical frozen-backbone
+adaptation; the systems benchmark establishes the largest single-workstation
+operating envelope.}
+\label{tab:dgm-evaluation-suite}
+\end{table}
 
 \subsection{Run tiers}
 
@@ -25,7 +71,7 @@ Never used as headline evidence. \\
 Main & Default evidence tier for all tables. &
 $10^6$ controlled rounds, full CIFAR-10/100 streams, $5$M--$10$M language tokens,
 3--5 seeds. & Main paper tables and figures. \\
-Max & Largest M4 Max run used for scaling claims. &
+Max & Largest single-workstation run used for scaling claims. &
 $10^7$ controlled rounds or synthetic states, $50$M cached-token hidden states
 when storage permits, up to $10^6$ concepts in systems tests. &
 Systems and scalability figure. \\
@@ -33,22 +79,23 @@ Systems and scalability figure. \\
 \end{tabular}
 \caption{Experiment tiers. Smoke runs are engineering checks; main and max runs
 are the only tiers that should support empirical claims.}
-\label{tab:m4max-run-tiers}
+\label{tab:single-workstation-run-tiers}
 \end{table}
 
 \subsection{Hardware and accounting}
 
-The hardware report must include chip, GPU-core count, unified memory, macOS
-version, Python version, framework version, backend, dtype, and whether hidden
-states are recomputed or cached. For every method, report both total wall clock
-and the runtime-adaptation overhead after the shared frozen forward pass. For
-gradient baselines, count backward passes, optimizer state, and activation
-storage for the adaptation window. For DGM and cache baselines, count concept or
-example memory, edge memory, index memory, and validation-buffer memory.
+The hardware report must include CPU, accelerator, accelerator memory or unified
+memory, operating system, Python version, framework version, backend, dtype, and
+whether hidden states are recomputed or cached. For every method, report both
+total wall clock and the runtime-adaptation overhead after the shared frozen
+forward pass. For gradient baselines, count backward passes, optimizer state,
+and activation storage for the adaptation window. For DGM and cache baselines,
+count concept or example memory, edge memory, index memory, and
+validation-buffer memory.
 
-The max run should stop before swapping dominates. If the machine has 64GB
-unified memory, the target cap is 48GB resident memory. If it has 128GB, the
-target cap is 96GB. Exceeding the cap is a failed systems configuration rather
+The max run should stop before memory pressure or swapping dominates. The memory
+cap should be declared before the run as a fixed fraction of available RAM or
+accelerator memory. Exceeding the cap is a failed systems configuration rather
 than a valid larger experiment.
 
 \subsection{Controlled-stream grid}
@@ -143,6 +190,16 @@ layer, provided an end-to-end online subset verifies identical predictions up to
 floating-point tolerance. Report token NLL, perplexity, adaptation microseconds
 per token, peak memory, backward passes per token, and concept/edge growth over
 document position.
+
+\subsection{Evidence boundary}
+
+For the non-oracle CIFAR-100 Image-HQS result, the paper claims predictive
+evidence under a shared frozen encoder: DGM posterior memory improves test NLL
+and accuracy over the reported online linear baselines without label leakage.
+It does not claim a full loss-latency-memory frontier against stronger
+nonparametric and inference-time gradient baselines. That broader frontier is a
+future-work requirement rather than a premise of
+Table~\ref{tab:cifar100-image-hqs}.
 
 \subsection{Required failure diagnostics}
 
