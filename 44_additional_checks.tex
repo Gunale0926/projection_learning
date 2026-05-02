@@ -1,57 +1,121 @@
-\section{Additional Computational Checks}
+\section{M4 Max Evaluation Grid and Diagnostics}
 \label{app:additional-checks}
 
-This appendix reports secondary checks that are useful for debugging implementations but are not the main evidence for the refine-or-repair claim.
+This appendix fixes the intended scale of the empirical program in
+Section~\ref{sec:experiments}. It is a design constraint, not a result claim.
+All numbers below are single-workstation targets; a smaller smoke run may be
+used for code validation, but the paper should not treat smoke results as
+evidence for DGM.
 
-\subsection{Online image streams}
+\subsection{Run tiers}
 
-We run small online image-stream checks on MNIST and CIFAR-10 using cached local datasets. These are sanity checks, not evidence that DGM is a competitive image classifier. In these experiments the DGM memory uses exemplar repair. The online backpropagation baseline sees each example once and performs one gradient step. Offline backpropagation is a batch upper bound.
-
-\begin{table}[ht]
+\begin{table}[h]
 \centering
-\begin{tabular}{lccc}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.15\linewidth}
+>{\raggedright\arraybackslash}p{0.26\linewidth}
+>{\raggedright\arraybackslash}p{0.28\linewidth}
+>{\raggedright\arraybackslash}p{0.20\linewidth}}
 \toprule
-Dataset & Offline backprop & Online backprop & Online DGM memory \\
+Tier & Purpose & Scale & Use in paper \\
 \midrule
-MNIST & $0.843\pm0.009$ & $0.682\pm0.038$ & $0.851\pm0.003$ \\
-CIFAR-10 & $0.273\pm0.003$ & $0.137\pm0.010$ & $0.243\pm0.008$ \\
+Smoke & Catch implementation bugs and check predict-before-observe order. &
+$10^4$ synthetic rounds, CIFAR-10 subset, $10^5$ language tokens, one seed. &
+Never used as headline evidence. \\
+Main & Default evidence tier for all tables. &
+$10^6$ controlled rounds, full CIFAR-10/100 streams, $5$M--$10$M language tokens,
+3--5 seeds. & Main paper tables and figures. \\
+Max & Largest M4 Max run used for scaling claims. &
+$10^7$ controlled rounds or synthetic states, $50$M cached-token hidden states
+when storage permits, up to $10^6$ concepts in systems tests. &
+Systems and scalability figure. \\
 \bottomrule
 \end{tabular}
-\caption{Image-stream sanity checks. The point is not to beat fully trained image models, but to compare one-pass runtime updates.}
-\label{tab:image-check}
+\caption{Experiment tiers. Smoke runs are engineering checks; main and max runs
+are the only tiers that should support empirical claims.}
+\label{tab:m4max-run-tiers}
 \end{table}
 
-The relevant future settings are context switching, few-shot adaptation with a frozen encoder, long-document memory, repeated syntax regimes, and hidden task identity.
+\subsection{Hardware and accounting}
 
-\subsection{Frozen-embedding adapter check}
+The hardware report must include chip, GPU-core count, unified memory, macOS
+version, Python version, framework version, backend, dtype, and whether hidden
+states are recomputed or cached. For every method, report both total wall clock
+and the runtime-adaptation overhead after the shared frozen forward pass. For
+gradient baselines, count backward passes, optimizer state, and activation
+storage for the adaptation window. For DGM and cache baselines, count concept or
+example memory, edge memory, index memory, and validation-buffer memory.
 
-For a stronger adapter benchmark, we train a shared convolutional encoder and freeze it. The adaptation problem is deliberately narrow: given only five labeled support examples per class, adapt the readout. We compare nearest-neighbor memory, ridge memory as a closed-form projection adapter from Appendix~\ref{app:dgm-extensions}, a one-pass backpropagation head, and a 200-step backpropagation head on the same frozen embeddings.
+The max run should stop before swapping dominates. If the machine has 64GB
+unified memory, the target cap is 48GB resident memory. If it has 128GB, the
+target cap is 96GB. Exceeding the cap is a failed systems configuration rather
+than a valid larger experiment.
 
-\begin{table}[ht]
-\centering
-\begin{tabular}{lccc}
-\toprule
-Dataset & Method & Accuracy & Adapter time \\
-\midrule
-MNIST, 5-shot & one-pass backprop head & $0.100\pm0.000$ & $0.0002$s \\
-MNIST, 5-shot & 200-step backprop head & $0.332\pm0.009$ & $0.0320$s \\
-MNIST, 5-shot & kNN memory & $0.486\pm0.005$ & $0.0006$s \\
-MNIST, 5-shot & ridge memory & $\mathbf{0.623\pm0.003}$ & $0.0018$s \\
-\midrule
-CIFAR-10, 5-shot & one-pass backprop head & $0.115\pm0.014$ & $0.0003$s \\
-CIFAR-10, 5-shot & 200-step backprop head & $0.359\pm0.009$ & $0.0325$s \\
-CIFAR-10, 5-shot & kNN memory & $0.355\pm0.005$ & $0.0006$s \\
-CIFAR-10, 5-shot & ridge memory & $\mathbf{0.397\pm0.010}$ & $0.0004$s \\
-\bottomrule
-\end{tabular}
-\caption{Few-shot adapter check on frozen embeddings. Ridge memory fits the adapter by a closed-form projection solve.}
-\label{tab:adapter-benchmark}
-\end{table}
+\subsection{Controlled-stream grid}
 
-\subsection{Projection-memory residual identity}
+The hidden-context control should sweep regime count, noise, and drift:
+\[
+K\in\{8,32,128\},\qquad
+\epsilon_{\mathrm{label}}\in\{0,0.05,0.15\},\qquad
+T\in\{10^6,10^7\}.
+\]
+The repair-only control uses the same marginal $x_t$ process and stream length
+but removes the hidden label conflict. Required curves are cumulative
+prequential regret, accepted concept count, accepted edge count, and held-out
+split value. A convincing DGM run has a sublinear-looking regret curve relative
+to the refined oracle after discovery, while repair-only baselines keep a
+positive asymptotic slope on the hidden-context stream and do not on the
+repair-only stream.
 
-We verify the projection-memory residual contraction identity used by local repair. For random $W,k,v$ and step size $\eta$, the soft Projection Memory update satisfies
-\begin{align*}
-v-W_{t+1}k=\frac{1}{1+\eta\norm{k}_2^2}(v-W_tk).
-\end{align*}
-Over 200 random trials, the maximum absolute error between the measured residual ratio and the formula was $3.33\cdot 10^{-16}$.
+\subsection{Vision-stream grid}
+
+The main vision run uses a frozen encoder and three observation orders:
+random-balanced, class-burst, and corruption/domain-burst. CIFAR-10 is for fast
+debugging; CIFAR-100 is the main mandatory dataset. If a local larger image
+dataset is available, an ImageNet-100-style subset can be added as a max run,
+but it should not replace CIFAR-100 because reviewers must be able to reproduce
+the baseline tier easily.
+
+The main table should include frozen, online head SGD/Adam, online ridge or RLS,
+budgeted $k$NN/cache, repair-only DGM, edge-free DGM, and full DGM. Report
+prequential NLL, prequential accuracy, post-adaptation test NLL and accuracy,
+adaptation seconds per 10k examples, peak memory, and accepted concepts/edges.
+
+\subsection{Language-stream grid}
+
+The language benchmark uses read-before-observe next-token prediction. The
+small run may use a character or word model trained locally, but the main run
+should use a frozen pretrained or fixed checkpoint model so that DGM is judged
+as an inference-time layer rather than as extra offline training. The stream is
+long contiguous text, not randomly shuffled tokens. The comparison set is:
+frozen model, continuous cache or $k$NN-LM, online soft-prompt/head/adapter
+updates, repair-only DGM-Embedding, and full DGM-Embedding.
+
+The max run may precompute hidden states in fp16 and replay the adaptation
+layer, provided an end-to-end online subset verifies identical predictions up to
+floating-point tolerance. Report token NLL, perplexity, adaptation microseconds
+per token, peak memory, backward passes per token, and concept/edge growth over
+document position.
+
+\subsection{Required failure diagnostics}
+
+The following checks are required before interpreting a positive result:
+\begin{itemize}
+    \item \textbf{Order check:} the observed label or token must not enter any
+    prediction made for that same round.
+    \item \textbf{Backbone equality:} all methods must use identical frozen
+    hidden states for the same stream.
+    \item \textbf{Budget equality:} cache, $k$NN, and DGM memory budgets must be
+    matched in bytes, not just in number of stored items.
+    \item \textbf{Candidate recall:} controlled streams should report how often
+    the oracle-compatible concept is present in the sparse candidate set.
+    \item \textbf{Growth sanity:} on repair-only controls, full DGM should not
+    grow a large graph; otherwise the refinement guard is too weak.
+    \item \textbf{Ablation consistency:} if edge-free DGM matches full DGM on the
+    hidden-context control, the experiment is not testing graph distinctions.
+\end{itemize}
+
+These diagnostics are stricter than ordinary benchmark reporting because the
+paper's claim is structural. A result that improves accuracy while failing the
+order, budget, or ablation checks is not evidence for the refine-or-repair
+claim.
