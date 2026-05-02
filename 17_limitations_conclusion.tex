@@ -1,0 +1,18 @@
+\section{Limitations and Conclusion}
+\label{sec:main-limitations}
+
+\begin{itemize}
+\item The theory is about explicit information structures or restricted hard-route classes.
+\item Full backpropagation through the representation is outside the repair-only lower bound.
+\item Soft-DGM requires candidate recall and margin assumptions to approximate the hard route.
+\item Held-out guarantees require fresh or reusable validation data rather than adaptive reuse of the same scoring buffer.
+\item The experiments are diagnostics plus frozen-embedding evidence, not broad SOTA evidence.
+\end{itemize}
+The non-oracle Image-HQS result is especially narrow: it supports local posterior repair under learned visual concepts, but it does not establish exact hierarchy recovery from images or a complete memory-latency frontier.
+The next empirical step is a budget-matched comparison against stronger tree, RLS, $k$NN, online MLP, and prototype-growth baselines under the same prequential contract.
+The method also needs better policies for merging, eviction, nonlinear distinctions, and adaptive validation if it is to be used as a long-running system rather than a diagnostic implementation.
+
+The main point is the separation between two runtime operations.
+Repair improves predictions inside the current quotient; refinement changes the quotient when consequences reveal a missing distinction.
+DGM gives one guarded graph-memory implementation of that decision: accept consequence-valued distinctions as edges, otherwise repair local memories.
+That narrower framing is the intended contribution: a decision-theoretic obstruction, a value criterion for distinctions, and a guarded graph-memory mechanism aligned with those claims.

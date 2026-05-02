@@ -1,0 +1,121 @@
+\section{Distinction Graph Machines}
+\label{sec:main-dgm}
+
+DGM instantiates refinement as a graph operation.
+Trees impose a rooted order on distinctions; DGM stores local pairwise distinctions between runtime concepts and keeps repairable memories at the nodes.
+This is useful when conflicts are local and non-hierarchical: a new concept may need to be separated from only the concepts it has been confused with, rather than from every existing leaf in a tree.
+The runtime state is
+\[
+S_t=
+\left(
+\{a_j,c_j,M_j,n_j\}_{j=1}^{N_t},
+E_t
+\right).
+\]
+Here $a_j\in\R^d$ is a frozen anchor that defines the hard information structure, $c_j\in\R^d$ is a movable centroid used only for retrieval, $M_j$ is a repairable local memory, and $E_t$ is the set of accepted distinction edges.
+Anchors and edges define refinement; memories and centroids are repairable payloads and statistics.
+A new concept is initialized with anchor and centroid at the current hidden state; later repair may move the centroid or update the memory, but does not rewrite previously accepted edge predicates.
+
+For an edge $e=(i,j)$,
+\[
+u_e=\frac{a_i-a_j}{\|a_i-a_j\|_2},
+\qquad
+b_e=\frac12u_e^\top(a_i+a_j),
+\qquad
+g_e(h)=\mathbf 1\{u_e^\top h>b_e\}.
+\]
+This edge separates the anchors that caused the conflict:
+\[
+u_e^\top a_i-b_e=\frac12\|a_i-a_j\|_2,
+\qquad
+u_e^\top a_j-b_e=-\frac12\|a_i-a_j\|_2.
+\]
+
+The edge signature
+\[
+\sigma^G_t(h)=\bigl(g_e(h)\bigr)_{e\in E_t}
+\]
+induces the edge partition
+\[
+\calP^G_t
+=
+\{h:\sigma^G_t(h)=s\}_{s\in\{0,1\}^{E_t}}
+\setminus\{\varnothing\}.
+\]
+Therefore
+\[
+\mathrm{Repair}\Rightarrow \calP^G_{t+1}=\calP^G_t,
+\qquad
+\mathrm{Refine\ by\ }g\Rightarrow \calP^G_{t+1}=\calP^G_t\vee g.
+\]
+These are the DGM invariants.
+A repair may improve $M_j$, change counts, or move retrieval centroids, but it does not add an edge generator.
+A refinement creates a new anchor and at least one accepted edge, so the edge signature gains a new bit and the edge skeleton is joined with that bit.
+The exact hard route also uses anchor-order events for nearest eligible anchor selection; the full formalism is in Appendix~\ref{sec:algorithms}.
+The edge skeleton is the part that corresponds exactly to the minimal join operation in Section~\ref{sec:main-value}.
+Anchor-order events are routing infrastructure, not additional consequence claims.
+
+The practical Soft-DGM read is a sparse differentiable approximation.
+Given
+\[
+N(h)=
+N_{\rm centroid}(h)
+\cup
+N_{\rm anchor}(h)
+\cup
+\operatorname{GraphNeighbors}(N_{\rm centroid}(h)),
+\]
+define
+\[
+\chi_j(h)
+=
+\exp\left[
+\frac1{\sqrt{\max\{1,|\operatorname{Inc}(j)|\}}}
+\sum_{e\in\operatorname{Inc}(j)}
+\beta_e
+\log\operatorname{sigmoid}
+\left(
+\frac{s_{e,j}(u_e^\top h-b_e)}{\tau_e}
+\right)
+\right].
+\]
+The routing weight and prediction are
+\[
+\alpha_j(h)
+=
+\frac{
+\exp(-\|h-c_j\|_2^2/T)\chi_j(h)
+}{
+\sum_{r\in N(h)}
+\exp(-\|h-c_r\|_2^2/T)\chi_r(h)
+},
+\qquad
+\hat y(h)=\sum_{j\in N(h)}\alpha_j(h)M_j(h).
+\]
+Exact partition guarantees apply to the anchor-based hard route.
+The soft read is a sparse differentiable approximation and requires candidate recall; diagnostics and the formal approximation statement are in Appendix~\ref{sec:algorithms}.
+Centroid movement can change soft routing weights, so centroid repair should be interpreted as repair of the hard information structure plus an approximate neural read, not as a claim that every smooth prediction remains constant on edge-partition atoms.
+
+\begin{algorithm}[t]
+\caption{\textsc{Guarded-DGM-Update}}
+\label{alg:main-guarded-dgm}
+\begin{algorithmic}[1]
+\Statex Input: state $S_t$, example $(x_t,y_t)$, proposal buffer, scoring buffer.
+\State Compute $h_t=\phi_\theta(x_t)$ and predict with edge-gated local memories.
+\State Form $\calC_t^{\rm rep}$ by updating local memory or centroid while keeping anchors and edges fixed.
+\State Form $\calC_t^{\rm ref}$ by creating a new anchor at $h_t$ and edges to confused neighbors.
+\State Score all candidates on $\calB_t^{\rm score}$.
+\State Let $G_{\rm rep}$ be the best empirical repair gain.
+\State Let $G_{\rm ref}$ be the best penalized empirical refinement gain.
+\If{$G_{\rm ref}>G_{\rm rep}+\tau+4\epsilon_t$}
+    \State commit the refinement.
+\Else
+    \State commit the best non-worsening repair candidate.
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+DGM is therefore a data-structure implementation of guarded distinction acceptance under an explicit runtime information structure.
+It is not a claim that graph memory is globally optimal, nor that the soft implementation is exactly measurable with respect to the hard edge partition.
+The claim boundary is important: Hard-DGM gives the clean partition invariant, Soft-DGM gives a practical sparse read, and the guard decides whether the empirical evidence justifies moving from repair to refinement.
+Thus DGM should be evaluated by whether it makes the right structural decision under a stated runtime contract, not by whether its graph edges are human-interpretable concepts by default.

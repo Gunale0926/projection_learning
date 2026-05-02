@@ -1,0 +1,84 @@
+\section{Introduction}
+\label{sec:main-intro}
+
+Runtime learning mechanisms usually respond to surprise by repairing state: cache a new example, update a local statistic, or adapt a small set of parameters.
+These updates are powerful only if the current runtime representation already separates the cases that require different actions.
+If two cases are indistinguishable to the runtime state but require different predictions, no repair of values inside that state can separate them.
+This is a common failure mode in online systems with memory: a cache can store more examples, an adapter can move its parameters, and a local statistic can become well estimated, but all of these updates still assign one decision to one runtime cell if the representation has collapsed the relevant cases.
+
+We model this failure using information partitions, following the decision-theoretic view that available information constrains admissible decision rules \citep{blackwell1953equivalent,berger1985statistical}.
+A runtime state induces an equivalence relation over cases.
+A repair update changes the payload assigned to an existing equivalence class; a refinement update changes the equivalence relation itself by adding an observable distinction.
+In the simplest log-loss example, $\Omega=\{0,1\}$, $Y=\omega$, and $P(0)=P(1)=1/2$.
+The trivial partition $\Pi=\{\{0,1\}\}$ has $R_{\log}(\Pi)=\log 2$, while the refined partition $\Pi^\star=\{\{0\},\{1\}\}$ has $R_{\log}(\Pi^\star)=0$.
+No repair of the single atom can assign two different predictions.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,>=stealth]
+\tikzset{
+    atom/.style={draw,rounded corners=2pt,fill=gray!8,minimum width=2.0cm,minimum height=1.05cm},
+    child/.style={draw,rounded corners=2pt,fill=blue!6,minimum width=0.95cm,minimum height=1.05cm},
+    state/.style={circle,fill=black,inner sep=0pt,minimum size=4pt},
+    mem/.style={draw,rounded corners=1.5pt,fill=green!10,minimum width=0.85cm,minimum height=0.32cm,font=\scriptsize},
+    lab/.style={font=\scriptsize},
+    title/.style={font=\scriptsize\bfseries}
+}
+\node[title] at (0,1.05) {current atom};
+\node[atom] at (0,0.25) {};
+\node[state,label={[lab]90:$\omega$}] at (-0.45,0.42) {};
+\node[state,label={[lab]90:$\omega'$}] at (0.45,0.42) {};
+\node[lab] at (-0.45,-0.05) {$Y=0$};
+\node[lab] at (0.45,-0.05) {$Y=1$};
+\node[mem] at (0,-0.65) {$a(B)$};
+
+\node[title] at (3.55,1.05) {repair};
+\node[atom] at (3.55,0.25) {};
+\node[state] at (3.10,0.42) {};
+\node[state] at (4.00,0.42) {};
+\node[mem] at (3.55,-0.65) {$a'(B)$};
+\node[lab,align=center,text width=2.1cm] at (3.55,-1.12) {same atom, one payload};
+
+\node[title] at (7.05,1.05) {refine};
+\node[child] at (6.55,0.25) {};
+\node[child] at (7.55,0.25) {};
+\node[state] at (6.55,0.42) {};
+\node[state] at (7.55,0.42) {};
+\node[lab] at (6.55,-0.08) {$U=0$};
+\node[lab] at (7.55,-0.08) {$U=1$};
+\node[mem] at (6.55,-0.65) {$a_0$};
+\node[mem] at (7.55,-0.65) {$a_1$};
+\node[lab,align=center,text width=2.35cm] at (7.05,-1.12) {new cells, separate payloads};
+
+\draw[->,thick] (1.05,0.55) -- (2.45,0.55);
+\draw[->,thick] (4.65,0.55) -- (5.85,0.55);
+\node[lab] at (1.75,0.82) {$\Pi_{t+1}=\Pi_t$};
+\node[lab] at (5.25,0.82) {$\Pi_{t+1}=\Pi_t\vee U$};
+\end{tikzpicture}
+\caption{Repair changes payloads on existing atoms; refinement changes the information partition by adding a distinction.}
+\label{fig:main-repair-refine}
+\end{figure}
+
+The central decomposition is
+\[
+R_L(f_t)-R_L(\Pi^\star)
+=
+\underbrace{R_L(f_t)-R_L(\Pi_t)}_{\Delta_{\rm repair}}
++
+\underbrace{R_L(\Pi_t)-R_L(\Pi^\star)}_{\Delta_{\rm refine}}.
+\]
+The first term is what better payloads, memories, or statistics can fix at the current partition.
+The second is what can only be removed by changing the partition.
+This decomposition is the organizing principle of the paper: surprise is not by itself evidence for refinement, because stale or noisy local statistics also cause error; refinement is justified only when the held-out consequence value of a new distinction exceeds what repair can explain.
+
+This paper makes three contributions.
+\begin{itemize}
+    \item \textbf{Obstruction.} If predictions remain measurable with respect to a fixed partition, a positive refinement gap gives linear regret against a refined oracle.
+    \item \textbf{Value.} Useful distinctions are consequence-sensitive: under uniqueness of Bayes actions, a refinement has zero value exactly when the refined Bayes action was already measurable under the old information; under log loss the value of adding $U$ is $I(Y;U\mid\Pi)$.
+    \item \textbf{Implementation.} We instantiate the decision as Distinction Graph Machines (DGM), a graph-memory data structure whose accepted edges are distinctions and whose nodes carry repairable local memories.
+\end{itemize}
+Experiments are organized by claim strength: a synthetic Bayes-gap stream calibrates the theorem, CIFAR-100 BalancedMask-HQS tests consequence-sensitive edge recovery with known oracle structure, and non-oracle CIFAR-100 Image-HQS tests predictive usefulness under frozen image embeddings without exposing hierarchy labels.
+
+We do not claim that DGM dominates unrestricted end-to-end representation learning.
+The obstruction applies to updates that preserve the relevant information map; representation-changing gradient updates are refinements in this model.
+DGM is one guarded implementation of distinction acceptance under an explicit runtime information structure.

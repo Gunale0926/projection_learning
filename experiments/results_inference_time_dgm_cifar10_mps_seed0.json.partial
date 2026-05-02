@@ -1,0 +1,49 @@
+{
+  "runs": [
+    {
+      "adapt_seconds": 0.023539667017757893,
+      "backward_steps": 0,
+      "concepts": 0,
+      "dataset": "CIFAR10",
+      "eval_seconds": 0.02097725006751716,
+      "memory_bytes": 0,
+      "method": "frozen",
+      "post_accuracy": 0.5848000049591064,
+      "post_nll": 1.1391150951385498,
+      "prequential_accuracy": 0.5895000100135803,
+      "prequential_nll": 1.1372147798538208,
+      "seed": 0,
+      "trainable_parameters": 0
+    },
+    {
+      "adapt_seconds": 0.15253295795992017,
+      "backward_steps": 16,
+      "concepts": 0,
+      "dataset": "CIFAR10",
+      "eval_seconds": 0.024288374930620193,
+      "memory_bytes": 0,
+      "method": "backprop_head",
+      "post_accuracy": 0.5982000231742859,
+      "post_nll": 1.1159595251083374,
+      "prequential_accuracy": 0.5914999842643738,
+      "prequential_nll": 1.121113657951355,
+      "seed": 0,
+      "trainable_parameters": 1290
+    },
+    {
+      "adapt_seconds": 6.668918750016019,
+      "backward_steps": 0,
+      "concepts": 56,
+      "dataset": "CIFAR10",
+      "eval_seconds": 0.07638279092498124,
+      "memory_bytes": 12929280,
+      "method": "full_dgm",
+      "post_accuracy": 0.5881999731063843,
+      "post_nll": 1.1942763328552246,
+      "prequential_accuracy": 0.5879999995231628,
+      "prequential_nll": 1.1725504398345947,
+      "seed": 0,
+      "trainable_parameters": 0
+    }
+  ]
+}

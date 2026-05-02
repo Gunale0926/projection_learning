@@ -1,14 +1,9 @@
-We prove a repair obstruction for online prediction.
-For any fixed information partition $\Pi$, every adaptive learner whose predictions remain $\Pi$-measurable has expected regret at least
-\[
-T\left(R_L(\Pi)-R_L(\Pi^\star)\right)
-\]
-against a refined oracle partition $\Pi^\star$, up to the standard epsilon-oracle relaxation when Bayes actions are not attained.
-Thus a positive refinement gap is an information-structure error: no update that preserves $\Pi$ can remove it.
-
-We characterize useful refinements.
-Adding a prediction-time binary distinction has zero value exactly when the refined Bayes action is already measurable under the old information; under log loss its value is $I(Y;U\mid\calF)$, and under squared loss it is conditional variance reduction.
-
-We instantiate the escape operation as Distinction Graph Machines, a dynamic graph-memory data structure whose edges are accepted distinctions and whose nodes store repairable local memories.
-On a frequency-controlled CIFAR-100 hierarchy query stream, DGM recovers the fine-to-coarse graph with one accepted edge per fine class, while repair-only learners remain at the structural log-loss bound, frequency-only recovery fails, and crossed interaction baselines solve the task with many more parameters.
-On a non-oracle CIFAR-100 Image-HQS stream, an image-routed DGM posterior memory improves 10-seed test log loss over online logistic and crossed-interaction baselines.
+Online adaptation often treats errors as repairable state errors: update a cache, a local statistic, or an adapter while preserving the current representation.
+We study when this is impossible.
+A runtime representation induces an information partition over cases; any learner whose predictions remain measurable with respect to a fixed partition pays at least the Bayes risk of that partition each round.
+Hence a positive refinement gap yields linear regret against an oracle that can condition on a finer partition.
+We characterize useful refinements as those that change the Bayes action.
+Under log loss, the value of adding a binary distinction $U$ is $I(Y;U\mid\Pi)$; under squared loss it is conditional variance reduction.
+We instantiate the decision as Distinction Graph Machines, a graph-memory data structure whose edges are accepted distinctions and whose nodes carry repairable local memories.
+A held-out guard accepts a refinement only when its penalized empirical gain exceeds the best repair gain.
+Controlled Bayes-gap and CIFAR-100 hierarchy streams validate the obstruction and edge recovery, while a non-oracle CIFAR-100 Image-HQS stream shows predictive gains under a shared frozen encoder.

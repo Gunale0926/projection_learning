@@ -342,7 +342,7 @@ The candidate is accepted only if it beats the repair gain by a safety margin:
 \begin{align}
 \widehat\Delta_{\mathrm{refine}}>
 \max\{\widehat\Delta_{\mathrm{repair}},0\}
-+\tau+2\epsilon_m
++\tau+4\epsilon_m
 \qquad\text{and}\qquad
 D_t>\tau_{\mathrm{disagree}}.
 \label{eq:refine-accept}
@@ -368,7 +368,7 @@ Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m
 \node[refine] (refinecand) at (4.55,-0.9) {refinement candidate\\new anchor and edges};
 \node[repair] (repairscore) at (7.15,0.9) {score on $\calB_t^{\mathrm{score}}$\\$\widehat\Delta_{\mathrm{repair}}$};
 \node[refine] (refinescore) at (7.15,-0.9) {score on $\calB_t^{\mathrm{score}}$\\$\widehat\Delta_{\mathrm{refine}}$};
-\node[test] (accept) at (10.0,0) {accept refinement if\\$\widehat\Delta_{\mathrm{refine}}>\widehat\Delta_{\mathrm{repair}}+\tau+2\epsilon_m$\\and $D_t>\tau_{\mathrm{disagree}}$};
+\node[test] (accept) at (10.0,0) {accept refinement if\\$\widehat\Delta_{\mathrm{refine}}>\widehat\Delta_{\mathrm{repair}}+\tau+4\epsilon_m$\\and $D_t>\tau_{\mathrm{disagree}}$};
 \node[commit] (refinecommit) at (12.95,0.78) {commit\\refinement};
 \node[commit] (repaircommit) at (12.95,-0.78) {commit\\guarded repair};
 
@@ -422,7 +422,7 @@ Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m
 -\lambda_{\mathrm{edge}}\abs{E_t^{\mathrm{new}}}$
 \State $r_t\gets
 \one\{\widehat\Delta_t^{\mathrm{refine}}>
-\max\{\widehat\Delta_t^{\mathrm{repair}},0\}+\tau+2\epsilon_m
+\max\{\widehat\Delta_t^{\mathrm{repair}},0\}+\tau+4\epsilon_m
 \ \wedge\ D_t>\tau_{\mathrm{disagree}}\}$
 \If{$r_t=1$}
 \State $\calS_{t+1}\gets\calS_t^{\mathrm{new}}$
@@ -455,7 +455,7 @@ J_{\calB_t^{\mathrm{score}}}(\calS)
 +\lambda_{\mathrm{concept}}N_{\mathrm{concept}}(\calS)
 +\lambda_{\mathrm{edge}}\abs{E(\calS)}.
 \end{align*}
-If repair is committed by the guarded rule \eqref{eq:guarded-repair}, then $J_{\calB_t^{\mathrm{score}}}$ does not increase. If a refinement adding one anchored concept and actual edge set $E_{\mathrm{new}}$ is accepted only under \eqref{eq:refine-accept}, then the empirical penalized objective $J_{\calB_t^{\mathrm{score}}}$ decreases by more than $\widehat\Delta_{\mathrm{repair}}+\tau+2\epsilon_m$ and in particular by more than $\tau+2\epsilon_m$.
+If repair is committed by the guarded rule \eqref{eq:guarded-repair}, then $J_{\calB_t^{\mathrm{score}}}$ does not increase. If a refinement adding one anchored concept and actual edge set $E_{\mathrm{new}}$ is accepted only under \eqref{eq:refine-accept}, then the empirical penalized objective $J_{\calB_t^{\mathrm{score}}}$ decreases by more than $\widehat\Delta_{\mathrm{repair}}+\tau+4\epsilon_m$ and in particular by more than $\tau+4\epsilon_m$.
 \end{theorem}
 
 This is a local-buffer statement. It does not imply monotone descent of a global objective when the scoring buffer changes over time; a global finiteness claim requires a common potential or validation objective.
