@@ -9,8 +9,9 @@ efficient recurrent or linear state updates
 \citep{gu2023mamba,peng2023rwkv,yang2025gated,yang2024gated,sun2023retentive}.
 TTT-style models instead make the hidden state expressive by running a
 learned update rule at test time \citep{sun2025learning}.
-Our experiments place DGM in this comparison class: DGM is a causal mixer whose
-state is a runtime graph of concepts, memories, and distinction edges.
+Our experiments place CGA in this comparison class: CGA is an attention-like
+causal mixer whose state is a runtime graph of concepts, memories, and
+distinction edges rather than a token table.
 
 \paragraph{Repair without refinement.}
 Cache language models, $k$NN-LMs, retrieval-augmented systems, fast weights, online ridge or RLS memories, adapters, LoRA, and test-time adaptation repair state inside a representation or optimize a surrogate at inference time \citep{grave2017improving,khandelwal2020generalization,lewis2020retrieval,ba2016using,schlag2021linear,crammer2006online,houlsby2019parameter,hu2022lora,sun2020test,wang2021tent}.
@@ -19,11 +20,16 @@ Some of these methods can change information if they update the representation i
 
 \paragraph{Refinement without local repair.}
 Decision trees, Hoeffding trees, adaptive trees, Mondrian forests, ART, SOMs, neural gas, growing neural gas, and prototype methods create or refine categories using split tests, mismatch, or geometry \citep{quinlan1986induction,breiman1984classification,domingos2000mining,bifet2009adaptive,lakshminarayanan2014mondrian,carpenter1987massively,kohonen1990self,fritzke1995growing}.
-DGM shares the refinement motivation but stores accepted distinctions as graph edges and continues repairing local memories after creation.
+CGA shares the refinement motivation but stores accepted distinctions as graph edges and continues repairing local memories after creation.
 The empirical split scores we use are the same classical information-gain and variance-reduction quantities; the distinction is the online repair-vs-refine comparison and the graph-memory state.
 
 \paragraph{Routing and memory.}
 Mixture-of-experts, Switch Transformers, Product-Key Memory, Memory Networks, Neural Turing Machines, and Differentiable Neural Computers route to trained or external capacity \citep{shazeer2017outrageously,fedus2022switch,lample2019large,weston2015memory,graves2014neural,graves2016hybrid}.
-DGM differs in write semantics: routed objects are runtime-created concepts whose edges generate an information structure.
-This places DGM between online trees and neural memory: it borrows split-value tests from the former and sparse differentiable reads from the latter, but keeps the decision-theoretic distinction between changing a cell's payload and changing the cells themselves.
+CGA differs in write semantics: attended objects are runtime-created concepts
+whose edges generate an information structure.
+This places CGA between attention and neural memory: it borrows continuous
+content-addressed reads from the former, concept creation from online
+refinement systems, and local memory repair from external-memory models.
+The key difference from token attention is not the softmax read; it is the
+runtime concept graph being read.
 Appendix~\ref{app:related} gives the extended comparison.

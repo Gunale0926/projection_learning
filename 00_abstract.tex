@@ -1,22 +1,23 @@
-Many efficient sequence models replace attention with a fixed recurrent state,
-a linear memory, or an inference-time optimizer.  These mechanisms can repair
-values inside the state they already expose, but they do not directly answer a
-structural question: when should a runtime system create a new distinction
-instead of continuing to update the same memory cell?  We formalize this
-repair-versus-refinement decision using information partitions.  If predictions
-remain measurable with respect to a fixed partition, a positive refinement gap
-implies linear regret against an oracle with the missing distinction.  Under
-log loss, the value of adding a distinction is $I(Y;U\mid\Pi)$; under squared
-loss, it is the corresponding conditional-variance reduction.
-We instantiate the decision as Distinction Graph Machines (DGM), a sequence
-layer whose runtime state is an explicit graph of concepts, local memories, and
-accepted distinction edges.  In the language-model setting, DGM is used as an
-attention replacement: each block reads from and writes to a causal dynamic
-graph state rather than attending over all previous tokens.  The empirical
-claim is deliberately focused.  We evaluate DGM on two sequence-modeling tests:
-state-equalized multi-query associative recall, which directly measures
-key-value storage and retrieval, and TinyDGM-LM language modeling, which tests
-whether the same mechanism can serve as a trainable causal mixer.  This frames
-DGM as a theoretically grounded runtime-memory alternative in the comparison
-class of TTT-style expressive state, Mamba/RWKV-style recurrent mixers, and
-attention-based Transformers.
+Self-attention computes over token memory: each previous token contributes a
+key and value, and later tokens retrieve from this token table.  This gives
+expressive content-addressed recall, but the memory size grows with sequence
+length and every stored object remains a token-level event.  We propose
+\emph{Concept Graph Attention} (CGA), a causal sequence layer that keeps the
+continuous readout of attention but changes the memory being attended to.  CGA
+builds a runtime graph of latent concepts from the prefix; each concept stores
+an address, a value memory, counts, and optional distinction edges.  Tokens read
+from all active concepts with attention-style softmax weights, then write to
+the graph by local sufficient-statistic updates.  Thus CGA replaces attention
+over tokens with attention over a dynamic concept graph.
+
+Theoretically, we view the graph as a refinable runtime information structure:
+repair updates change payloads inside existing concepts, while refinement
+updates create new concepts or distinction edges.  This connects CGA to a
+repair-versus-refinement decomposition of online prediction error and explains
+why concept creation is not merely a cache-management heuristic.  Empirically,
+we evaluate CGA as an attention-like mixer in the PoST/Zoology sequence-modeling
+framework, focusing on state-equalized multi-query associative recall and a
+small causal language-model setting.  The intended comparison class is modern
+efficient attention alternatives such as Mamba, RWKV, GDN, and TTT-style
+stateful layers: CGA keeps differentiable attention-style reads, but moves the
+state from token memory to a compact, updateable concept graph.

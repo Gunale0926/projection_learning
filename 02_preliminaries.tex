@@ -25,8 +25,8 @@ $\Pi\vee U$ & partition obtained by splitting $\Pi$ by $U$ \\
 $\calF,\calG$ & sigma-algebras or information structures \\
 $V_L(\calF,\calG)$ & value of refining $\calF$ to $\calG$ \\
 $d_L^\epsilon$ & loss-dependent distinction complexity \\
-$a_j,c_j,M_j$ & DGM anchor, centroid, and local memory for concept $j$ \\
-$E_t,g_e,\calP_t^G$ & DGM edge set, edge generator, and graph-generated partition \\
+$a_j,c_j,M_j$ & CGA anchor, centroid, and local memory for concept $j$ \\
+$E_t,g_e,\calP_t^G$ & CGA edge set, edge generator, and graph-generated partition \\
 $\calB_t^{\mathrm{score}}$ & held-out scoring buffer for empirical refinement tests \\
 $\widehat\Delta_{\mathrm{repair}},\widehat\Delta_{\mathrm{refine}}$ & empirical repair and refinement gains \\
 \bottomrule
@@ -309,7 +309,7 @@ When the infimum is attained, any minimizer is an $\calF$-Bayes action and is de
 
 For a finite partition $\Pi$, Definition~\ref{def:F-measurable-predictor} recovers Definition~\ref{def:partition-measurable} by taking $\calF=\sigma(\Pi)$ and the action space discrete.
 
-Implementations often have fixed pre-existing prediction outputs that are not created by the runtime refinement mechanism, such as a backbone distribution or other fixed pre-outcome features used outside DGM routing. We write this base information as a sigma-algebra $\calB$ and measure runtime refinements through the total information $\calB\vee\calF_t$. The full hidden state used to propose or instantiate distinctions should not automatically be included as freely conditionable base information: if $\calB$ contains $h$, then every edge predicate $g_e(h)$ and anchor-order event is already $\calB$-measurable, so the unrestricted sigma-algebra refinement gap becomes trivial. Thus the refinement gap relative to a target $\calF^\star$ is
+Implementations often have fixed pre-existing prediction outputs that are not created by the runtime refinement mechanism, such as a backbone distribution or other fixed pre-outcome features used outside CGA routing. We write this base information as a sigma-algebra $\calB$ and measure runtime refinements through the total information $\calB\vee\calF_t$. The full hidden state used to propose or instantiate distinctions should not automatically be included as freely conditionable base information: if $\calB$ contains $h$, then every edge predicate $g_e(h)$ and anchor-order event is already $\calB$-measurable, so the unrestricted sigma-algebra refinement gap becomes trivial. Thus the refinement gap relative to a target $\calF^\star$ is
 \begin{align*}
 R_L(\calB\vee\calF_t)-R_L(\calB\vee\calF^\star).
 \end{align*}

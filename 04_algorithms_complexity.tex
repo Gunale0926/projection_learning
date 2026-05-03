@@ -1,33 +1,33 @@
-\section{Distinction Graph Machines: A Data Structure for Refinable Partitions}
+\section{Concept Graph Attention: A Data Structure for Refinable Partitions}
 \label{sec:algorithms}
 
-DGM implements refinable information structures as a graph: edges generate distinctions and nodes store repairable memories. The ingredients are related to decision-tree refinement, adaptive category creation, prototype memories, and external neural memories, but DGM uses them to implement the repair/refinement distinction \citep{breiman1984classification,domingos2000mining,carpenter1987massively,grossberg2013adaptive,kohonen1990self,weston2015memory,graves2016hybrid}. The theory so far gives a diagnostic: decide whether an observed error is better explained by $\Delta_{\mathrm{repair}}$ at fixed information or by $\Delta_{\mathrm{refine}}$ from missing distinctions. A runtime implementation therefore needs a state representation that can both repair local statistics and add distinctions. DGM is the data-structure realization of the abstract refinable-partition model.
+CGA implements refinable information structures as a graph: edges generate distinctions and nodes store repairable memories. The ingredients are related to decision-tree refinement, adaptive category creation, prototype memories, and external neural memories, but CGA uses them to implement the repair/refinement distinction \citep{breiman1984classification,domingos2000mining,carpenter1987massively,grossberg2013adaptive,kohonen1990self,weston2015memory,graves2016hybrid}. The theory so far gives a diagnostic: decide whether an observed error is better explained by $\Delta_{\mathrm{repair}}$ at fixed information or by $\Delta_{\mathrm{refine}}$ from missing distinctions. A runtime implementation therefore needs a state representation that can both repair local statistics and add distinctions. CGA is the data-structure realization of the abstract refinable-partition model.
 
 \subsection{Why a graph, not a tree?}
 
-\begin{definition}[DGM concept]
+\begin{definition}[CGA concept]
 \label{def:dgm-concept}
-A DGM concept is a memory location selected by a graph-generated hard-route map and equipped with a local memory. It is not claimed to be a human-interpretable semantic concept and need not correspond one-to-one with an atom of the edge partition. Local memories live at graph nodes, and distinction predicates live on edges between nodes that have been confused.
+A CGA concept is a memory location selected by a graph-generated hard-route map and equipped with a local memory. It is not claimed to be a human-interpretable semantic concept and need not correspond one-to-one with an atom of the edge partition. Local memories live at graph nodes, and distinction predicates live on edges between nodes that have been confused.
 \end{definition}
 
 The central object is
 \begin{align*}
-\text{DGM}=\text{graph-generated information structure}+\text{local memory repair}.
+\text{CGA}=\text{graph-generated information structure}+\text{local memory repair}.
 \end{align*}
 The graph is not metadata: its edges generate a finite edge-skeleton information structure and gate the read path, while anchor order completes the exact hard route. The partition and generated-sigma-algebra language follows standard finite measurable-space constructions \citep{billingsley1995probability,kallenberg2002foundations}. The main-text statements below give the operational theorem forms; full proofs are in Appendix~\ref{app:algorithm-bridge-proofs}.
 
-\begin{definition}[Hard-DGM and Soft-DGM]
+\begin{definition}[Hard-CGA and Soft-CGA]
 \label{def:hard-soft-dgm}
-Hard-DGM is the formal algorithm: fixed anchors and accepted binary edges generate an edge skeleton, while the exact hard route is measured by the join of this edge skeleton with the anchor-distance ordering. A repair changes only local actions or memories and leaves the hard-route information fixed; a refinement adds an anchored concept, new edge generators, and the anchor-order events involving the new anchor. Soft-DGM is the practical relaxation used for sparse neural hidden states: movable centroids retrieve candidates, smooth edge gates approximate hard eligibility, and routing weights mix local memories.
+Hard-CGA is the formal algorithm: fixed anchors and accepted binary edges generate an edge skeleton, while the exact hard route is measured by the join of this edge skeleton with the anchor-distance ordering. A repair changes only local actions or memories and leaves the hard-route information fixed; a refinement adds an anchored concept, new edge generators, and the anchor-order events involving the new anchor. Soft-CGA is the practical relaxation used for sparse neural hidden states: movable centroids retrieve candidates, smooth edge gates approximate hard eligibility, and routing weights mix local memories.
 \end{definition}
 
-The partition-level guarantees are exact for Hard-DGM. Soft-DGM is covered only as an approximation under the candidate-recall and margin conditions in Theorem~\ref{thm:soft-routing-hard-limit:informal}.
+The partition-level guarantees are exact for Hard-CGA. Soft-CGA is covered only as an approximation under the candidate-recall and margin conditions in Theorem~\ref{thm:soft-routing-hard-limit:informal}.
 
-\subsection{Hard-DGM state and invariants}
+\subsection{Hard-CGA state and invariants}
 
-\begin{definition}[Hard-DGM state and anchor edge]
+\begin{definition}[Hard-CGA state and anchor edge]
 \label{def:hard-dgm-state}
-Let $\phi_\theta:\calX\to\R^d$ be an encoder, write $h=\phi_\theta(x)$, and let $\mathsf H\subseteq\R^d$ denote the hidden-state space on which the runtime structure is evaluated. A Distinction Graph Machine has runtime state
+Let $\phi_\theta:\calX\to\R^d$ be an encoder, write $h=\phi_\theta(x)$, and let $\mathsf H\subseteq\R^d$ denote the hidden-state space on which the runtime structure is evaluated. A Concept Graph Attention has runtime state
 \begin{align*}
 \calS_t=\left(\{a_j,c_j,M_j,n_j\}_{j=1}^{N_t},G_t\right),
 \qquad
@@ -61,7 +61,7 @@ form a finite partition $\calP_t^G$ of hidden-state space, and the generated sig
 \end{align*}
 \end{definition}
 
-This edge partition is only the skeleton. The exact hard route also needs the ordering of eligible anchors by anchor distance; that order is added below as $\calF_t^{\mathrm{anchor\text{-}order}}$. Centroids and local memories are adaptive statistics attached to hard-route states or sparse neighborhoods, not generators of the exact Hard-DGM information structure. Concept nodes and graph-generated partition atoms are related but not identical: a node is a data-structure representative with memory and retrieval statistics; the formal information structure is generated by edge signatures and anchor-order events.
+This edge partition is only the skeleton. The exact hard route also needs the ordering of eligible anchors by anchor distance; that order is added below as $\calF_t^{\mathrm{anchor\text{-}order}}$. Centroids and local memories are adaptive statistics attached to hard-route states or sparse neighborhoods, not generators of the exact Hard-CGA information structure. Concept nodes and graph-generated partition atoms are related but not identical: a node is a data-structure representative with memory and retrieval statistics; the formal information structure is generated by edge signatures and anchor-order events.
 
 \begin{figure}[t]
 \centering
@@ -98,7 +98,7 @@ This edge partition is only the skeleton. The exact hard route also needs the or
 \node[font=\scriptsize,align=center,text width=6.0cm] at (2.85,0.0)
 {distinction edges define the information structure; centroids retrieve; memories repair};
 \end{tikzpicture}
-\caption{DGM state. Anchors are stable concept identities, centroids are movable retrieval statistics, distinction edges generate the information structure, and concept memories are repaired after a concept is judged adequate.}
+\caption{CGA state. Anchors are stable concept identities, centroids are movable retrieval statistics, distinction edges generate the information structure, and concept memories are repaired after a concept is judged adequate.}
 \label{fig:dgm-state}
 \end{figure}
 
@@ -119,14 +119,14 @@ Implementations should create such an edge only when the anchor separation clear
 \end{align*}
 for a fixed $\eta_{\mathrm{anchor}}>0$. If a proposed new anchor is duplicate or nearly duplicate with a confused neighbor, the algorithm should skip that edge and fall back to repair, merge, or another admissible distinction.
 
-\begin{theorem}[DGM graph generates a finite information structure]
+\begin{theorem}[CGA graph generates a finite information structure]
 \label{thm:dgm-graph-partition:informal}
 For any finite edge set $E_t$, equality of signatures $\sigma_t^G(h)$ is an equivalence relation whose classes form a finite edge-skeleton partition $\calP_t^G$. Adding one edge $g$ refines this skeleton by $\calP_t^G\vee\sigma(g)$.
 \end{theorem}
 
-\subsection{Soft-DGM edge-gated prediction}
+\subsection{Soft-CGA edge-gated prediction}
 
-The hard route selects the nearest eligible anchor using fixed anchors, accepted edges, and anchor-distance order, so repairs that change only memories and centroids do not change $\calF_t^{\mathrm{DGM}}$. Given $h$, Soft-DGM instead computes retrieval distances $d_j(h)=\norm{h-c_j}_2^2$ to movable centroids. Moving centroids can change the smooth routing weights and therefore the actual Soft-DGM predictor, even when the Hard-DGM skeleton is fixed. Thus centroid repair is a repair in the formal hard-route structure, not a strict claim that the soft read map remains partition-measurable. A centroid-only top-$k$ set is not sufficient for the formal hard-route guarantee: if the hard eligible anchor never enters the candidate set, edge gates cannot recover it. Approximate-nearest-neighbor systems can make the retrieval term sublinear or hardware-efficient, but the formal guarantee still needs recall of the hard-route candidate \citep{indyk1998approximate,johnson2019billion}. We therefore use a recall-oriented candidate set
+The hard route selects the nearest eligible anchor using fixed anchors, accepted edges, and anchor-distance order, so repairs that change only memories and centroids do not change $\calF_t^{\mathrm{CGA}}$. Given $h$, Soft-CGA instead computes retrieval distances $d_j(h)=\norm{h-c_j}_2^2$ to movable centroids. Moving centroids can change the smooth routing weights and therefore the actual Soft-CGA predictor, even when the Hard-CGA skeleton is fixed. Thus centroid repair is a repair in the formal hard-route structure, not a strict claim that the soft read map remains partition-measurable. A centroid-only top-$k$ set is not sufficient for the formal hard-route guarantee: if the hard eligible anchor never enters the candidate set, edge gates cannot recover it. Approximate-nearest-neighbor systems can make the retrieval term sublinear or hardware-efficient, but the formal guarantee still needs recall of the hard-route candidate \citep{indyk1998approximate,johnson2019billion}. We therefore use a recall-oriented candidate set
 \begin{align*}
 N(h)=
 N_{k_c}^{\mathrm{centroid}}(h)
@@ -173,10 +173,10 @@ The distinction partition alone does not determine the whole exact hard route, b
 \end{align*}
 with deterministic tie-breaking. The hard routing skeleton is measurable with respect to
 \begin{align*}
-\calF_t^{\mathrm{DGM}}=
+\calF_t^{\mathrm{CGA}}=
 \calF_t^{\mathrm{edge}}\vee \calF_t^{\mathrm{anchor\text{-}order}}.
 \end{align*}
-The exact DGM route map can be written as
+The exact CGA route map can be written as
 \begin{align*}
 I_{\calS_t}(h)
 =
@@ -185,15 +185,15 @@ I_{\calS_t}(h)
 \operatorname{HardRoute}_{\calS_t}(h)
 \right).
 \end{align*}
-This map is measurable with respect to $\calF_t^{\mathrm{DGM}}$, so
+This map is measurable with respect to $\calF_t^{\mathrm{CGA}}$, so
 \begin{align*}
 \sigma(I_{\calS_t})\subseteq \calF_t^{\mathrm{edge}}\vee \calF_t^{\mathrm{anchor\text{-}order}}.
 \end{align*}
-The inclusion can be strict: the full anchor-order sigma-algebra records pairwise order comparisons that may not affect the final selected concept. One may use $\calF_t^{\mathrm{DGM}}$ as a stable upper information structure with simple repair-stability proofs, or use the coarser exact-route sigma-algebra $\sigma(I_{\calS_t})$ when the selected memory location itself is the desired state. Nodes are memory locations selected by this measurable route map; they need not be in one-to-one correspondence with atoms of the edge-skeleton partition. The soft read keeps the same anchored graph skeleton but may use movable centroids and smooth gates for locality; repairs can therefore change its effective smooth read geometry. Soft-DGM should be read as a differentiable approximation to the anchor-generated hard information map, with exact partition claims recovered only in the hard-route limit or under explicit approximation assumptions.
+The inclusion can be strict: the full anchor-order sigma-algebra records pairwise order comparisons that may not affect the final selected concept. One may use $\calF_t^{\mathrm{CGA}}$ as a stable upper information structure with simple repair-stability proofs, or use the coarser exact-route sigma-algebra $\sigma(I_{\calS_t})$ when the selected memory location itself is the desired state. Nodes are memory locations selected by this measurable route map; they need not be in one-to-one correspondence with atoms of the edge-skeleton partition. The soft read keeps the same anchored graph skeleton but may use movable centroids and smooth gates for locality; repairs can therefore change its effective smooth read geometry. Soft-CGA should be read as a differentiable approximation to the anchor-generated hard information map, with exact partition claims recovered only in the hard-route limit or under explicit approximation assumptions.
 
 \begin{theorem}[Anchor-based hard routing is graph-plus-anchor-order measurable]
 \label{thm:hard-dgm-measurable:informal}
-With finite $E_t$, finite frozen anchors $a_1,\ldots,a_{N_t}$, and deterministic tie-breaking, the exact hard-route selected concept index, defined as the nearest eligible anchor with fallback to the nearest anchor, is measurable with respect to $\calF_t^{\mathrm{DGM}}=\calF_t^{\mathrm{edge}}\vee \calF_t^{\mathrm{anchor\text{-}order}}$.
+With finite $E_t$, finite frozen anchors $a_1,\ldots,a_{N_t}$, and deterministic tie-breaking, the exact hard-route selected concept index, defined as the nearest eligible anchor with fallback to the nearest anchor, is measurable with respect to $\calF_t^{\mathrm{CGA}}=\calF_t^{\mathrm{edge}}\vee \calF_t^{\mathrm{anchor\text{-}order}}$.
 \end{theorem}
 
 The next statement is analytic rather than structural: it applies to whichever fixed distances a soft read uses. With anchor distances it recovers the exact hard route; with centroid distances it describes the behavior of the soft retrieval approximation. It also exposes the candidate-recall requirement that links the formal hard route to the sparse implementation.
@@ -217,7 +217,7 @@ Under either condition, total wrong-side routing mass vanishes. Together with th
 \end{theorem}
 
 \begin{algorithm}[H]
-\caption{\textsc{DGM-Predict}}
+\caption{\textsc{CGA-Predict}}
 \label{alg:dgm-predict}
 \begin{algorithmic}[1]
 \Statex $\calS_t=(\{a_j,c_j,M_j,n_j\}_{j=1}^{N_t},G_t),\quad x\in\calX$
@@ -240,7 +240,7 @@ Under either condition, total wrong-side routing mass vanishes. Together with th
 
 \subsection{Refine or repair on a graph}
 
-After observing consequence $y$, DGM scores empirical versions of the two gaps in Theorem~\ref{thm:error-decomposition}. A repair candidate keeps the DGM information map fixed and updates only local state. A refinement candidate changes the information map by adding an anchored concept and distinction edges. The committed operation is the one whose held-out gain justifies its cost and safety margin.
+After observing consequence $y$, CGA scores empirical versions of the two gaps in Theorem~\ref{thm:error-decomposition}. A repair candidate keeps the CGA information map fixed and updates only local state. A refinement candidate changes the information map by adding an anchored concept and distinction edges. The committed operation is the one whose held-out gain justifies its cost and safety margin.
 
 Let $j^\star$ be the highest-weight concept under \eqref{eq:edge-gated-routing}. Define local surprise
 \begin{align*}
@@ -270,7 +270,7 @@ L(y,M_i(h))>\tau_{\mathrm{conflict}}
 \operatorname{Div}_{\calY}(M_i,M_{j^\star};h)>\tau_{\mathrm{disagree}}
 \right\}.
 \end{align*}
-When a budget of at most $q$ new edges is used, DGM takes $\operatorname{Confused}_q(h,y)$ to be the $q$ highest-scoring members of this set under
+When a budget of at most $q$ new edges is used, CGA takes $\operatorname{Confused}_q(h,y)$ to be the $q$ highest-scoring members of this set under
 \begin{align*}
 \operatorname{score}_i(h,y)
 =
@@ -285,7 +285,7 @@ Repair is guarded rather than blindly committed. The implementation proposes a s
 =
 \{\calS_t^{\mathrm{mem}},\calS_t^{\mathrm{mem+centroid}},\calS_t^{\mathrm{shrink}},\calS_t\}.
 \end{align*}
-Each candidate keeps anchors and edges fixed, so it preserves $I_{\calS_t}$ and $\calF_t^{\mathrm{DGM}}$. On the scoring buffer, the empirical repair gain is
+Each candidate keeps anchors and edges fixed, so it preserves $I_{\calS_t}$ and $\calF_t^{\mathrm{CGA}}$. On the scoring buffer, the empirical repair gain is
 \begin{align}
 \widehat\Delta_{\mathrm{repair}}
 =
@@ -295,7 +295,7 @@ Each candidate keeps anchors and edges fixed, so it preserves $I_{\calS_t}$ and 
 \widehat R(\calS';\calB_t^{\mathrm{score}}).
 \label{eq:repair-gain}
 \end{align}
-DGM's guarded repair candidate is
+CGA's guarded repair candidate is
 \begin{align}
 \calS_{t+1}\in
 \argmin_{\calS'\in\calC_{\mathrm{repair}}}
@@ -347,7 +347,7 @@ The candidate is accepted only if it beats the repair gain by a safety margin:
 D_t>\tau_{\mathrm{disagree}}.
 \label{eq:refine-accept}
 \end{align}
-Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m=\abs{\calB_t^{\mathrm{score}}}$; it can be set to zero for a purely empirical implementation, or to the adaptive validation margin in Theorem~\ref{thm:safe-refinement:informal}. If the refinement test fails, DGM commits the guarded repair candidate in \eqref{eq:guarded-repair}. This makes refinement a statistically guarded gap comparison rather than an unscored growth heuristic.
+Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m=\abs{\calB_t^{\mathrm{score}}}$; it can be set to zero for a purely empirical implementation, or to the adaptive validation margin in Theorem~\ref{thm:safe-refinement:informal}. If the refinement test fails, CGA commits the guarded repair candidate in \eqref{eq:guarded-repair}. This makes refinement a statistically guarded gap comparison rather than an unscored growth heuristic.
 
 \begin{figure}[t]
 \centering
@@ -383,12 +383,12 @@ Here $\epsilon_m$ is a statistical safety margin for a scoring buffer of size $m
 \draw[->,thick] (accept.south east) -- (repaircommit.west);
 \end{tikzpicture}%
 }
-\caption{DGM refine-or-repair decision. Proposal signals only choose candidates to score; the committed update is selected by held-out empirical gains. A refinement changes the information structure only when its penalized gain beats the best non-worsening repair by the safety margin; otherwise DGM repairs local state while preserving anchors and edges.}
+\caption{CGA refine-or-repair decision. Proposal signals only choose candidates to score; the committed update is selected by held-out empirical gains. A refinement changes the information structure only when its penalized gain beats the best non-worsening repair by the safety margin; otherwise CGA repairs local state while preserving anchors and edges.}
 \label{fig:dgm-decision}
 \end{figure}
 
 \begin{algorithm}[H]
-\caption{\textsc{DGM-Observe}}
+\caption{\textsc{CGA-Observe}}
 \label{alg:dgm-observe}
 \begin{algorithmic}[1]
 \Statex $\calS_t,\quad (x_t,y_t),\quad \calB_t^{\mathrm{prop}},\quad \calB_t^{\mathrm{score}}$
@@ -462,7 +462,7 @@ This is a local-buffer statement. It does not imply monotone descent of a global
 
 \begin{theorem}[Statistically safe adaptive refinement]
 \label{thm:safe-refinement:informal}
-Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing the past stream, the current DGM state, and all proposal-buffer information available before scoring at time $t$. Let $\calC_t$ be a finite candidate class that is predictable with respect to $\mathfrak H_t$, and let $\calB_t^{\mathrm{score}}$ contain $m_t$ fresh held-out samples, or samples not previously used to choose proposals or update the state, independent of $\mathfrak H_t$ conditional on the current scoring distribution. For candidate $g$, let $\widehat G_t(g)$ be the empirical raw risk decrease on $\calB_t^{\mathrm{score}}$ before complexity cost, and let $G_t(g)$ be the corresponding population raw gain. Define
+Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing the past stream, the current CGA state, and all proposal-buffer information available before scoring at time $t$. Let $\calC_t$ be a finite candidate class that is predictable with respect to $\mathfrak H_t$, and let $\calB_t^{\mathrm{score}}$ contain $m_t$ fresh held-out samples, or samples not previously used to choose proposals or update the state, independent of $\mathfrak H_t$ conditional on the current scoring distribution. For candidate $g$, let $\widehat G_t(g)$ be the empirical raw risk decrease on $\calB_t^{\mathrm{score}}$ before complexity cost, and let $G_t(g)$ be the corresponding population raw gain. Define
 \begin{align*}
 \epsilon_t=
 \sqrt{
@@ -496,20 +496,20 @@ For language modeling, raw next-token negative log likelihood is unbounded. Fix 
 If refinement proposal and scoring use $\ell_{\mathrm{clip}}$, then Theorem~\ref{thm:safe-refinement:informal} applies to clipped-loss refinement gain. An accepted refinement has positive clipped population gain after cost and margin with the stated high probability. This corollary does not claim positive gain for the raw unbounded negative log likelihood without additional tail assumptions.
 \end{corollary}
 
-\begin{theorem}[Anchor-stable DGM information structure]
+\begin{theorem}[Anchor-stable CGA information structure]
 \label{thm:anchor-stable:informal}
 Let
 \begin{align*}
-\calF_t^{\mathrm{DGM}}
+\calF_t^{\mathrm{CGA}}
 =
 \sigma(g_e:e\in E_t)
 \vee
 \sigma\!\left(\{h:\norm{h-a_i}_2^2\le \norm{h-a_j}_2^2\}:1\le i,j\le N_t\right).
 \end{align*}
-If a repair step changes only retrieval centroids $c_j$, local memories $M_j$, and counts $n_j$, while keeping anchors $a_j$ and edges $E_t$ fixed, then $\calF_{t+1}^{\mathrm{DGM}}=\calF_t^{\mathrm{DGM}}$. If a refinement adds a new anchor and new edge generators, then the updated information structure is the join of $\calF_t^{\mathrm{DGM}}$ with the new anchor-order events and the new edge generators.
+If a repair step changes only retrieval centroids $c_j$, local memories $M_j$, and counts $n_j$, while keeping anchors $a_j$ and edges $E_t$ fixed, then $\calF_{t+1}^{\mathrm{CGA}}=\calF_t^{\mathrm{CGA}}$. If a refinement adds a new anchor and new edge generators, then the updated information structure is the join of $\calF_t^{\mathrm{CGA}}$ with the new anchor-order events and the new edge generators.
 \end{theorem}
 
-Thus the edge skeleton realizes the minimal join operation from Section~\ref{sec:minimal-refinement}. The exact hard-route DGM adds anchor-order events as routing infrastructure whenever a new anchor is inserted. Consequently, Hard-DGM is a structured implementation of refinement, but its exact-route information update is not always the single-event minimal refinement in the strict Section~\ref{sec:minimal-refinement} sense.
+Thus the edge skeleton realizes the minimal join operation from Section~\ref{sec:minimal-refinement}. The exact hard-route CGA adds anchor-order events as routing infrastructure whenever a new anchor is inserted. Consequently, Hard-CGA is a structured implementation of refinement, but its exact-route information update is not always the single-event minimal refinement in the strict Section~\ref{sec:minimal-refinement} sense.
 
 \begin{corollary}[Finite number of accepted refinements]
 \label{cor:finite-refinements:informal}
@@ -518,9 +518,9 @@ If there is a common nonnegative potential $\Phi(\calS)$ and every accepted refi
 
 \subsection{Data-structure operations}
 
-\begin{definition}[DGM data-structure operations]
+\begin{definition}[CGA data-structure operations]
 \label{def:dgm-data-structure-operations}
-Viewed as a dynamic partition data structure, DGM implements four operations:
+Viewed as a dynamic partition data structure, CGA implements four operations:
 \begin{align*}
 \operatorname{Query}(h),\qquad
 \operatorname{Repair}(h,y),\qquad
@@ -534,15 +534,15 @@ The maintained edge-skeleton invariant is
 \end{align*}
 where $\calP^G(\calS_t)$ is the edge-generated skeleton partition. The exact hard-route invariant is
 \begin{align*}
-\operatorname{Repair}\quad&\Longrightarrow\quad \calF^{\mathrm{DGM}}(\calS_{t+1})=\calF^{\mathrm{DGM}}(\calS_t),\\
-\operatorname{Refine}\quad&\Longrightarrow\quad \calF^{\mathrm{DGM}}(\calS_{t+1})
+\operatorname{Repair}\quad&\Longrightarrow\quad \calF^{\mathrm{CGA}}(\calS_{t+1})=\calF^{\mathrm{CGA}}(\calS_t),\\
+\operatorname{Refine}\quad&\Longrightarrow\quad \calF^{\mathrm{CGA}}(\calS_{t+1})
 =
-\calF^{\mathrm{DGM}}(\calS_t)\vee\sigma(g_e:e\in E_{\mathrm{new}})\vee\sigma(\text{new anchor-order events}).
+\calF^{\mathrm{CGA}}(\calS_t)\vee\sigma(g_e:e\in E_{\mathrm{new}})\vee\sigma(\text{new anchor-order events}).
 \end{align*}
 Thus repair modifies payloads on the current structure, while refinement changes the structure by adding both edge generators and the order information induced by new anchors.
 \end{definition}
 
-\begin{theorem}[DGM data-structure cost]
+\begin{theorem}[CGA data-structure cost]
 \label{thm:dgm-data-structure-main}
 Assume $N_t$ concepts in $\R^d$, candidate set size $\abs{N(h)}=k$, selected incident edge count $Q(h)$, retrieval cost $C_{\mathrm{ret}}(N_t,d)$, and selected local-memory evaluation cost $C_{\mathrm{mem}}$. Then
 \begin{align*}
@@ -557,10 +557,10 @@ O(N_t(2d+\bar s)+\abs{E_t}d)
 memory, up to indexing overhead.
 \end{theorem}
 
-The theorem is an implementation bound rather than a statistical guarantee. It says that DGM realizes the abstract operation $\Pi\mapsto\Pi\vee U$ on the edge skeleton and the corresponding join update on $\calF^{\mathrm{DGM}}$ with local graph updates and sparse routing, provided the candidate retrieval layer supplies the relevant hard-route concepts.
+The theorem is an implementation bound rather than a statistical guarantee. It says that CGA realizes the abstract operation $\Pi\mapsto\Pi\vee U$ on the edge skeleton and the corresponding join update on $\calF^{\mathrm{CGA}}$ with local graph updates and sparse routing, provided the candidate retrieval layer supplies the relevant hard-route concepts.
 
 \paragraph{Comparison to gradient and memory baselines.}
-Backpropagation is not itself a repair or refinement operation; it is an optimizer. If it updates only parameters downstream of a fixed information map, it is a fixed-information repair update in the sense of Definition~\ref{def:fixed-information-repair}. If it updates the encoder or routing representation, it may change the induced partition and is outside the repair-only lower bound. Table~\ref{tab:runtime-memory-comparison} summarizes the resulting computational comparison against common online optimizers, caches, trees, and parameter-efficient adaptation modules \citep{rumelhart1986learning,kingma2015adam,grave2017improving,khandelwal2020generalization,domingos2000mining,houlsby2019parameter,hu2022lora}. Let $P_{\mathrm{tr}}$ be the number of trainable parameters updated by backpropagation, $A_{\mathrm{bp}}$ the activation storage required for the backward pass over the adaptation window, $M$ the number of stored examples in a cache or $k$NN memory, $D_{\mathrm{tree}}$ the tree depth, $S_{\mathrm{leaf}}$ the per-leaf sufficient statistics, and $\bar s$ the average sparse categorical support per DGM concept. The table lists runtime-adaptation overhead beyond any shared frozen forward pass that computes $h$.
+Backpropagation is not itself a repair or refinement operation; it is an optimizer. If it updates only parameters downstream of a fixed information map, it is a fixed-information repair update in the sense of Definition~\ref{def:fixed-information-repair}. If it updates the encoder or routing representation, it may change the induced partition and is outside the repair-only lower bound. Table~\ref{tab:runtime-memory-comparison} summarizes the resulting computational comparison against common online optimizers, caches, trees, and parameter-efficient adaptation modules \citep{rumelhart1986learning,kingma2015adam,grave2017improving,khandelwal2020generalization,domingos2000mining,houlsby2019parameter,hu2022lora}. Let $P_{\mathrm{tr}}$ be the number of trainable parameters updated by backpropagation, $A_{\mathrm{bp}}$ the activation storage required for the backward pass over the adaptation window, $M$ the number of stored examples in a cache or $k$NN memory, $D_{\mathrm{tree}}$ the tree depth, $S_{\mathrm{leaf}}$ the per-leaf sufficient statistics, and $\bar s$ the average sparse categorical support per CGA concept. The table lists runtime-adaptation overhead beyond any shared frozen forward pass that computes $h$.
 
 \begin{table}[t]
 \centering
@@ -577,11 +577,11 @@ Head-only or linear-probe backprop & Fixed-information repair when features $h=I
 Adapters / LoRA online & Repair if downstream of fixed $I$; otherwise may change the information map & Backward/update through adapter parameters $P_{\mathrm{ad}}$ in selected layers & $O(P_{\mathrm{ad}})$ weights plus optimizer state and selected-layer activations \\
 Cache or budgeted $k$NN & Stores examples under a fixed representation; no explicit refinement test & Retrieval $C_{\mathrm{ret}}(M,d)$ plus aggregation over $k$ neighbors & $O(M(d+\bar s))$ keys and values, plus index overhead \\
 Online tree / Hoeffding tree & Refines a rooted leaf partition & Query $O(D_{\mathrm{tree}})$; update split statistics on visited leaf & $O(\#\mathrm{leaves}\cdot S_{\mathrm{leaf}})$ \\
-DGM, exact Hard-DGM & Refines graph-generated partition by adding binary generators & Query $O(N_td+Q(h)d+kd+C_{\mathrm{mem}})$ with exact retrieval; accepted refinement adds $O(d+qd)$ & $O(N_t(2d+\bar s)+\abs{E_t}d)$ \\
-DGM, sparse Soft-DGM & Approximate Hard-DGM under candidate recall and margins & Query $O(C_{\mathrm{ret}}(N_t,d)+Q(h)d+kd+C_{\mathrm{mem}})$; accepted refinement adds $O(d+qd)$ & $O(N_t(2d+\bar s)+\abs{E_t}d)$ plus index overhead \\
+CGA, exact Hard-CGA & Refines graph-generated partition by adding binary generators & Query $O(N_td+Q(h)d+kd+C_{\mathrm{mem}})$ with exact retrieval; accepted refinement adds $O(d+qd)$ & $O(N_t(2d+\bar s)+\abs{E_t}d)$ \\
+CGA, sparse Soft-CGA & Approximate Hard-CGA under candidate recall and margins & Query $O(C_{\mathrm{ret}}(N_t,d)+Q(h)d+kd+C_{\mathrm{mem}})$; accepted refinement adds $O(d+qd)$ & $O(N_t(2d+\bar s)+\abs{E_t}d)$ plus index overhead \\
 \bottomrule
 \end{tabular}
-\caption{Runtime-adaptation cost comparison. DGM does not claim to dominate unconstrained full backpropagation statistically. The theoretical separation applies to fixed-information repair methods: when the representation quotient is fixed and has positive refinement gap, they incur the lower bound in Theorem~\ref{thm:repair-only-regret}, while DGM can pay local graph-memory cost to add a distinction. Full backpropagation through the representation can also change the quotient, but pays backward-pass, activation, and optimizer-state costs.}
+\caption{Runtime-adaptation cost comparison. CGA does not claim to dominate unconstrained full backpropagation statistically. The theoretical separation applies to fixed-information repair methods: when the representation quotient is fixed and has positive refinement gap, they incur the lower bound in Theorem~\ref{thm:repair-only-regret}, while CGA can pay local graph-memory cost to add a distinction. Full backpropagation through the representation can also change the quotient, but pays backward-pass, activation, and optimizer-state costs.}
 \label{tab:runtime-memory-comparison}
 \end{table}
 
@@ -606,7 +606,7 @@ p_{\mathrm{mem}}(y\mid h)
 \end{align}
 and the final prediction is the convex mixture
 \begin{align}
-p_{\mathrm{DGM}}(y\mid h)
+p_{\mathrm{CGA}}(y\mid h)
 =
 (1-\lambda_t)p_0(y\mid h)+\lambda_t p_{\mathrm{mem}}(y\mid h),
 \qquad
@@ -616,7 +616,7 @@ p_{\mathrm{DGM}}(y\mid h)
 \end{definition}
 This keeps the read path a valid probability distribution. It also gives the simple pointwise safety bound
 \begin{align*}
--\log p_{\mathrm{DGM}}(y\mid h)
+-\log p_{\mathrm{CGA}}(y\mid h)
 \le
 -\log p_0(y\mid h)-\log(1-\lambda_t)
 \end{align*}
@@ -657,9 +657,9 @@ Let $Z_t=\sum_k w_{1,k}\prod_{s=1}^t q_{s,k}(y_s)$. The posterior update implies
 
 Because $p_0(y\mid h)$, $M_j(h)$, and the soft weights can depend on the hidden state, the practical predictor need not be constant on atoms of the edge partition alone. The formal interpretation is the base-information convention from Section~\ref{sec:preliminaries}: let
 \begin{align*}
-\calB=\sigma\!\left(p_0(\cdot\mid h),\text{fixed pre-outcome features used outside DGM routing}\right).
+\calB=\sigma\!\left(p_0(\cdot\mid h),\text{fixed pre-outcome features used outside CGA routing}\right).
 \end{align*}
-Then DGM refinements are claims about the additional runtime information in $\calF_t^{\mathrm{DGM}}$, and predictors are measured as $\calB\vee\calF_t^{\mathrm{DGM}}$-measurable. The hidden state may be used by the algorithm to compute admissible distinctions, proposal scores, and restricted routing functions, but it is not treated as arbitrary freely conditionable information in the unrestricted Bayes-risk theory. If full $h$ is admitted into $\calB$, then all edge predicates and anchor-order events are already $\calB$-measurable and the partition-level refinement gap collapses to zero. In the hard one-hot special case, where each memory returns an atomwise constant action and no extra base features are used, this reduces to strict partition measurability; $h$-dependent soft memories should be read as restricted-class or approximation statements.
+Then CGA refinements are claims about the additional runtime information in $\calF_t^{\mathrm{CGA}}$, and predictors are measured as $\calB\vee\calF_t^{\mathrm{CGA}}$-measurable. The hidden state may be used by the algorithm to compute admissible distinctions, proposal scores, and restricted routing functions, but it is not treated as arbitrary freely conditionable information in the unrestricted Bayes-risk theory. If full $h$ is admitted into $\calB$, then all edge predicates and anchor-order events are already $\calB$-measurable and the partition-level refinement gap collapses to zero. In the hard one-hot special case, where each memory returns an atomwise constant action and no extra base features are used, this reduces to strict partition measurability; $h$-dependent soft memories should be read as restricted-class or approximation statements.
 
 Repair is the sufficient-statistic update. For every selected concept $j\in N(h)$,
 \begin{align*}
@@ -669,7 +669,7 @@ n_j^+=n_j+\alpha_j(h),
 \end{align*}
 with all unselected counts unchanged. The low-cost hard-update variant is recovered by setting $\alpha_{j^\star}=1$ for the highest-weight concept and $\alpha_j=0$ for all $j\ne j^\star$. Embedding-mean memories and ridge or projection-style local repair are useful implementation variants, but they should be evaluated with calibration metrics before being used for log-loss claims.
 
-\subsection{From DGM to DGM-LM}
+\subsection{From CGA to CGA-LM}
 \label{sec:language-dgm}
 
-The generic DGM object above can be attached to many local memories. For sequence models, Appendix~\ref{sec:large-model-training} gives DGM-LM as an attention-replacement architecture with a causal read-before-write protocol and detached runtime graph updates.
+The generic CGA object above can be attached to many local memories. For sequence models, Appendix~\ref{sec:large-model-training} gives CGA-LM as an attention-replacement architecture with a causal read-before-write protocol and detached runtime graph updates.

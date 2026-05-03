@@ -1,65 +1,64 @@
 \section{Introduction}
 \label{sec:main-intro}
 
-Runtime learning mechanisms usually respond to surprise by repairing state: cache a new example, update a local statistic, or adapt a small set of parameters.
-These updates are powerful only if the current runtime representation already separates the cases that require different actions.
-If two cases are indistinguishable to the runtime state but require different predictions, no repair of values inside that state can separate them.
-This is a common failure mode in online systems with memory: a cache can store more examples, an adapter can move its parameters, and a local statistic can become well estimated, but all of these updates still assign one decision to one runtime cell if the representation has collapsed the relevant cases.
+Attention can be read as a memory operation.
+Given a prefix, a Transformer stores one key-value entry per token and later
+queries retrieve a weighted combination of those token values.
+This token table is powerful because the read is continuous and differentiable,
+but it also fixes the unit of memory: the model attends to token events.
+Long-context architectures have therefore explored many ways to replace or
+compress token attention, including recurrent states, state-space models,
+linear memories, and inference-time optimizers.
+These approaches change the systems tradeoff, but they do not directly expose
+the structural question: should a runtime sequence model store another token,
+repair an existing memory cell, or create a new latent concept?
 
-We model this failure using information partitions, following the decision-theoretic view that available information constrains admissible decision rules \citep{blackwell1953equivalent,berger1985statistical}.
-A runtime state induces an equivalence relation over cases.
-A repair update changes the payload assigned to an existing equivalence class; a refinement update changes the equivalence relation itself by adding an observable distinction.
-In the simplest log-loss example, $\Omega=\{0,1\}$, $Y=\omega$, and $P(0)=P(1)=1/2$.
-The trivial partition $\Pi=\{\{0,1\}\}$ has $R_{\log}(\Pi)=\log 2$, while the refined partition $\Pi^\star=\{\{0\},\{1\}\}$ has $R_{\log}(\Pi^\star)=0$.
-No repair of the single atom can assign two different predictions.
+We propose \emph{Concept Graph Attention} (CGA).
+CGA keeps the familiar attention read,
+\[
+\operatorname{read}(q)=\sum_{j\le N_t}
+\operatorname{softmax}_j(s(q,c_j))\,v_j,
+\]
+but changes the objects being read.
+Instead of attending over raw token keys and values, CGA attends over a runtime
+graph of concepts.
+Each concept has an address, a value memory, sufficient statistics, and optional
+distinction edges to other concepts.
+As tokens arrive, the graph is updated by local write rules: compatible
+observations repair an existing concept, while incompatible observations create
+or refine concepts.
+Thus the layer is attention-like in its readout but graph-memory-like in its
+state:
+\[
+\text{Transformer: tokens}\rightarrow\text{attention over token memory},
+\qquad
+\text{CGA: tokens}\rightarrow\text{concept graph}\rightarrow
+\text{attention over concepts}.
+\]
 
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[x=1cm,y=1cm,>=stealth]
-\tikzset{
-    atom/.style={draw,rounded corners=2pt,fill=gray!8,minimum width=2.0cm,minimum height=1.05cm},
-    child/.style={draw,rounded corners=2pt,fill=blue!6,minimum width=0.95cm,minimum height=1.05cm},
-    state/.style={circle,fill=black,inner sep=0pt,minimum size=4pt},
-    mem/.style={draw,rounded corners=1.5pt,fill=green!10,minimum width=0.85cm,minimum height=0.32cm,font=\scriptsize},
-    lab/.style={font=\scriptsize},
-    title/.style={font=\scriptsize\bfseries}
-}
-\node[title] at (0,1.05) {current atom};
-\node[atom] at (0,0.25) {};
-\node[state,label={[lab]90:$\omega$}] at (-0.45,0.42) {};
-\node[state,label={[lab]90:$\omega'$}] at (0.45,0.42) {};
-\node[lab] at (-0.45,-0.05) {$Y=0$};
-\node[lab] at (0.45,-0.05) {$Y=1$};
-\node[mem] at (0,-0.65) {$a(B)$};
+This positioning is deliberate.
+We do not claim that CGA removes attention; rather, it changes what attention is
+computed over.
+The potential advantage is that the number of memory slots is a concept budget
+$C$ rather than the sequence length $T$, giving a read cost of $O(TC)$ when
+$C\ll T$.
+More importantly, the memory slots are updateable runtime objects.
+They can aggregate repeated evidence, preserve key-value bindings, and carry
+local distinction structure across blocks.
+This makes CGA a candidate drop-in replacement for attention variants whose
+read can be interpreted as content-addressed retrieval: dense attention, sparse
+attention, grouped-query attention, sliding-window attention with global memory,
+or other recent attention modifications can in principle replace their token
+memory with a concept graph memory.
 
-\node[title] at (3.55,1.05) {repair};
-\node[atom] at (3.55,0.25) {};
-\node[state] at (3.10,0.42) {};
-\node[state] at (4.00,0.42) {};
-\node[mem] at (3.55,-0.65) {$a'(B)$};
-\node[lab,align=center,text width=2.1cm] at (3.55,-1.12) {same atom, one payload};
-
-\node[title] at (7.05,1.05) {refine};
-\node[child] at (6.55,0.25) {};
-\node[child] at (7.55,0.25) {};
-\node[state] at (6.55,0.42) {};
-\node[state] at (7.55,0.42) {};
-\node[lab] at (6.55,-0.08) {$U=0$};
-\node[lab] at (7.55,-0.08) {$U=1$};
-\node[mem] at (6.55,-0.65) {$a_0$};
-\node[mem] at (7.55,-0.65) {$a_1$};
-\node[lab,align=center,text width=2.35cm] at (7.05,-1.12) {new cells, separate payloads};
-
-\draw[->,thick] (1.05,0.55) -- (2.45,0.55);
-\draw[->,thick] (4.65,0.55) -- (5.85,0.55);
-\node[lab] at (1.75,0.82) {$\Pi_{t+1}=\Pi_t$};
-\node[lab] at (5.25,0.82) {$\Pi_{t+1}=\Pi_t\vee U$};
-\end{tikzpicture}
-\caption{Repair changes payloads on existing atoms; refinement changes the information partition by adding a distinction.}
-\label{fig:main-repair-refine}
-\end{figure}
-
-The central decomposition is
+The theoretical part of the paper explains why concept creation is a structural
+operation rather than a cache heuristic.
+A runtime state induces an information structure: two cases that map to the
+same runtime cell must share the same local payload unless the representation is
+refined.
+Repair changes the payload attached to an existing cell; refinement changes the
+cells themselves by adding a distinction.
+For a loss $L$, the excess risk decomposes as
 \[
 R_L(f_t)-R_L(\Pi^\star)
 =
@@ -67,24 +66,74 @@ R_L(f_t)-R_L(\Pi^\star)
 +
 \underbrace{R_L(\Pi_t)-R_L(\Pi^\star)}_{\Delta_{\rm refine}}.
 \]
-The first term is what better payloads, memories, or statistics can fix at the current partition.
-The second is what can only be removed by changing the partition.
-This decomposition is the organizing principle of the paper: surprise is not by itself evidence for refinement, because stale or noisy local statistics also cause error; refinement is justified only when the held-out consequence value of a new distinction exceeds what repair can explain.
+The first term can be reduced by better values inside the current concept
+graph.
+The second requires changing the graph: a missing concept or edge means the
+runtime state is too coarse for the consequence being predicted.
+Under log loss, the value of adding a distinction is $I(Y;U\mid\Pi)$; under
+squared loss, it is the corresponding conditional-variance reduction.
 
-This paper makes three contributions.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,>=stealth]
+\tikzset{
+    token/.style={draw,rounded corners=1.5pt,fill=gray!8,minimum width=0.54cm,minimum height=0.34cm,font=\scriptsize},
+    concept/.style={circle,draw,fill=blue!7,minimum size=0.72cm,font=\scriptsize},
+    query/.style={draw,rounded corners=1.5pt,fill=green!10,minimum width=0.72cm,minimum height=0.36cm,font=\scriptsize},
+    lab/.style={font=\scriptsize},
+    arr/.style={->,thick}
+}
+\node[lab] at (0,1.35) {token attention};
+\foreach \i/\x in {1/-1.2,2/-0.6,3/0,4/0.6,5/1.2} {
+  \node[token] (t\i) at (\x,0.65) {$x_{\i}$};
+}
+\node[query] (qt) at (0,-0.4) {$q_t$};
+\foreach \i in {1,2,3,4,5} {
+  \draw[arr,gray] (qt) -- (t\i);
+}
+\node[lab,align=center,text width=2.6cm] at (0,-1.05) {read over token keys and values};
+
+\node[lab] at (5.0,1.35) {concept graph attention};
+\foreach \i/\x/\y in {1/4.1/0.78,2/4.85/0.42,3/5.7/0.82,4/5.15/1.08} {
+  \node[concept] (c\i) at (\x,\y) {$c_{\i}$};
+}
+\draw[-,thick,blue!45] (c1) -- (c2);
+\draw[-,thick,blue!45] (c2) -- (c3);
+\draw[-,thick,blue!45] (c4) -- (c1);
+\node[query] (qc) at (5.0,-0.4) {$q_t$};
+\foreach \i in {1,2,3,4} {
+  \draw[arr,gray] (qc) -- (c\i);
+}
+\node[lab,align=center,text width=3.0cm] at (5.0,-1.05) {read over runtime concepts; writes update the graph};
+\end{tikzpicture}
+\caption{CGA changes the memory object of attention. Standard attention reads
+from token memory. CGA first builds a causal concept graph, then performs a
+continuous attention read over active concepts.}
+\label{fig:cga-vs-token-attention}
+\end{figure}
+
+The paper makes three contributions.
 \begin{itemize}
-    \item \textbf{Obstruction.} If predictions remain measurable with respect to a fixed partition, a positive refinement gap gives linear regret against a refined oracle.
-    \item \textbf{Value.} Useful distinctions are consequence-sensitive: under uniqueness of Bayes actions, a refinement has zero value exactly when the refined Bayes action was already measurable under the old information; under log loss the value of adding $U$ is $I(Y;U\mid\Pi)$.
-    \item \textbf{Implementation.} We instantiate the decision as Distinction Graph Machines (DGM), a causal graph-memory sequence mixer whose accepted edges are distinctions and whose nodes carry repairable local memories.
+    \item \textbf{Architecture.} We introduce Concept Graph Attention, a causal
+    mixer that reads continuously from a dynamic concept graph and updates that
+    graph with local non-BPTT memory operations.
+    \item \textbf{Theory.} We formalize repair versus refinement for runtime
+    information structures and relate concept creation to consequence-valued
+    information gains.
+    \item \textbf{Evaluation.} We implement CGA in the PoST/Zoology framework
+    and evaluate it as an attention-like sequence mixer on state-equalized
+    multi-query associative recall, with language-model experiments as the next
+    scaling target.
 \end{itemize}
-Experiments are organized around the sequence-modeling claim.
-On multi-query associative recall we compare DGM to state-equalized efficient
-mixers such as Mamba, RWKV, GDN, and TTT-style expressive-state models.
-On TinyDGM-LM we replace causal attention with DGM inside a small decoder and
-measure language-model loss, latency, and runtime graph state.
-Older CIFAR, adapter, and readout-only diagnostics are not part of the main
-empirical claim.
 
-We do not claim that DGM dominates unrestricted end-to-end representation learning.
-The obstruction applies to updates that preserve the relevant information map; representation-changing gradient updates are refinements in this model.
-DGM is one guarded implementation of distinction acceptance under an explicit runtime information structure.
+The claim boundary is important.
+CGA is not presented as a fully optimized replacement for every attention
+kernel.
+It is a method proposal for changing the memory basis of attention from tokens
+to runtime concepts.
+The current implementation trains slow projections by backpropagation, while
+the concept graph update itself is a forward-time memory operation.
+This places CGA between attention, external memory, and efficient recurrent
+mixers: it uses differentiable content-addressed reads like attention, but the
+state being read is a compact, updateable concept graph rather than the entire
+prefix token table.

@@ -1,153 +1,115 @@
-\section{DGM-LM: DGM as an Attention Replacement}
+\section{CGA-LM: Replacing Token Attention with Concept Graph Attention}
 \label{sec:large-model-training}
 
 For language modeling, the world state is a prefix and the consequence is the
-next observed token.
-This makes the refine-or-repair decision concrete.
-If the current runtime state already separates the prefix cases that require
-different next-token behavior, the model should repair local memories.
-If incompatible consequences are repeatedly routed to the same concept, the
-model should create a new distinction.
-
-The architecture used in our language-model experiments is DGM-LM.
-It is not a readout layer placed on top of a frozen Transformer.
-It replaces the causal attention sublayer inside each decoder block with a DGM
-mixer:
+next token.
+CGA-LM replaces the causal attention sublayer inside a decoder block with
+Concept Graph Attention:
 \[
-\operatorname{DGMBlock}(X)
+\operatorname{CGABlock}(X)
 =
-X+\operatorname{DGMMixer}(\operatorname{Norm}(X)).
+X+\operatorname{CGA}(\operatorname{Norm}(X)).
 \]
-The output has the same shape as causal attention, $[B,L,d_{\rm model}]$, so
-the surrounding MLP, residual, normalization, embedding, and language-model
-head are standard decoder components.
+The block has the same external shape contract as attention,
+$[B,L,d_{\rm model}]\mapsto[B,L,d_{\rm model}]$.
+The surrounding MLP, residual stream, layer normalization, embeddings, and
+language-model head are otherwise standard decoder components.
 
-\subsection{Causal graph-memory mixer}
+\subsection{Causal concept attention}
 
-At layer $\ell$, token $t$ produces query, key, and value projections
+At layer $\ell$, token $t$ produces read query, write key, and write value
+projections:
 \[
 q_t=Q_\ell x_t,\qquad k_t=K_\ell x_t,\qquad v_t=V_\ell x_t.
 \]
-The DGM state for one sequence in the block is
+The layer-local CGA state is a graph
 \[
-\calS_t^\ell
+\calG_t^\ell
 =
 \left(
 \{a_j,c_j,m_j,n_j\}_{j=1}^{N_t},
 E_t
-\right),
+\right).
 \]
-where $a_j$ is a frozen anchor, $c_j$ is a repairable centroid, $m_j$ is a
-local value memory, $n_j$ is a count, and $E_t$ is a sparse set of accepted
-distinction edges.
-The read is causal: token $t$ can only read concepts created from positions
-$<t$.
-For retrieved concepts $N_t(q_t)$,
+The read is causal: token $t$ reads only concepts created from earlier tokens.
+For active concepts,
 \[
 \alpha_{tj}
 =
-\operatorname{softmax}_{j\in N_t(q_t)}
-\left(
-\frac{\langle q_t,c_j\rangle+\gamma_j(q_t)}{\tau}
-\right),
+\operatorname{softmax}_{j\le N_t}
+\left(\gamma_\ell q_t^\top c_j\right),
 \qquad
-z_t=\sum_{j\in N_t(q_t)}\alpha_{tj}m_j,
+z_t=\sum_{j\le N_t}\alpha_{tj}m_j,
+\qquad
+y_t=O_\ell z_t .
 \]
-where $\gamma_j(q_t)$ is the edge-gating score induced by distinction edges.
-The mixer output is
-\[
-y_t=O_\ell z_t.
-\]
-Thus DGM-LM has the same external contract as attention: it maps a prefix of
-hidden states to a contextualized hidden state for each position.
-The difference is the internal state.
-Attention stores all previous token values implicitly in the sequence;
-DGM stores a budgeted set of runtime concepts and local memories.
+The scale $\gamma_\ell$ is learned.
+Multi-head CGA uses independent address and value subspaces per head and
+concatenates the head outputs before the output projection, exactly as
+multi-head attention does.
 
 \subsection{Read before write}
 
 The update order is the same during training and autoregressive inference:
 \[
-\text{read from }\calS_t^\ell
+\text{read from }\calG_t^\ell
 \rightarrow
 \text{emit }y_t
 \rightarrow
-\text{observe }(k_t,v_t)
+\text{write }(k_t,v_t)
 \rightarrow
-\text{repair or refine }\calS_{t+1}^\ell .
+\text{repair or refine }\calG_{t+1}^\ell .
 \]
-This order prevents the current token from reading its own write.
-A repair updates an existing concept memory or centroid:
-\[
-m_j^+
-=
-\frac{n_jm_j+v_t}{n_j+1},
-\qquad
-c_j^+
-=
-\operatorname{normalize}\bigl((1-\eta)c_j+\eta k_t\bigr).
-\]
-A refinement creates a new concept with anchor and centroid initialized at
-$k_t$, memory initialized at $v_t$, and optional edges to recently confused
-concepts.
-In the reference implementation, concept creation is triggered by low routing
-similarity or high value residual; the full guarded statistical test is the
-theoretical target for larger systems.
+This prevents a token from reading its own write.
+A repair updates an existing concept's sufficient statistics.
+A refinement creates a new concept and optional distinction edges.
+The MQAR implementation uses delayed writes so that a key token can bind to the
+following value token; language-model variants can use the same default or a
+learned write gate.
 
-\subsection{Training}
+\subsection{Training boundary}
 
 Slow neural parameters are trained by ordinary next-token backpropagation
-through the DGM read path.
-The graph write itself is detached:
+through the CGA read path.
+The graph mutation itself is detached:
 \[
-\calS_{t+1}^\ell
+\calG_{t+1}^\ell
 =
-\operatorname{stopgrad}
+\operatorname{CGAWrite}
 \left(
-\operatorname{DGMWrite}
-\bigl(
-\operatorname{stopgrad}(\calS_t^\ell),
+\operatorname{stopgrad}(\calG_t^\ell),
 \operatorname{stopgrad}(k_t),
 v_t
-\bigr)
 \right).
 \]
-This is the same contract as the MQAR mixer.
-Backpropagation learns projections, output maps, MLPs, embeddings, and other
-slow parameters.
-Runtime graph state is learned by the explicit causal write rule.
-The resulting model is therefore not ``backprop-free'' in training; rather, it
-does not use attention as the sequence mixer and does not require
-inference-time backpropagation to update its fast state.
+Thus CGA-LM is not a backprop-free language model.
+It is an attention replacement whose fast state is updated by a forward-time
+concept-graph rule while the slow projections are trained end-to-end.
 
 \begin{algorithm}[H]
-\caption{\textsc{DGMMixerForward}}
-\label{alg:dgm-lm}
+\caption{\textsc{CGALayerForward}}
+\label{alg:cga-lm}
 \begin{algorithmic}[1]
-\State \textbf{Input:} hidden states $x_{1:L}$, empty layer-local graph state $\calS$
-\For{$t=1,\ldots,L$}
-\State $q_t\gets Qx_t$, $k_t\gets Kx_t$, $v_t\gets Vx_t$
-\State retrieve edge-compatible candidates $N_t(q_t)$ from $\calS$
-\State compute edge-gated weights $\alpha_{tj}$ over $N_t(q_t)$
-\State $z_t\gets\sum_{j\in N_t(q_t)}\alpha_{tj}m_j$
-\State emit $y_t\gets Oz_t$
-\State update $\calS\gets\textsc{DGMWrite}(\calS,k_t,v_t)$ by repair or refinement
+\State \textbf{Input:} hidden states $x_{1:L}$, empty concept graph $\calG$
+\For{causal blocks}
+\State project block queries, write keys, and values
+\State read all active concepts with continuous attention weights
+\State emit block outputs through the output projection
+\State form delayed or gated write pairs
+\State assign writes to compatible concepts or proposed new concepts
+\State scatter-add sufficient statistics and commit graph updates
 \EndFor
-\State \Return $y_{1:L}$
+\State \Return contextualized hidden states
 \end{algorithmic}
 \end{algorithm}
 
 \subsection{Scaling path}
 
-The reference DGM-LM implementation is deliberately simple PyTorch.
-It is suitable for MQAR, tiny language modeling, and correctness checks, but
-it is not expected to beat optimized attention or Mamba kernels on wall-clock
-speed.
-The scaling path is systems work:
-fused top-$k$ routing, compact edge-gate kernels, blockwise graph updates,
-budget-aware merge and eviction, and sharded concept banks.
-The paper therefore separates two claims.
-The theoretical and algorithmic claim is that DGM gives a principled
-refine-or-repair sequence state.
-The systems claim is only that this state has a plausible path to efficient
-implementation; the current experiments must report latency honestly.
+The reference CGA implementation uses dense concept reads.
+This is appropriate for state-equalized MQAR where the concept budget is small.
+For large concept graphs, sparse retrieval, fused dense-read kernels,
+budget-aware merge and eviction, and sharded concept banks are systems work.
+The paper therefore separates the architectural claim from the kernel claim:
+CGA changes the memory basis of attention from tokens to concepts; optimized
+implementations should then choose dense or sparse concept attention depending
+on the concept budget.

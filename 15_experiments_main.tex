@@ -1,118 +1,104 @@
 \section{Experiments}
 \label{sec:main-experiments}
 
-The experimental section is intentionally narrow.
-We evaluate DGM only as a causal sequence mixer, not as a CIFAR classifier,
-not as a readout adapter, and not as a general test-time adaptation wrapper.
-This keeps the empirical claim aligned with the theory:
-DGM should help when a sequence model needs runtime distinctions that determine
-future consequences.
-
-We use two experiments.
-The first is a controlled associative-recall benchmark, where the desired
-behavior is exactly to write key-value information and recover it later.
-The second is language modeling from scratch, where the same DGM mixer replaces
-causal attention inside a small decoder.
+The empirical claim is intentionally narrow.
+We evaluate CGA as a causal sequence mixer: a layer with the external contract
+of attention, but whose memory is a bounded concept graph rather than all
+previous tokens.
+The main experiment is multi-query associative recall (MQAR), because MQAR
+directly measures whether a mixer can write key-value information and retrieve
+it later.
+Language modeling is the scaling target, but the first publication-level result
+should establish controlled recall and state scaling.
 
 \subsection{Experiment 1: Multi-Query Associative Recall}
 \label{sec:exp-mqar}
 
-Multi-query associative recall (MQAR) is the cleanest benchmark for the DGM
-claim \citep{arora2024zoology}.
-The input contains key-value pairs and later queries; the model must return the
-corresponding value.
-Unlike CIFAR-style adaptation, MQAR directly tests whether a sequence mixer can
-create, maintain, and retrieve runtime memory.
-It also lets us compare against the same class of efficient language-model
-mixers used in recent sequence-model papers.
+MQAR inputs contain key-value pairs followed by queries; the model must output
+the corresponding value \citep{arora2024zoology}.
+This is the cleanest test for CGA because the task separates two questions:
+whether the model can store associations in a runtime memory, and whether later
+queries can retrieve them.
+For token attention, the memory is the raw prefix.
+For CGA, the memory is a concept graph constructed from the prefix.
 
-We run DGM inside the existing PoST/Zoology MQAR framework.
-The comparison is state-equalized: for each $(d_{\rm model},h)$ pair, the DGM
-concept budget is chosen so that its recurrent memory budget is comparable to
-the existing Mamba, RWKV, GDN, GLA/RetNet, and TTT-style runs.
-Training uses sequence length $512$ with a curriculum over the number of
-key-value pairs.
-Evaluation reports both in-distribution recall and length extrapolation at
-test lengths $512,1024,2048,4096$.
-We report accuracy by slice:
+We run CGA inside the existing PoST/Zoology MQAR framework.
+The comparison is state-equalized against existing efficient sequence mixers.
+For the primary fair run we match the $64$K-state setting used by the PoST/Mamba
+benchmarks:
 \[
-(\text{sequence length},\ \text{number of key-value pairs},\ \text{persist vs.
-capacity}).
+d_{\rm model}=512,\qquad L=2,\qquad C=92,\qquad d_{\rm state}=64.
 \]
+The implementation uses four CGA heads, dense concept reads, untied read/write
+address projections, and a learned read logit scale initialized at the standard
+dot-product attention scale.
+Training uses sequence length $512$ with the same curriculum over key-value
+count as the PoST baselines.
+Evaluation reports the existing persist and capacity slices at lengths
+$512,1024,2048,4096$.
 
-\paragraph{Primary baselines.}
-The primary comparison set is:
+\paragraph{Baselines.}
+The comparison class is the standard MQAR suite already present in the lab
+framework:
 \begin{itemize}
-    \item \textbf{Transformer}: the full-attention reference mixer.
-    \item \textbf{Mamba/RWKV/GDN}: recurrent-state efficient sequence mixers.
-    \item \textbf{TTT}: expressive hidden-state sequence modeling through
-    test-time learning style updates.
-    \item \textbf{DGM}: the proposed causal graph-memory mixer with concept
-    creation, local memory repair, and edge-gated retrieval.
+    \item \textbf{Transformer}: token-level causal self-attention.
+    \item \textbf{Mamba/RWKV/GDN/GLA/RetNet}: recurrent or linear-state
+    efficient mixers.
+    \item \textbf{TTT-style layers}: expressive state updated by test-time
+    learning style mechanisms.
+    \item \textbf{CGA}: attention over a runtime concept graph.
 \end{itemize}
 
-\paragraph{What counts as success.}
-DGM does not need to beat a fully optimized Transformer on every setting.
-The publication-level positive result is stronger and more specific:
-\begin{enumerate}
-    \item DGM matches or exceeds recurrent-state baselines at equal state
-    budget on MQAR recall.
-    \item DGM degrades more gracefully than fixed-state mixers as query length
-    or key-value load increases.
-    \item The result is reported with concept count, edge count, memory budget,
-    and latency, so the gain is not hidden inside unbounded state growth.
-\end{enumerate}
-
-The implementation artifact for this experiment is the DGM-only MQAR sweep in
-the PoST framework:
-\path{../PoST_dev/zoology/zoology/experiments/dgm_mqar.py}.
-Existing PoST MQAR runs supply the non-DGM baselines, so this script adds only
-the missing DGM points rather than duplicating the whole benchmark suite.
-
-\subsection{Experiment 2: TinyDGM-LM}
-\label{sec:exp-tiny-dgm-lm}
-
-The second experiment asks whether DGM can be trained as a language-model
-mixer, rather than only solving an artificial retrieval task.
-We train a tiny causal decoder from scratch in two matched variants:
-\begin{itemize}
-    \item \textbf{Tiny Transformer}: standard causal self-attention.
-    \item \textbf{TinyDGM-LM}: the attention sublayer is replaced by a DGM
-    mixer with causal left-to-right graph writes.
-\end{itemize}
-Both models use the same tokenizer, embedding dimension, depth, optimizer,
-training tokens, and evaluation split.
-The reported metrics are validation negative log likelihood, perplexity,
-prefill latency, decode latency, parameter count, concept count, edge count,
-and estimated runtime state size.
-
-This experiment is not meant to be a large-scale SOTA claim.
-Its job is to close the conceptual gap between MQAR and language modeling:
-the same DGM operation that stores and retrieves keys in MQAR must also support
-next-token training as a causal mixer.
-If TinyDGM-LM is competitive with the tiny Transformer at similar parameter
-count while exposing a smaller or more structured runtime state, it justifies
-scaling the architecture in the PoST training stack.
+\paragraph{What the experiment tests.}
+The fair-state run asks whether replacing token memory by concept memory is
+competitive at the same state budget.
+The important diagnostic slices are:
+\[
+(\text{test length},\ \text{key-value count},\ \text{persist/capacity}).
+\]
+A positive result is not merely low training loss.
+CGA should maintain recall when the query distance grows, expose a compact
+runtime state, and report latency and concept count so that improvements are
+not hidden inside unbounded memory.
 
 The implementation artifact is
-\path{experiments/train_tiny_dgm_lm.py}.
-For larger runs, the same architecture is registered in PoST as
-\texttt{arch=dgm}; the 180M launch script is
-\path{../PoST_dev/scripts/run_dgm_180m_4b.sh}.
+\path{../PoST_dev/zoology/zoology/experiments/cga_mqar.py}.
+The registered mixer is \texttt{zoology.mixers.cga.ConceptGraphAttention}.
 
-\subsection{Ablations Kept Out of the Main Paper}
+\subsection{Experiment 2: CGA-LM}
+\label{sec:exp-cga-lm}
+
+The language-model experiment asks whether the same concept-memory read/write
+operation can serve as a causal mixer beyond synthetic recall.
+The matched comparison is:
+\begin{itemize}
+    \item \textbf{Tiny Transformer}: standard causal self-attention.
+    \item \textbf{TinyCGA-LM}: the attention sublayer is replaced by CGA.
+\end{itemize}
+Both models should use the same tokenizer, depth, width, optimizer, training
+tokens, and evaluation split.
+The reported metrics are validation negative log likelihood, perplexity,
+prefill latency, decode latency, parameter count, concept count, edge count,
+and runtime state size.
+
+The language-model result is not meant to be a large-scale SOTA claim in this
+draft.
+Its role is to show that CGA is not an MQAR-only mechanism: the same layer that
+performs associative recall can be trained as an attention-like decoder mixer.
+For larger runs, CGA can be introduced into the existing PoST training stack as
+an attention replacement with the same external block interface.
+
+\subsection{Removed Experiments}
 \label{sec:exp-not-in-main}
 
 Earlier drafts included CIFAR test-time adaptation, LoRA-style adapters,
 entropy minimization, readout-only language-model memory, and synthetic
 refinement diagnostics.
 Those experiments are removed from the main claim.
-They test different questions and made the paper look like a collection of
-unrelated mechanisms.
-The final empirical story is therefore:
+They test different questions and obscure the central message:
 \[
-\text{DGM is a dynamic graph-memory sequence mixer.}
+\text{CGA replaces token attention memory with a dynamic concept graph.}
 \]
-MQAR tests whether the mixer performs controlled associative recall.
-TinyDGM-LM tests whether the mixer can replace attention in a causal language
-model.
+MQAR tests controlled concept-memory recall.
+CGA-LM tests whether the same operation can be trained as a causal
+language-model mixer.

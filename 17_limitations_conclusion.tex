@@ -4,17 +4,17 @@
 \begin{itemize}
 \item The theory is about explicit information structures or restricted hard-route classes.
 \item Full backpropagation through the representation is outside the repair-only lower bound.
-\item Soft-DGM requires candidate recall and margin assumptions to approximate the hard route.
+\item CGA's dense read is stable at small concept budgets, but large concept graphs will need sparse or fused kernels.
 \item Held-out guarantees require fresh or reusable validation data rather than adaptive reuse of the same scoring buffer.
 \item The experiments are sequence-modeling tests, not a complete large-scale language-model SOTA claim.
 \end{itemize}
-The empirical claim is deliberately narrow: DGM is evaluated as a causal
-sequence mixer on MQAR and small language modeling.
-MQAR should show whether the graph state can write and retrieve key-value
+The empirical claim is deliberately narrow: CGA is evaluated as an
+attention-like causal sequence mixer on MQAR and small language modeling.
+MQAR should show whether the concept graph can write and retrieve key-value
 information under matched state budgets.
-TinyDGM-LM should show whether the same mechanism can replace attention in a
+CGA-LM should show whether the same mechanism can replace token attention in a
 trainable decoder.
-If DGM loses to optimized recurrent mixers, that is a real systems and
+If CGA loses to optimized recurrent mixers, that is a real systems and
 algorithmic gap rather than a wording problem.
 The method still needs fused kernels, better budget policies, merge and
 eviction rules, nonlinear distinctions, and distributed concept sharding before
@@ -22,5 +22,9 @@ it can be treated as a large-model systems result.
 
 The main point is the separation between two runtime operations.
 Repair improves predictions inside the current quotient; refinement changes the quotient when consequences reveal a missing distinction.
-DGM gives one guarded graph-memory implementation of that decision: accept consequence-valued distinctions as edges, otherwise repair local memories.
-That narrower framing is the intended contribution: a decision-theoretic obstruction, a value criterion for distinctions, and a guarded graph-memory mechanism aligned with those claims.
+CGA gives one graph-attention implementation of that decision: read
+continuously from concepts, accept consequence-valued distinctions as graph
+structure, otherwise repair concept memories.
+That framing is the intended contribution: an attention-compatible concept
+graph layer, a decision-theoretic obstruction, and a value criterion for when a
+runtime memory should refine rather than merely repair.

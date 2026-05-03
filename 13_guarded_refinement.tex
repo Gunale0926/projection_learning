@@ -81,6 +81,6 @@ The theorem is a finite-sample guard, not a global training theorem.
 If the same validation buffer is reused adaptively, one needs reusable-holdout or adaptive-validation control; otherwise the rule should be read as an empirical heuristic.
 The margin also clarifies the role of the threshold $\tau$.
 The $4\epsilon_t$ term accounts for sampling uncertainty in the empirical comparison; $\tau$ is a modeling margin that can absorb unmodeled costs, numerical instability, or a desired minimum effect size.
-In DGM, $c(S')$ charges concept and edge growth, while repair candidates keep the accepted distinction set fixed.
+In CGA, $c(S')$ charges concept and edge growth, while repair candidates keep the accepted distinction set fixed.
 The result assumes a finite candidate class at the scoring time.
 Appendix~\ref{sec:value} gives broader greedy-recovery and oracle-inequality statements, including a local-split bound whose atom count grows as $m_0+B$ rather than $m_0 2^B$.

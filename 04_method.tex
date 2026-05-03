@@ -34,7 +34,7 @@ R_L(\calG)\le R_L(\calF).
 Every $\calF$-measurable action is also $\calG$-measurable. Taking the infimum of the same expected loss over the larger feasible set gives the claim.
 \end{proof}
 
-This is a population statement. It says that information cannot hurt the best possible decision rule. It does not say that a finite implementation should refine without restraint. Statistical estimation, finite samples, and model selection can overfit; those are algorithmic questions, not failures of the information order. This is why the DGM algorithm later uses penalties, thresholds, and sample-split scoring before committing a new concept.
+This is a population statement. It says that information cannot hurt the best possible decision rule. It does not say that a finite implementation should refine without restraint. Statistical estimation, finite samples, and model selection can overfit; those are algorithmic questions, not failures of the information order. This is why the CGA algorithm later uses penalties, thresholds, and sample-split scoring before committing a new concept.
 
 \subsection{Loss-relevant refinement}
 
@@ -191,7 +191,7 @@ It also has the between-cell form
 \end{align*}
 \end{definition}
 
-The population identities lead directly to these standard empirical split scores: information gain for classification and variance reduction for regression trees \citep{quinlan1986induction,breiman1984classification,domingos2000mining}. They implement the same principle as Definition~\ref{def:distinction-value}: split only when the proposed distinction has measurable consequence value. The DGM algorithm below turns this population rule into a guarded empirical decision.
+The population identities lead directly to these standard empirical split scores: information gain for classification and variance reduction for regression trees \citep{quinlan1986induction,breiman1984classification,domingos2000mining}. They implement the same principle as Definition~\ref{def:distinction-value}: split only when the proposed distinction has measurable consequence value. The CGA algorithm below turns this population rule into a guarded empirical decision.
 
 \subsection{Distinction complexity}
 
@@ -214,11 +214,11 @@ R_L(\Pi^\star)+\epsilon
 with value $+\infty$ if no such sequence exists.
 \end{definition}
 
-The refinement gap measures the value of a target information structure. Distinction complexity measures how many admissible bits are needed to reach it. Repair-only learning is the case $m=0$. Decision trees, graph refinements, and prototype split systems differ partly in the distinction classes and ordering constraints they impose. DGM corresponds to a graph-generated class of local binary predicates proposed from confused runtime states.
+The refinement gap measures the value of a target information structure. Distinction complexity measures how many admissible bits are needed to reach it. Repair-only learning is the case $m=0$. Decision trees, graph refinements, and prototype split systems differ partly in the distinction classes and ordering constraints they impose. CGA corresponds to a graph-generated class of local binary predicates proposed from confused runtime states.
 
 \subsection{Greedy recovery under realizability}
 
-The next theorem is a clean realizable upper bound for greedy refinement. It is intentionally stated for the abstract partition model rather than for Soft-DGM retrieval. The distinction class is understood to contain only prediction-time observable distinctions, as in Definition~\ref{def:refinable-online-prediction}.
+The next theorem is a clean realizable upper bound for greedy refinement. It is intentionally stated for the abstract partition model rather than for Soft-CGA retrieval. The distinction class is understood to contain only prediction-time observable distinctions, as in Definition~\ref{def:refinable-online-prediction}.
 
 \begin{definition}[Target-respecting distinction]
 \label{def:target-respecting}

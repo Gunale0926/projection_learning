@@ -1,0 +1,149 @@
+\section{Concept Graph Attention}
+\label{sec:main-cga}
+
+CGA is an attention layer whose memory is a graph of runtime concepts rather
+than a table of token keys and values.
+For each sequence in a batch, the state before block $b$ is
+\[
+\calG_b =
+\left(
+\{a_j, c_j, m_j, n_j\}_{j=1}^{N_b},
+E_b
+\right),
+\qquad N_b\le C.
+\]
+Here $a_j$ is a stable anchor for concept identity, $c_j$ is a retrieval
+address, $m_j$ is a value memory, $n_j$ is a count or sufficient statistic, and
+$E_b$ is an optional set of distinction edges.
+The concept budget $C$ is a model hyperparameter analogous to a recurrent-state
+budget.
+Unlike token attention, $N_b$ need not grow with the sequence length.
+
+\paragraph{Dense concept read.}
+Given normalized query $q_t$ and active concept addresses $c_j$, CGA reads by
+continuous attention over concepts:
+\[
+\alpha_{tj}
+=
+\frac{\exp(\gamma q_t^\top c_j)\,\mathbf 1\{j\in A_b(t)\}}
+{\sum_{r=1}^{N_b}\exp(\gamma q_t^\top c_r)\,\mathbf 1\{r\in A_b(t)\}},
+\qquad
+z_t=\sum_{j=1}^{N_b}\alpha_{tj}m_j .
+\]
+$A_b(t)$ is the set of concepts eligible under the current graph gates; when
+edges are disabled it is simply the active concept set.
+The scale $\gamma$ is learned, initialized at the standard dot-product
+attention scale.
+This dense read is the default definition of CGA.
+Sparse top-$k$ concept reads are a possible large-memory acceleration, but they
+are not the core algorithm.
+
+\paragraph{Concept graph writes.}
+CGA uses a read-before-write causal protocol.
+After producing $z_t$, the layer forms a write key $k_t$ and value $v_t$ from
+the token representation.
+In MQAR we use a one-token delayed write key so that a key token can bind to the
+following value token:
+\[
+k^{\rm write}_t = k_{t-1},
+\qquad
+v^{\rm write}_t = v_t.
+\]
+The runtime update is local.
+If the write key is compatible with an existing concept, CGA repairs that
+concept by adding sufficient statistics:
+\[
+n_j \leftarrow n_j + w_t,\qquad
+s^k_j \leftarrow s^k_j + w_t k^{\rm write}_t,\qquad
+s^v_j \leftarrow s^v_j + w_t v^{\rm write}_t,
+\]
+\[
+c_j \leftarrow \operatorname{normalize}(s^k_j/n_j),
+\qquad
+m_j \leftarrow s^v_j/n_j .
+\]
+If no compatible concept exists and capacity remains, CGA creates a new concept
+with anchor $a_{N+1}=k^{\rm write}_t$ and initializes its sufficient
+statistics.
+Within a block, observations are accumulated with scatter-add operations and
+committed at the block boundary.
+This makes the update scan-friendly: repair statistics form commutative monoids,
+and concept creation is a bounded join of proposed new concepts.
+
+\paragraph{Edges as optional distinctions.}
+When a new concept is created from a confused parent, CGA may add a distinction
+edge.
+For endpoints $a_i,a_j$, the edge predicate is
+\[
+u_{ij}=\frac{a_i-a_j}{\|a_i-a_j\|_2},
+\qquad
+b_{ij}=\frac12u_{ij}^{\top}(a_i+a_j),
+\qquad
+g_{ij}(h)=\mathbf 1\{u_{ij}^{\top}h>b_{ij}\}.
+\]
+These edges are not needed for the dense concept read to be differentiable.
+They are structural information in the concept graph: they restrict eligibility
+and record accepted local distinctions.
+Repairs change $m_j,c_j,n_j$ while keeping anchors and edges fixed; refinements
+add concepts or edges.
+
+\paragraph{Relation to ordinary attention.}
+Let $K_{\rm tok},V_{\rm tok}$ be token-level keys and values.
+Standard attention computes
+\[
+\operatorname{Attn}(X)_t
+=
+\sum_{s<t}
+\operatorname{softmax}_s(q_t^\top K_{{\rm tok},s})V_{{\rm tok},s}.
+\]
+CGA instead computes
+\[
+\operatorname{CGA}(X)_t
+=
+\sum_{j\le N_t}
+\operatorname{softmax}_j(q_t^\top c_j)m_j,
+\]
+where $c_j,m_j$ are produced by the concept-graph update over the prefix.
+Thus the read is attention-like, but the memory basis is different.
+Attention uses one slot per token event; CGA uses a bounded set of runtime
+concepts that aggregate and refine token evidence.
+
+\paragraph{Backpropagation boundary.}
+CGA trains its slow parameters end-to-end:
+embeddings, read/write projections, output projections, and the language-model
+head receive gradient from the task loss.
+The runtime graph mutation itself is not backpropagated through as a recurrent
+state trajectory.
+Routing decisions, concept allocation, counts, anchors, and edges are detached
+fast state.
+The value content written into concepts may remain differentiable so that a
+future concept read can train the value projection.
+This is the same high-level separation used by many stateful layers: slow
+parameters are trained by backpropagation, while fast memory changes during the
+forward pass by an algorithmic update.
+
+\begin{algorithm}[t]
+\caption{\textsc{ConceptGraphAttentionForward}}
+\label{alg:main-cga}
+\begin{algorithmic}[1]
+\Statex Input: hidden states $x_{1:T}$, concept budget $C$, block size $B$.
+\State Initialize empty concept graph $\calG_0$.
+\For{blocks $[s,e)$}
+    \State Project $q,k,v$ for all tokens in the block.
+    \State Compute dense attention from block queries to active concept keys.
+    \State Emit $z_t=\sum_j\alpha_{tj}m_j$ for all $t\in[s,e)$.
+    \State Form delayed write pairs $(k^{\rm write}_t,v^{\rm write}_t)$.
+    \State Propose new concepts for low-similarity writes.
+    \State Assign writes to proposed or existing concepts.
+    \State Scatter-add count, key, and value sufficient statistics.
+    \State Commit concept repairs and accepted concept creations to $\calG$.
+\EndFor
+\State Return output projection of $(z_1,\ldots,z_T)$.
+\end{algorithmic}
+\end{algorithm}
+
+CGA should therefore be read as a concept-memory generalization of attention.
+It does not require the concept graph to be human-interpretable.
+The graph is an operational runtime object: a compact set of memory slots, local
+distinctions, and sufficient statistics over which the model performs
+continuous retrieval.
