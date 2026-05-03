@@ -4,6 +4,12 @@ A runtime representation induces an information partition over cases; any learne
 Hence a positive refinement gap yields linear regret against an oracle that can condition on a finer partition.
 We characterize useful refinements as those that change the Bayes action.
 Under log loss, the value of adding a binary distinction $U$ is $I(Y;U\mid\Pi)$; under squared loss it is conditional variance reduction.
-We instantiate the decision as Distinction Graph Machines, a graph-memory data structure whose edges are accepted distinctions and whose nodes carry repairable local memories.
+We instantiate the decision as Distinction Graph Machines, a test-time graph-memory layer whose state is an explicit distinction graph: edges are accepted distinctions and nodes carry repairable local memories.
 A held-out guard accepts a refinement only when its penalized empirical gain exceeds the best repair gain.
-Controlled Bayes-gap and CIFAR-100 hierarchy streams validate the obstruction and edge recovery, while a non-oracle CIFAR-100 Image-HQS stream shows predictive gains under a shared frozen encoder.
+The empirical protocol treats DGM as a test-time layer: under a shared CIFAR-10
+source model, we compare frozen inference, entropy minimization, a low-rank
+adapter baseline, a TTT-style rotation-adaptation baseline, and DGM graph-memory
+updates with and without online pseudo-label writes.
+This framing makes the claim deliberately narrow: DGM is not a replacement for
+all backpropagation, but a forward-only graph-memory state with explicit
+distinctions and local repair.

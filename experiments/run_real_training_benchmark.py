@@ -310,14 +310,16 @@ class DGMConceptMemory:
 
 
 class FullDGMRefineMemory:
-    """Hard-route DGM with local repair and consequence-sensitive refinement.
+    """Edge-gated graph memory with local repair and guarded split refinement.
 
     Concepts are not class-indexed. Each concept stores a prototype, a local
-    label-count memory, and a bounded validation buffer. Observation first
-    repairs the routed concept. When the buffer shows a stable log-loss gain
-    from a local distinction, the concept is split and a parent-child edge is
-    recorded. This is a finite hard-routing approximation of the full DGM
-    refine-or-repair loop, suitable for image embeddings.
+    label-count memory, a frozen anchor, and a bounded validation buffer.
+    Observation first repairs the routed concept. When the buffer shows a stable
+    log-loss gain from a local distinction, the concept is split and one or more
+    accepted distinction edges are added. Prediction retrieves nearby concepts
+    by movable centroids, then gates those candidates by the accepted edge
+    predicates before mixing compatible local memories. This is the practical
+    Soft-DGM graph route used by the experiments.
     """
 
     def __init__(
@@ -334,6 +336,9 @@ class FullDGMRefineMemory:
         split_penalty: float,
         max_splits_per_batch: int,
         device: torch.device,
+        edge_degree: int = 1,
+        min_edge_divergence: float = 0.0,
+        max_incident_edges: int = 128,
     ) -> None:
         self.n_classes = int(n_classes)
         self.embedding_dim = int(embedding_dim)
@@ -346,54 +351,111 @@ class FullDGMRefineMemory:
         self.min_child = int(min_child)
         self.split_penalty = float(split_penalty)
         self.max_splits_per_batch = int(max_splits_per_batch)
+        self.edge_degree = max(1, int(edge_degree))
+        self.min_edge_divergence = float(min_edge_divergence)
+        self.max_incident_edges = max(1, int(max_incident_edges))
+        self.max_edges = self.max_concepts * self.edge_degree
         self.device = device
 
+        self.anchors = torch.zeros(max_concepts, embedding_dim, device=device)
         self.prototypes = torch.zeros(max_concepts, embedding_dim, device=device)
         self.counts = torch.zeros(max_concepts, n_classes, device=device)
         self.totals = torch.zeros(max_concepts, device=device)
         self.active = torch.zeros(max_concepts, dtype=torch.bool, device=device)
+        self.anchor_set = torch.zeros(max_concepts, dtype=torch.bool, device=device)
         self.buffer_z = torch.zeros(max_concepts, buffer_size, embedding_dim, device=device)
         self.buffer_y = torch.zeros(max_concepts, buffer_size, dtype=torch.long, device=device)
         self.buffer_n = torch.zeros(max_concepts, dtype=torch.long, device=device)
         self.buffer_pos = torch.zeros(max_concepts, dtype=torch.long, device=device)
         self.parents = torch.full((max_concepts,), -1, dtype=torch.long, device=device)
         self.edge_gain = torch.zeros(max_concepts, device=device)
+        self.edge_u = torch.zeros(self.max_edges, embedding_dim, device=device)
+        self.edge_b = torch.zeros(self.max_edges, device=device)
+        self.edge_src = torch.full((self.max_edges,), -1, dtype=torch.long, device=device)
+        self.edge_dst = torch.full((self.max_edges,), -1, dtype=torch.long, device=device)
+        self.concept_edge_ids = torch.full((max_concepts, self.max_incident_edges), -1, dtype=torch.long, device=device)
+        self.concept_edge_sides = torch.zeros((max_concepts, self.max_incident_edges), dtype=torch.int8, device=device)
+        self.concept_edge_n = torch.zeros(max_concepts, dtype=torch.long, device=device)
         self.examples_seen = 0
         self._concept_count = 0
+        self._edge_count = 0
+        self._dropped_edges = 0
 
     def reset(self) -> None:
+        self.anchors.zero_()
         self.prototypes.zero_()
         self.counts.zero_()
         self.totals.zero_()
         self.active.zero_()
+        self.anchor_set.zero_()
         self.buffer_z.zero_()
         self.buffer_y.zero_()
         self.buffer_n.zero_()
         self.buffer_pos.zero_()
         self.parents.fill_(-1)
         self.edge_gain.zero_()
+        self.edge_u.zero_()
+        self.edge_b.zero_()
+        self.edge_src.fill_(-1)
+        self.edge_dst.fill_(-1)
+        self.concept_edge_ids.fill_(-1)
+        self.concept_edge_sides.zero_()
+        self.concept_edge_n.zero_()
         self.examples_seen = 0
         self._concept_count = 0
+        self._edge_count = 0
+        self._dropped_edges = 0
 
     @property
     def concepts(self) -> int:
         return self._concept_count
 
     @property
+    def edges(self) -> int:
+        return self._edge_count
+
+    @property
+    def dropped_edges(self) -> int:
+        return self._dropped_edges
+
+    @property
     def estimated_bytes(self) -> int:
         tensors = [
+            self.anchors,
             self.prototypes,
             self.counts,
             self.totals,
             self.active,
+            self.anchor_set,
             self.buffer_z,
             self.buffer_y,
             self.buffer_n,
             self.buffer_pos,
             self.parents,
             self.edge_gain,
+            self.edge_u,
+            self.edge_b,
+            self.edge_src,
+            self.edge_dst,
+            self.concept_edge_ids,
+            self.concept_edge_sides,
+            self.concept_edge_n,
         ]
         return int(sum(t.numel() * t.element_size() for t in tensors))
+
+    @torch.no_grad()
+    def compact_for_inference(self) -> None:
+        """Drop refinement buffers once the graph is built.
+
+        The buffers are only needed by observe()/try_refine(). Prediction uses
+        prototypes, counts, anchors, and accepted edge predicates, so experiments
+        can report the deployed memory footprint after this call.
+        """
+        self.buffer_z = torch.empty(self.max_concepts, 0, self.embedding_dim, device=self.device)
+        self.buffer_y = torch.empty(self.max_concepts, 0, dtype=torch.long, device=self.device)
+        self.buffer_n.zero_()
+        self.buffer_pos.zero_()
+        self.buffer_size = 0
 
     def _active_idx(self) -> torch.Tensor:
         return torch.arange(self._concept_count, device=self.device)
@@ -407,12 +469,20 @@ class FullDGMRefineMemory:
         return idx
 
     @torch.no_grad()
-    def _set_concept(self, idx: int, z: torch.Tensor, y: torch.Tensor) -> None:
+    def _set_concept(self, idx: int, z: torch.Tensor, y: torch.Tensor, *, set_anchor: bool) -> None:
         z = nn.functional.normalize(z, dim=1)
-        self.prototypes[idx] = nn.functional.normalize(z.mean(dim=0), dim=0)
+        center = nn.functional.normalize(z.mean(dim=0), dim=0)
+        self.prototypes[idx] = center
+        if set_anchor or not bool(self.anchor_set[idx].item()):
+            self.anchors[idx] = center
+            self.anchor_set[idx] = True
         self.counts[idx].zero_()
         self.counts[idx].scatter_add_(0, y, torch.ones_like(y, dtype=self.counts.dtype))
         self.totals[idx] = float(y.numel())
+        if self.buffer_size == 0:
+            self.buffer_n[idx] = 0
+            self.buffer_pos[idx] = 0
+            return
         n = min(y.numel(), self.buffer_size)
         self.buffer_z[idx].zero_()
         self.buffer_y[idx].zero_()
@@ -431,13 +501,98 @@ class FullDGMRefineMemory:
         k = min(self.top_k, len(active_idx))
         vals, local = torch.topk(sims, k=k, dim=1)
         concept_idx = active_idx[local]
+        route_scores = vals
+        if self._edge_count > 0:
+            edge_ids = self.concept_edge_ids[concept_idx]
+            edge_sides = self.concept_edge_sides[concept_idx]
+            valid = edge_ids >= 0
+            if bool(valid.any().item()):
+                needed_edges = torch.unique(edge_ids[valid], sorted=True)
+                edge_bits = ((z @ self.edge_u[needed_edges].T) > self.edge_b[needed_edges]).to(torch.int8)
+                edge_positions = torch.searchsorted(needed_edges, edge_ids.clamp_min(0))
+                batch_idx = torch.arange(z.shape[0], device=z.device)[:, None, None].expand_as(edge_ids)
+                candidate_bits = torch.zeros_like(edge_sides)
+                candidate_bits[valid] = edge_bits[batch_idx[valid], edge_positions[valid]]
+                violated = valid & (candidate_bits != edge_sides)
+                eligible = ~violated.any(dim=2)
+                has_eligible = eligible.any(dim=1, keepdim=True)
+                eligible = torch.where(has_eligible, eligible, torch.ones_like(eligible))
+                route_scores = vals.masked_fill(~eligible, -1.0e9)
         local_counts = self.counts[concept_idx]
         local_totals = self.totals[concept_idx].unsqueeze(-1)
         probs = (local_counts + self.alpha / self.n_classes) / (local_totals + self.alpha).clamp_min(1e-6)
-        weights = torch.softmax(vals / self.temperature, dim=1).unsqueeze(-1)
+        weights = torch.softmax(route_scores / self.temperature, dim=1).unsqueeze(-1)
         p = (weights * probs).sum(dim=1).clamp_min(1e-8)
         logits = torch.log(p)
         return logits - logits.mean(dim=1, keepdim=True)
+
+    @torch.no_grad()
+    def _add_edge(self, src: int, dst: int) -> bool:
+        if src == dst or self._edge_count >= self.max_edges:
+            return False
+        if not bool(self.anchor_set[src].item()) or not bool(self.anchor_set[dst].item()):
+            return False
+        src_slot = int(self.concept_edge_n[src].item())
+        dst_slot = int(self.concept_edge_n[dst].item())
+        if src_slot >= self.max_incident_edges or dst_slot >= self.max_incident_edges:
+            self._dropped_edges += 1
+            return False
+        existing_src = self.edge_src[: self._edge_count]
+        existing_dst = self.edge_dst[: self._edge_count]
+        duplicate = ((existing_src == src) & (existing_dst == dst)) | ((existing_src == dst) & (existing_dst == src))
+        if bool(duplicate.any().item()):
+            return False
+
+        src_anchor = self.anchors[src]
+        dst_anchor = self.anchors[dst]
+        diff = dst_anchor - src_anchor
+        norm = torch.linalg.vector_norm(diff)
+        if float(norm.item()) <= 1.0e-6:
+            return False
+        u = diff / norm
+        edge = self._edge_count
+        self.edge_u[edge] = u
+        self.edge_b[edge] = 0.5 * torch.dot(u, src_anchor + dst_anchor)
+        self.edge_src[edge] = src
+        self.edge_dst[edge] = dst
+        self.concept_edge_ids[src, src_slot] = edge
+        self.concept_edge_sides[src, src_slot] = 0
+        self.concept_edge_n[src] = src_slot + 1
+        self.concept_edge_ids[dst, dst_slot] = edge
+        self.concept_edge_sides[dst, dst_slot] = 1
+        self.concept_edge_n[dst] = dst_slot + 1
+        self._edge_count += 1
+        return True
+
+    def _label_distribution(self, concept: int) -> torch.Tensor:
+        return (self.counts[concept] + self.alpha / self.n_classes) / (self.totals[concept] + self.alpha).clamp_min(1e-6)
+
+    @torch.no_grad()
+    def _add_confused_neighbor_edges(self, child: int, parent: int) -> None:
+        extra_edges = self.edge_degree - 1
+        if extra_edges <= 0 or self._edge_count >= self.max_edges or self.concepts <= 2:
+            return
+        active_idx = self._active_idx()
+        keep = (active_idx != child) & (active_idx != parent)
+        candidates = active_idx[keep]
+        if candidates.numel() == 0:
+            return
+        child_anchor = nn.functional.normalize(self.anchors[child], dim=0)
+        candidate_anchors = nn.functional.normalize(self.anchors[candidates], dim=1)
+        sims = candidate_anchors @ child_anchor
+        order = torch.argsort(sims, descending=True)
+        child_prob = self._label_distribution(child)
+        added = 0
+        for pos in order.tolist():
+            candidate = int(candidates[pos].item())
+            cand_prob = self._label_distribution(candidate)
+            divergence = 0.5 * torch.sum(torch.abs(child_prob - cand_prob))
+            if float(divergence.item()) < self.min_edge_divergence:
+                continue
+            if self._add_edge(candidate, child):
+                added += 1
+                if added >= extra_edges:
+                    break
 
     @torch.no_grad()
     def observe(self, z: torch.Tensor, y: torch.Tensor) -> None:
@@ -447,7 +602,7 @@ class FullDGMRefineMemory:
         if self.concepts == 0:
             idx = self._new_concept()
             if idx is not None:
-                self._set_concept(idx, z, y)
+                self._set_concept(idx, z, y, set_anchor=True)
             return
 
         active_idx = self._active_idx()
@@ -482,7 +637,7 @@ class FullDGMRefineMemory:
     @torch.no_grad()
     def _append_buffer(self, concept: int, z: torch.Tensor, y: torch.Tensor) -> None:
         m = int(y.numel())
-        if m == 0:
+        if m == 0 or self.buffer_size == 0:
             return
         n_write = min(m, self.buffer_size)
         z_write = z[-n_write:]
@@ -539,8 +694,10 @@ class FullDGMRefineMemory:
         self.parents[child] = concept
         self.edge_gain[child] = gain
 
-        self._set_concept(child, bz[right], by[right])
-        self._set_concept(concept, bz[~right], by[~right])
+        self._set_concept(child, bz[right], by[right], set_anchor=True)
+        self._set_concept(concept, bz[~right], by[~right], set_anchor=False)
+        self._add_edge(concept, child)
+        self._add_confused_neighbor_edges(child, concept)
         return True
 
 
@@ -566,6 +723,8 @@ class RunResult:
     train_seconds: float
     eval_seconds: float
     concepts: int
+    edges: int
+    dropped_edges: int
     memory_examples_seen: int
     memory_bytes: int
     device: str
@@ -658,6 +817,9 @@ def train_one(
     full_dgm_min_child: int,
     full_dgm_split_penalty: float,
     full_dgm_max_splits_per_batch: int,
+    full_dgm_edge_degree: int,
+    full_dgm_min_edge_divergence: float,
+    full_dgm_max_incident_edges: int,
     device: torch.device,
 ) -> RunResult:
     set_seed(seed)
@@ -691,6 +853,9 @@ def train_one(
             split_penalty=full_dgm_split_penalty,
             max_splits_per_batch=full_dgm_max_splits_per_batch,
             device=device,
+            edge_degree=full_dgm_edge_degree,
+            min_edge_divergence=full_dgm_min_edge_divergence,
+            max_incident_edges=full_dgm_max_incident_edges,
         )
     train_totals = MetricTotals(device)
     start_train = time.perf_counter()
@@ -748,6 +913,9 @@ def train_one(
                 split_penalty=full_dgm_split_penalty,
                 max_splits_per_batch=full_dgm_max_splits_per_batch,
                 device=device,
+                edge_degree=full_dgm_edge_degree,
+                min_edge_divergence=full_dgm_min_edge_divergence,
+                max_incident_edges=full_dgm_max_incident_edges,
             )
         build_memory(model, train_eval_loader, eval_memory, device)
     test = evaluate(model, test_loader, device, eval_memory, memory_weight)
@@ -772,6 +940,8 @@ def train_one(
         train_seconds=train_seconds,
         eval_seconds=eval_seconds,
         concepts=0 if eval_memory is None else eval_memory.concepts,
+        edges=0 if eval_memory is None else int(getattr(eval_memory, "edges", 0)),
+        dropped_edges=0 if eval_memory is None else int(getattr(eval_memory, "dropped_edges", 0)),
         memory_examples_seen=0 if eval_memory is None else eval_memory.examples_seen,
         memory_bytes=0 if eval_memory is None else eval_memory.estimated_bytes,
         device=str(device),
@@ -789,6 +959,8 @@ def summarize(rows: Iterable[RunResult]) -> dict[str, float]:
         "train_seconds",
         "eval_seconds",
         "concepts",
+        "edges",
+        "dropped_edges",
         "memory_examples_seen",
         "memory_bytes",
     ]:
@@ -867,6 +1039,9 @@ def main() -> None:
     parser.add_argument("--full-dgm-min-child", type=int, default=6)
     parser.add_argument("--full-dgm-split-penalty", type=float, default=3.0)
     parser.add_argument("--full-dgm-max-splits-per-batch", type=int, default=4)
+    parser.add_argument("--full-dgm-edge-degree", type=int, default=2)
+    parser.add_argument("--full-dgm-min-edge-divergence", type=float, default=0.05)
+    parser.add_argument("--full-dgm-max-incident-edges", type=int, default=128)
     args = parser.parse_args()
 
     if args.torch_threads > 0:
@@ -930,6 +1105,9 @@ def main() -> None:
                     full_dgm_min_child=args.full_dgm_min_child,
                     full_dgm_split_penalty=args.full_dgm_split_penalty,
                     full_dgm_max_splits_per_batch=args.full_dgm_max_splits_per_batch,
+                    full_dgm_edge_degree=args.full_dgm_edge_degree,
+                    full_dgm_min_edge_divergence=args.full_dgm_min_edge_divergence,
+                    full_dgm_max_incident_edges=args.full_dgm_max_incident_edges,
                     device=device,
                 )
                 dataset_runs.append(run)
@@ -998,6 +1176,9 @@ def main() -> None:
             "full_dgm_min_child": args.full_dgm_min_child,
             "full_dgm_split_penalty": args.full_dgm_split_penalty,
             "full_dgm_max_splits_per_batch": args.full_dgm_max_splits_per_batch,
+            "full_dgm_edge_degree": args.full_dgm_edge_degree,
+            "full_dgm_min_edge_divergence": args.full_dgm_min_edge_divergence,
+            "full_dgm_max_incident_edges": args.full_dgm_max_incident_edges,
         },
         "datasets": by_dataset,
         "runs": [asdict(row) for row in all_runs],

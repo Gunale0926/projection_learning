@@ -77,7 +77,8 @@ This paper makes three contributions.
     \item \textbf{Value.} Useful distinctions are consequence-sensitive: under uniqueness of Bayes actions, a refinement has zero value exactly when the refined Bayes action was already measurable under the old information; under log loss the value of adding $U$ is $I(Y;U\mid\Pi)$.
     \item \textbf{Implementation.} We instantiate the decision as Distinction Graph Machines (DGM), a graph-memory data structure whose accepted edges are distinctions and whose nodes carry repairable local memories.
 \end{itemize}
-Experiments are organized by claim strength: a synthetic Bayes-gap stream calibrates the theorem, CIFAR-100 BalancedMask-HQS tests consequence-sensitive edge recovery with known oracle structure, and non-oracle CIFAR-100 Image-HQS tests predictive usefulness under frozen image embeddings without exposing hierarchy labels.
+Experiments are organized around the runtime-layer claim: on CIFAR-10 we compare DGM as a test-time graph-memory layer against a frozen source model, entropy minimization, a low-rank adapter baseline, and a TTT-style rotation-adaptation baseline.
+The older controlled diagnostics are retained only as proof-of-mechanism checks outside the main empirical claim.
 
 We do not claim that DGM dominates unrestricted end-to-end representation learning.
 The obstruction applies to updates that preserve the relevant information map; representation-changing gradient updates are refinements in this model.

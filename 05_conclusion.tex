@@ -1,8 +1,0 @@
-\section{Conclusion}
-\label{sec:conclusion}
-
-This paper separates two operations that are often conflated in runtime learning. A repair update improves predictions inside the current information structure. A refinement update changes the information structure itself. The repair-only lower bound shows that, whenever the current quotient collapses cases separated by the target, repair alone incurs linear regret against a refined oracle. The value identities show that useful distinctions are consequence-sensitive: under log loss, their value is conditional mutual information.
-
-DGM realizes these ideas as a graph-memory data structure whose nodes repair local memories and whose edges generate accepted distinctions. The theory does not claim that DGM is a universal replacement for gradient learning. It identifies when fixed-information updates are structurally insufficient and gives one algorithmic mechanism for adding the missing distinctions.
-
-The remaining empirical burden is substantial. The frequency-controlled CIFAR-100 hierarchy query stream shows that the learned graph can recover a real semantic hierarchy in an oracle-partition diagnostic, and the non-oracle CIFAR-100 Image-HQS stream shows that image-routed posterior memory can improve test log loss over online linear and crossed-interaction baselines under a shared frozen encoder. The calibrated trust aggregation gives a cumulative log-loss fallback to the frozen predictor. Stronger nonparametric baselines, memory-latency budgets, larger frozen-embedding streams, and large-scale language-model adaptation remain future work before making broad deployment claims.

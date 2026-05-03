@@ -15,4 +15,10 @@ Soft sparse retrieval introduces an additional recall condition. Edge gates can 
 
 The large-model layer is an architectural path rather than a completed scaling theorem. It gives a trainable read path, a detached write path, and a default budget policy with explicit complexity, but it does not prove optimization guarantees for deep nonconvex backbones, nor does it solve distributed systems issues such as load balancing or stale concept shards. Budget maintenance is also outside the formal refinement theorem: merge, eviction, and compression may discard distinctions, so their effect must be evaluated as a resource-management approximation.
 
-The experiments are computational checks, not a full benchmark suite. The non-oracle CIFAR-100 Image-HQS result gives one realistic frozen-embedding adaptation stream, but it should not be read as evidence that DGM recovers the CIFAR hierarchy graph from raw images or solves general visual online learning. A complete empirical evaluation should include stronger tuned online and nonparametric baselines, larger representation-probe ceilings, ablations of repair-only, refine-only, edge-free, and edge-gated variants, and tasks where hidden context changes force new distinctions.
+The experiment is a test-time layer benchmark, not a full benchmark suite.
+It should not be read as evidence that DGM solves general visual online
+learning or dominates gradient-based test-time adaptation.
+A complete empirical evaluation should include stronger tuned online and
+nonparametric baselines, larger representation-probe ceilings, ablations of
+repair-only, refine-only, edge-free, and edge-gated variants, and tasks where
+hidden context changes force new distinctions.

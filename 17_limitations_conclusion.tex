@@ -6,14 +6,19 @@
 \item Full backpropagation through the representation is outside the repair-only lower bound.
 \item Soft-DGM requires candidate recall and margin assumptions to approximate the hard route.
 \item Held-out guarantees require fresh or reusable validation data rather than adaptive reuse of the same scoring buffer.
-\item The experiments are diagnostics plus pure-DGM pilots, not broad SOTA evidence.
+\item The experiment is a test-time layer benchmark, not a broad CIFAR-10 SOTA claim.
 \end{itemize}
-The non-oracle Image-HQS result is especially narrow: it supports local posterior repair under learned visual concepts, but it does not establish exact hierarchy recovery from images or a complete memory-latency frontier.
-The pure-DGM pilots show that no-backprop memory is viable when the fixed geometry is adequate, and the CIFAR-10 handcraft runs show that Pure DGM can improve sharply once the fixed distinction basis has basic visual invariances.
-They also show the current limit: raw pixels and PCA are not enough, naive ``store more views'' scaling saturates without better memory selection, and the current FullDGM-refine implementation still trails a ridge readout on the same fixed HOG/color/DCT/LBP memory views.
-The trainable-CNN and character-LM pilots are therefore treated as non-pure references rather than the main claim.
-The next empirical step is a budget-matched comparison against stronger tree, RLS, $k$NN, handcrafted-feature SVM/ridge, cache, adapter, and prototype-growth baselines under the same prequential contract.
-The method also needs better policies for merging, eviction, nonlinear distinctions, and adaptive validation if it is to be used as a long-running system rather than a diagnostic implementation.
+The CIFAR-10 test-time layer benchmark is deliberately narrow: it compares
+runtime update mechanisms under a shared source architecture.
+TTT and LoRA-style baselines are allowed to use inference-time backpropagation;
+DGM instead updates an explicit graph-memory state.
+When DGM loses to gradient-based adaptation, that is a real systems and
+algorithmic gap rather than a wording problem.
+The next empirical step is a budget-matched multi-seed run with equal backbone,
+batch order, corruption streams, and reported memory-latency costs.
+The method also needs better policies for merging, eviction, nonlinear
+distinctions, and adaptive validation if it is to be used as a long-running
+system rather than a diagnostic implementation.
 
 The main point is the separation between two runtime operations.
 Repair improves predictions inside the current quotient; refinement changes the quotient when consequences reveal a missing distinction.
