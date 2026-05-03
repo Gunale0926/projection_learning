@@ -52,7 +52,8 @@ sufficient statistics. For head $h$,
 \lambda_{th}
 =
 \exp(A_h)\,
-\operatorname{softplus}(u_h^\top x_t+b_h)\,r_{th},
+\left(\delta_{\min}+(\delta_{\max}-\delta_{\min})
+\sigma(u_h^\top x_t+b_h)\right)r_{th},
 \qquad
 \rho_{bh}=\exp\left(-\sum_{t\in b}\lambda_{th}\right),
 \]
@@ -65,6 +66,8 @@ which gives ordered decay spectra across heads. The implementation also exposes
 a free per-head $A_h$ parameterization for ablations. This decay plays the same
 role as an $A$ or retention gate in Mamba-style state-space layers, but it acts
 on concept sufficient statistics rather than on a fixed token-indexed state.
+The bounded $\delta$ interval prevents the retention gate from deleting concept
+memory by driving the per-token decay arbitrarily high.
 In MQAR we use a one-token delayed write key so that a key token can bind to the
 following value token:
 \[

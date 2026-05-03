@@ -43,7 +43,7 @@ projections, a learned read logit scale initialized at the standard dot-product
 attention scale, a learned write gate with sparsity coefficient $10^{-4}$, and
 a trainable retention decay over concept sufficient statistics.
 The main run uses the PoST parameterization for the decay spectrum, with
-$\mathrm{dt}\in[10^{-5},10^{-3}]$, train length $512$, and position-adaptive
+$\mathrm{dt}\in[10^{-6},3\cdot 10^{-5}]$, train length $512$, and position-adaptive
 scaling enabled. The code also exposes a free per-head decay parameterization
 for direct ablation, but this ablation is not part of the main grid.
 Training uses sequence length $512$ with the same curriculum over key-value
