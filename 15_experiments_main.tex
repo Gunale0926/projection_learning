@@ -24,13 +24,22 @@ For CGA, the memory is a concept graph constructed from the prefix.
 
 We run CGA inside the existing PoST/Zoology MQAR framework.
 The comparison is state-equalized against existing efficient sequence mixers.
-For the primary fair run we match the $64$K-state setting used by the PoST/Mamba
-benchmarks:
+We use the same grid as the PoST/Mamba benchmark runs:
 \[
-d_{\rm model}=512,\qquad L=2,\qquad C=92,\qquad d_{\rm state}=64.
+(d_{\rm model},H)\in\{(512,4),(512,8),(256,4)\},
+\qquad
+d_{\rm state}=d_{\rm model}/(2H).
 \]
-The implementation uses four CGA heads, dense concept reads, untied read/write
-address projections, and a learned read logit scale initialized at the standard
+These correspond to target runtime-state budgets
+$d_{\rm model}^2/H\in\{64{\rm K},32{\rm K},16{\rm K}\}$.
+For each grid point, the concept budget $C$ is chosen as the largest integer
+whose CGA state size does not exceed the target budget.
+The resulting concept budgets are $C=96$ for $(512,4)$, $C=55$ for $(512,8)$,
+and $C=47$ for $(256,4)$.
+Each grid point is run with the same three-point learning-rate sweep
+$\{10^{-3.5},10^{-3},10^{-2.5}\}$.
+The implementation uses dense concept reads, untied read/write address
+projections, and a learned read logit scale initialized at the standard
 dot-product attention scale.
 Training uses sequence length $512$ with the same curriculum over key-value
 count as the PoST baselines.
