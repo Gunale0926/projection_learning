@@ -1,15 +1,22 @@
-Online adaptation often treats errors as repairable state errors: update a cache, a local statistic, or an adapter while preserving the current representation.
-We study when this is impossible.
-A runtime representation induces an information partition over cases; any learner whose predictions remain measurable with respect to a fixed partition pays at least the Bayes risk of that partition each round.
-Hence a positive refinement gap yields linear regret against an oracle that can condition on a finer partition.
-We characterize useful refinements as those that change the Bayes action.
-Under log loss, the value of adding a binary distinction $U$ is $I(Y;U\mid\Pi)$; under squared loss it is conditional variance reduction.
-We instantiate the decision as Distinction Graph Machines, a test-time graph-memory layer whose state is an explicit distinction graph: edges are accepted distinctions and nodes carry repairable local memories.
-A held-out guard accepts a refinement only when its penalized empirical gain exceeds the best repair gain.
-The empirical protocol treats DGM as a test-time layer: under a shared CIFAR-10
-source model, we compare frozen inference, entropy minimization, a low-rank
-adapter baseline, a TTT-style rotation-adaptation baseline, and DGM graph-memory
-updates with and without online pseudo-label writes.
-This framing makes the claim deliberately narrow: DGM is not a replacement for
-all backpropagation, but a forward-only graph-memory state with explicit
-distinctions and local repair.
+Many efficient sequence models replace attention with a fixed recurrent state,
+a linear memory, or an inference-time optimizer.  These mechanisms can repair
+values inside the state they already expose, but they do not directly answer a
+structural question: when should a runtime system create a new distinction
+instead of continuing to update the same memory cell?  We formalize this
+repair-versus-refinement decision using information partitions.  If predictions
+remain measurable with respect to a fixed partition, a positive refinement gap
+implies linear regret against an oracle with the missing distinction.  Under
+log loss, the value of adding a distinction is $I(Y;U\mid\Pi)$; under squared
+loss, it is the corresponding conditional-variance reduction.
+We instantiate the decision as Distinction Graph Machines (DGM), a sequence
+layer whose runtime state is an explicit graph of concepts, local memories, and
+accepted distinction edges.  In the language-model setting, DGM is used as an
+attention replacement: each block reads from and writes to a causal dynamic
+graph state rather than attending over all previous tokens.  The empirical
+claim is deliberately focused.  We evaluate DGM on two sequence-modeling tests:
+state-equalized multi-query associative recall, which directly measures
+key-value storage and retrieval, and TinyDGM-LM language modeling, which tests
+whether the same mechanism can serve as a trainable causal mixer.  This frames
+DGM as a theoretically grounded runtime-memory alternative in the comparison
+class of TTT-style expressive state, Mamba/RWKV-style recurrent mixers, and
+attention-based Transformers.

@@ -75,10 +75,15 @@ This paper makes three contributions.
 \begin{itemize}
     \item \textbf{Obstruction.} If predictions remain measurable with respect to a fixed partition, a positive refinement gap gives linear regret against a refined oracle.
     \item \textbf{Value.} Useful distinctions are consequence-sensitive: under uniqueness of Bayes actions, a refinement has zero value exactly when the refined Bayes action was already measurable under the old information; under log loss the value of adding $U$ is $I(Y;U\mid\Pi)$.
-    \item \textbf{Implementation.} We instantiate the decision as Distinction Graph Machines (DGM), a graph-memory data structure whose accepted edges are distinctions and whose nodes carry repairable local memories.
+    \item \textbf{Implementation.} We instantiate the decision as Distinction Graph Machines (DGM), a causal graph-memory sequence mixer whose accepted edges are distinctions and whose nodes carry repairable local memories.
 \end{itemize}
-Experiments are organized around the runtime-layer claim: on CIFAR-10 we compare DGM as a test-time graph-memory layer against a frozen source model, entropy minimization, a low-rank adapter baseline, and a TTT-style rotation-adaptation baseline.
-The older controlled diagnostics are retained only as proof-of-mechanism checks outside the main empirical claim.
+Experiments are organized around the sequence-modeling claim.
+On multi-query associative recall we compare DGM to state-equalized efficient
+mixers such as Mamba, RWKV, GDN, and TTT-style expressive-state models.
+On TinyDGM-LM we replace causal attention with DGM inside a small decoder and
+measure language-model loss, latency, and runtime graph state.
+Older CIFAR, adapter, and readout-only diagnostics are not part of the main
+empirical claim.
 
 We do not claim that DGM dominates unrestricted end-to-end representation learning.
 The obstruction applies to updates that preserve the relevant information map; representation-changing gradient updates are refinements in this model.

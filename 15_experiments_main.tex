@@ -1,74 +1,118 @@
 \section{Experiments}
 \label{sec:main-experiments}
 
-The experiments are now organized around one question: can DGM serve as a
-test-time learning layer, in the same broad comparison class as TTT-style
-self-supervised adaptation and parameter-efficient adapters?
-We therefore use one ML-facing protocol rather than a collection of unrelated
-diagnostics.
+The experimental section is intentionally narrow.
+We evaluate DGM only as a causal sequence mixer, not as a CIFAR classifier,
+not as a readout adapter, and not as a general test-time adaptation wrapper.
+This keeps the empirical claim aligned with the theory:
+DGM should help when a sequence model needs runtime distinctions that determine
+future consequences.
 
-\subsection{CIFAR-10 Test-Time Layer Benchmark}
+We use two experiments.
+The first is a controlled associative-recall benchmark, where the desired
+behavior is exactly to write key-value information and recover it later.
+The second is language modeling from scratch, where the same DGM mixer replaces
+causal attention inside a small decoder.
 
-We train a small CNN source model on CIFAR-10 and evaluate it on a stream of
-test images under clean and corrupted conditions.
-Each method receives the same pretrained source network and the same test
-stream.
-Prediction is measured before any update on the current batch.
-The methods differ only in their runtime state and update rule.
+\subsection{Experiment 1: Multi-Query Associative Recall}
+\label{sec:exp-mqar}
 
+Multi-query associative recall (MQAR) is the cleanest benchmark for the DGM
+claim \citep{arora2024zoology}.
+The input contains key-value pairs and later queries; the model must return the
+corresponding value.
+Unlike CIFAR-style adaptation, MQAR directly tests whether a sequence mixer can
+create, maintain, and retrieve runtime memory.
+It also lets us compare against the same class of efficient language-model
+mixers used in recent sequence-model papers.
+
+We run DGM inside the existing PoST/Zoology MQAR framework.
+The comparison is state-equalized: for each $(d_{\rm model},h)$ pair, the DGM
+concept budget is chosen so that its recurrent memory budget is comparable to
+the existing Mamba, RWKV, GDN, GLA/RetNet, and TTT-style runs.
+Training uses sequence length $512$ with a curriculum over the number of
+key-value pairs.
+Evaluation reports both in-distribution recall and length extrapolation at
+test lengths $512,1024,2048,4096$.
+We report accuracy by slice:
+\[
+(\text{sequence length},\ \text{number of key-value pairs},\ \text{persist vs.
+capacity}).
+\]
+
+\paragraph{Primary baselines.}
+The primary comparison set is:
 \begin{itemize}
-    \item \textbf{Source}: the frozen CNN with no runtime adaptation.
-    \item \textbf{DGM}: the same CNN plus a graph-memory readout built from
-    training embeddings.  The state is a sparse distinction graph with
-    node-local class memories; prediction uses edge-gated retrieval.
-    \item \textbf{DGM-Online}: the same graph-memory layer, additionally
-    updated on the test stream using high-confidence pseudo-labels.  This is a
-    forward-only test-time update: no backward pass is run at inference time.
-    \item \textbf{TTT-Rotation}: a test-time training baseline with an auxiliary
-    rotation-prediction task.  At test time it runs gradient steps on the
-    self-supervised rotation loss before making the supervised prediction.
-    \item \textbf{LoRA-Entropy}: a parameter-efficient test-time adapter
-    baseline.  The source CNN is frozen and a low-rank residual adapter in the
-    embedding space is updated by entropy minimization.
-    \item \textbf{EntropyMin}: a standard online entropy-minimization
-    adaptation baseline on the source model.
+    \item \textbf{Transformer}: the full-attention reference mixer.
+    \item \textbf{Mamba/RWKV/GDN}: recurrent-state efficient sequence mixers.
+    \item \textbf{TTT}: expressive hidden-state sequence modeling through
+    test-time learning style updates.
+    \item \textbf{DGM}: the proposed causal graph-memory mixer with concept
+    creation, local memory repair, and edge-gated retrieval.
 \end{itemize}
 
-This comparison is intentionally narrower than a general CIFAR-10 benchmark.
-It tests runtime learning mechanisms under a matched source architecture:
-TTT changes a small model state by gradient descent, LoRA changes a low-rank
-adapter by gradient descent, and DGM changes an explicit graph-memory state by
-write and refinement operations.
-The main reported metrics are accuracy, negative log likelihood, evaluation
-time, memory state size, accepted concepts, and accepted distinction edges.
-
-The source artifact for this protocol is
-\path{experiments/run_cifar_ttt_dgm_benchmark.py}.
-The intended publication run uses full CIFAR-10 training data, five paired
-seeds, clean plus corruption streams, and the same batch order for every method.
-Small smoke runs are used only to validate implementation; they are not paper
-evidence.
-
-\subsection{What Counts as a Positive Result}
-
-The cleanest positive result is not that DGM beats every gradient-based
-test-time method on every corruption.
-TTT-style methods can be especially strong when the auxiliary task matches the
-corruption.
-The result we need is more specific:
+\paragraph{What counts as success.}
+DGM does not need to beat a fully optimized Transformer on every setting.
+The publication-level positive result is stronger and more specific:
 \begin{enumerate}
-    \item DGM improves over the frozen source model under the same backbone.
-    \item DGM obtains competitive accuracy or log loss on at least one
-    corruption regime while using no inference-time backward pass.
-    \item DGM's runtime state is interpretable as a graph: accepted concepts,
-    accepted edges, and memory bytes must be reported.
-    \item When DGM loses to TTT or LoRA, the paper reports the loss honestly as
-    a tradeoff between forward-only graph-memory updates and gradient-based
-    test-time adaptation.
+    \item DGM matches or exceeds recurrent-state baselines at equal state
+    budget on MQAR recall.
+    \item DGM degrades more gracefully than fixed-state mixers as query length
+    or key-value load increases.
+    \item The result is reported with concept count, edge count, memory budget,
+    and latency, so the gain is not hidden inside unbounded state growth.
 \end{enumerate}
 
-This is the right SOTA-ready framing.
-DGM is not presented as a replacement for all backpropagation.
-It is presented as a runtime graph-memory layer with a different fast-state
-contract from TTT and LoRA: explicit distinctions and local memories instead of
-inner-loop gradient updates.
+The implementation artifact for this experiment is the DGM-only MQAR sweep in
+the PoST framework:
+\path{../PoST_dev/zoology/zoology/experiments/dgm_mqar.py}.
+Existing PoST MQAR runs supply the non-DGM baselines, so this script adds only
+the missing DGM points rather than duplicating the whole benchmark suite.
+
+\subsection{Experiment 2: TinyDGM-LM}
+\label{sec:exp-tiny-dgm-lm}
+
+The second experiment asks whether DGM can be trained as a language-model
+mixer, rather than only solving an artificial retrieval task.
+We train a tiny causal decoder from scratch in two matched variants:
+\begin{itemize}
+    \item \textbf{Tiny Transformer}: standard causal self-attention.
+    \item \textbf{TinyDGM-LM}: the attention sublayer is replaced by a DGM
+    mixer with causal left-to-right graph writes.
+\end{itemize}
+Both models use the same tokenizer, embedding dimension, depth, optimizer,
+training tokens, and evaluation split.
+The reported metrics are validation negative log likelihood, perplexity,
+prefill latency, decode latency, parameter count, concept count, edge count,
+and estimated runtime state size.
+
+This experiment is not meant to be a large-scale SOTA claim.
+Its job is to close the conceptual gap between MQAR and language modeling:
+the same DGM operation that stores and retrieves keys in MQAR must also support
+next-token training as a causal mixer.
+If TinyDGM-LM is competitive with the tiny Transformer at similar parameter
+count while exposing a smaller or more structured runtime state, it justifies
+scaling the architecture in the PoST training stack.
+
+The implementation artifact is
+\path{experiments/train_tiny_dgm_lm.py}.
+For larger runs, the same architecture is registered in PoST as
+\texttt{arch=dgm}; the 180M launch script is
+\path{../PoST_dev/scripts/run_dgm_180m_4b.sh}.
+
+\subsection{Ablations Kept Out of the Main Paper}
+\label{sec:exp-not-in-main}
+
+Earlier drafts included CIFAR test-time adaptation, LoRA-style adapters,
+entropy minimization, readout-only language-model memory, and synthetic
+refinement diagnostics.
+Those experiments are removed from the main claim.
+They test different questions and made the paper look like a collection of
+unrelated mechanisms.
+The final empirical story is therefore:
+\[
+\text{DGM is a dynamic graph-memory sequence mixer.}
+\]
+MQAR tests whether the mixer performs controlled associative recall.
+TinyDGM-LM tests whether the mixer can replace attention in a causal language
+model.

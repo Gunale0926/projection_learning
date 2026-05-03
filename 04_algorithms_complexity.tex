@@ -669,7 +669,7 @@ n_j^+=n_j+\alpha_j(h),
 \end{align*}
 with all unselected counts unchanged. The low-cost hard-update variant is recovered by setting $\alpha_{j^\star}=1$ for the highest-weight concept and $\alpha_j=0$ for all $j\ne j^\star$. Embedding-mean memories and ridge or projection-style local repair are useful implementation variants, but they should be evaluated with calibration metrics before being used for log-loss claims.
 
-\subsection{From DGM to DGM-Embedding}
+\subsection{From DGM to DGM-LM}
 \label{sec:language-dgm}
 
-The generic DGM object above can be attached to many local memories. For sequence models, Appendix~\ref{sec:large-model-training} gives DGM-Embedding as an architectural extension with a read-before-observe protocol and forward-only detached writes.
+The generic DGM object above can be attached to many local memories. For sequence models, Appendix~\ref{sec:large-model-training} gives DGM-LM as an attention-replacement architecture with a causal read-before-write protocol and detached runtime graph updates.

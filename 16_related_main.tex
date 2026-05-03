@@ -1,6 +1,17 @@
 \section{Related Work}
 \label{sec:main-related}
 
+\paragraph{Efficient sequence mixers and expressive state.}
+Transformers use content-addressed attention over previous tokens
+\citep{vaswani2017attention}.
+Mamba, RWKV, GDN, GLA, RetNet, and related models replace attention with
+efficient recurrent or linear state updates
+\citep{gu2023mamba,peng2023rwkv,yang2025gated,yang2024gated,sun2023retentive}.
+TTT-style models instead make the hidden state expressive by running a
+learned update rule at test time \citep{sun2025learning}.
+Our experiments place DGM in this comparison class: DGM is a causal mixer whose
+state is a runtime graph of concepts, memories, and distinction edges.
+
 \paragraph{Repair without refinement.}
 Cache language models, $k$NN-LMs, retrieval-augmented systems, fast weights, online ridge or RLS memories, adapters, LoRA, and test-time adaptation repair state inside a representation or optimize a surrogate at inference time \citep{grave2017improving,khandelwal2020generalization,lewis2020retrieval,ba2016using,schlag2021linear,crammer2006online,houlsby2019parameter,hu2022lora,sun2020test,wang2021tent}.
 They address $\Delta_{\rm repair}$; our obstruction asks when fixed-information repair is structurally insufficient.

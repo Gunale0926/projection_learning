@@ -6,19 +6,19 @@
 \item Full backpropagation through the representation is outside the repair-only lower bound.
 \item Soft-DGM requires candidate recall and margin assumptions to approximate the hard route.
 \item Held-out guarantees require fresh or reusable validation data rather than adaptive reuse of the same scoring buffer.
-\item The experiment is a test-time layer benchmark, not a broad CIFAR-10 SOTA claim.
+\item The experiments are sequence-modeling tests, not a complete large-scale language-model SOTA claim.
 \end{itemize}
-The CIFAR-10 test-time layer benchmark is deliberately narrow: it compares
-runtime update mechanisms under a shared source architecture.
-TTT and LoRA-style baselines are allowed to use inference-time backpropagation;
-DGM instead updates an explicit graph-memory state.
-When DGM loses to gradient-based adaptation, that is a real systems and
+The empirical claim is deliberately narrow: DGM is evaluated as a causal
+sequence mixer on MQAR and small language modeling.
+MQAR should show whether the graph state can write and retrieve key-value
+information under matched state budgets.
+TinyDGM-LM should show whether the same mechanism can replace attention in a
+trainable decoder.
+If DGM loses to optimized recurrent mixers, that is a real systems and
 algorithmic gap rather than a wording problem.
-The next empirical step is a budget-matched multi-seed run with equal backbone,
-batch order, corruption streams, and reported memory-latency costs.
-The method also needs better policies for merging, eviction, nonlinear
-distinctions, and adaptive validation if it is to be used as a long-running
-system rather than a diagnostic implementation.
+The method still needs fused kernels, better budget policies, merge and
+eviction rules, nonlinear distinctions, and distributed concept sharding before
+it can be treated as a large-model systems result.
 
 The main point is the separation between two runtime operations.
 Repair improves predictions inside the current quotient; refinement changes the quotient when consequences reveal a missing distinction.

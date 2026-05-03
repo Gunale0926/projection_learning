@@ -1,6 +1,0 @@
-m_score,true_refinement_recall,false_refinement_rate,spurious_distinction_acceptance,repair_decision_accuracy,refine_cell_repair_error
-32,0.95625,0.00125,0.000625,0.99875,0.01125
-64,0.99125,0.0,0.0,1.0,0.00125
-128,1.0,0.0,0.0,1.0,0.0
-256,1.0,0.0,0.0,1.0,0.0
-512,1.0,0.0,0.0,1.0,0.0
