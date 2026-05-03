@@ -17,10 +17,11 @@ language-model head are otherwise standard decoder components.
 
 \subsection{Causal concept attention}
 
-At layer $\ell$, token $t$ produces read query, write key, and write value
-projections:
+At layer $\ell$, token $t$ produces read query, write key, write value, write
+gate, and retention-decay projections:
 \[
-q_t=Q_\ell x_t,\qquad k_t=K_\ell x_t,\qquad v_t=V_\ell x_t.
+q_t=Q_\ell x_t,\qquad k_t=K_\ell x_t,\qquad v_t=V_\ell x_t,\qquad
+g_t=\sigma(w_g^\top x_t+b_g).
 \]
 The layer-local CGA state is a graph
 \[
@@ -56,7 +57,7 @@ The update order is the same during training and autoregressive inference:
 \rightarrow
 \text{emit }y_t
 \rightarrow
-\text{write }(k_t,v_t)
+\text{decay and write }(k_t,v_t,g_t)
 \rightarrow
 \text{repair or refine }\calG_{t+1}^\ell .
 \]
@@ -64,8 +65,12 @@ This prevents a token from reading its own write.
 A repair updates an existing concept's sufficient statistics.
 A refinement creates a new concept and optional distinction edges.
 The MQAR implementation uses delayed writes so that a key token can bind to the
-following value token; language-model variants can use the same default or a
-learned write gate.
+following value token.
+Both MQAR and language-model variants use a learned write gate.
+For general text, the same update includes a trainable retention factor
+$\rho_h=\exp(-\sum_t\lambda_{th})$ over old concept statistics, with the
+default PoST-style ordered decay parameterization and an optional free per-head
+parameterization for ablation.
 
 \subsection{Training boundary}
 
@@ -79,12 +84,17 @@ The graph mutation itself is detached:
 \left(
 \operatorname{stopgrad}(\calG_t^\ell),
 \operatorname{stopgrad}(k_t),
-v_t
+v_t,
+g_t,
+\rho_t
 \right).
 \]
 Thus CGA-LM is not a backprop-free language model.
 It is an attention replacement whose fast state is updated by a forward-time
 concept-graph rule while the slow projections are trained end-to-end.
+The gated value content and retention factors remain differentiable through
+future reads; routing, allocation, counts, anchors, and distinction edges are
+detached.
 
 \begin{algorithm}[H]
 \caption{\textsc{CGALayerForward}}
@@ -95,9 +105,9 @@ concept-graph rule while the slow projections are trained end-to-end.
 \State project block queries, write keys, and values
 \State read all active concepts with continuous attention weights
 \State emit block outputs through the output projection
-\State form delayed or gated write pairs
+\State form delayed write pairs, write gates, and retention factors
 \State assign writes to compatible concepts or proposed new concepts
-\State scatter-add sufficient statistics and commit graph updates
+\State decay old concept statistics, scatter-add new statistics, and commit graph updates
 \EndFor
 \State \Return contextualized hidden states
 \end{algorithmic}

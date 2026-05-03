@@ -34,13 +34,18 @@ These correspond to target runtime-state budgets
 $d_{\rm model}^2/H\in\{64{\rm K},32{\rm K},16{\rm K}\}$.
 For each grid point, the concept budget $C$ is chosen as the largest integer
 whose CGA state size does not exceed the target budget.
-The resulting concept budgets are $C=96$ for $(512,4)$, $C=55$ for $(512,8)$,
+The resulting concept budgets are $C=96$ for $(512,4)$, $C=54$ for $(512,8)$,
 and $C=47$ for $(256,4)$.
 Each grid point is run with the same three-point learning-rate sweep
 $\{10^{-3.5},10^{-3},10^{-2.5}\}$.
 The implementation uses dense concept reads, untied read/write address
-projections, and a learned read logit scale initialized at the standard
-dot-product attention scale.
+projections, a learned read logit scale initialized at the standard dot-product
+attention scale, a learned write gate with sparsity coefficient $10^{-4}$, and
+a trainable retention decay over concept sufficient statistics.
+The main run uses the PoST parameterization for the decay spectrum, with
+$\mathrm{dt}\in[10^{-5},10^{-3}]$, train length $512$, and position-adaptive
+scaling enabled. The code also exposes a free per-head decay parameterization
+for direct ablation, but this ablation is not part of the main grid.
 Training uses sequence length $512$ with the same curriculum over key-value
 count as the PoST baselines.
 Evaluation reports the existing persist and capacity slices at lengths
@@ -67,8 +72,15 @@ The important diagnostic slices are:
 \]
 A positive result is not merely low training loss.
 CGA should maintain recall when the query distance grows, expose a compact
-runtime state, and report latency and concept count so that improvements are
-not hidden inside unbounded memory.
+runtime state, and report latency and concept count so that improvements are not
+hidden inside unbounded memory.
+We additionally log the mean write gate, valid-token write gate, write mass per
+token, assignment rate, concept saturation, edge count, read scale, mean
+retention, and mean decay rate. These diagnostics are part of the main run
+because the central failure mode for CGA on MQAR is not only optimization loss,
+but whether useful key-value writes can be selected without filling the concept
+budget with random non-query tokens and whether the retention time constants
+are compatible with the sequence length.
 
 The implementation artifact is
 \path{../PoST_dev/zoology/zoology/experiments/cga_mqar.py}.
@@ -88,7 +100,7 @@ Both models should use the same tokenizer, depth, width, optimizer, training
 tokens, and evaluation split.
 The reported metrics are validation negative log likelihood, perplexity,
 prefill latency, decode latency, parameter count, concept count, edge count,
-and runtime state size.
+write-gate statistics, retention statistics, and runtime state size.
 
 The language-model result is not meant to be a large-scale SOTA claim in this
 draft.

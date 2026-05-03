@@ -14,7 +14,8 @@ E_b
 \]
 Here $a_j$ is a stable anchor for concept identity, $c_j$ is a retrieval
 address, $m_j$ is a value memory, $n_j$ is a count or sufficient statistic, and
-$E_b$ is an optional set of distinction edges.
+$E_b$ is an optional set of distinction edges. In the multi-head
+implementation, $c_j,m_j,n_j$ are head-wise sufficient statistics.
 The concept budget $C$ is a model hyperparameter analogous to a recurrent-state
 budget.
 Unlike token attention, $N_b$ need not grow with the sequence length.
@@ -40,8 +41,30 @@ are not the core algorithm.
 
 \paragraph{Concept graph writes.}
 CGA uses a read-before-write causal protocol.
-After producing $z_t$, the layer forms a write key $k_t$ and value $v_t$ from
-the token representation.
+After producing $z_t$, the layer forms a write key $k_t$, value $v_t$, and a
+learned write gate $g_t\in(0,1)$ from the token representation:
+\[
+g_t=\sigma(w_g^\top x_t+b_g).
+\]
+For language modeling, CGA also uses a trainable retention decay over concept
+sufficient statistics. For head $h$,
+\[
+\lambda_{th}
+=
+\exp(A_h)\,
+\operatorname{softplus}(u_h^\top x_t+b_h)\,r_{th},
+\qquad
+\rho_{bh}=\exp\left(-\sum_{t\in b}\lambda_{th}\right),
+\]
+where $r_{th}=t^{-\alpha_h}$ when position-adaptive scaling is enabled and
+$r_{th}=1$ otherwise. The default parameterization of $A_h$ is PoST-style:
+\[
+A_h=A_0+\sum_{i<h}\operatorname{softplus}(\Delta_i),
+\]
+which gives ordered decay spectra across heads. The implementation also exposes
+a free per-head $A_h$ parameterization for ablations. This decay plays the same
+role as an $A$ or retention gate in Mamba-style state-space layers, but it acts
+on concept sufficient statistics rather than on a fixed token-indexed state.
 In MQAR we use a one-token delayed write key so that a key token can bind to the
 following value token:
 \[
@@ -49,22 +72,31 @@ k^{\rm write}_t = k_{t-1},
 \qquad
 v^{\rm write}_t = v_t.
 \]
+The gate is not supervised by MQAR labels. It is trained only through the task
+loss and a small sparsity penalty $\lambda_g T^{-1}\sum_t g_t$.
 The runtime update is local.
 If the write key is compatible with an existing concept, CGA repairs that
 concept by adding sufficient statistics:
 \[
-n_j \leftarrow n_j + w_t,\qquad
-s^k_j \leftarrow s^k_j + w_t k^{\rm write}_t,\qquad
-s^v_j \leftarrow s^v_j + w_t v^{\rm write}_t,
+n_{jh} \leftarrow \operatorname{sg}(\rho_h)n_{jh} + \operatorname{sg}(g_t),\qquad
+s^k_{jh} \leftarrow \operatorname{sg}(\rho_h)s^k_{jh} + \operatorname{sg}(g_t) k^{\rm write}_{th},
 \]
 \[
-c_j \leftarrow \operatorname{normalize}(s^k_j/n_j),
+s^v_{jh} \leftarrow \rho_h s^v_{jh} + g_t v^{\rm write}_{th},
 \qquad
-m_j \leftarrow s^v_j/n_j .
+c_{jh} \leftarrow \operatorname{normalize}(s^k_{jh}/n_{jh}),
+\qquad
+m_{jh} \leftarrow s^v_{jh}/n_{jh}.
 \]
+Here $\operatorname{sg}$ denotes stop-gradient.
+The write gate and retention decay therefore receive gradient through future
+concept reads of the value payload, while routing, counts, anchors, and edges
+remain detached graph state.
 If no compatible concept exists and capacity remains, CGA creates a new concept
 with anchor $a_{N+1}=k^{\rm write}_t$ and initializes its sufficient
-statistics.
+statistics. Candidate creation scores are also multiplied by
+$\operatorname{sg}(g_t)$, so low-gate observations do not compete strongly for
+new concept slots.
 Within a block, observations are accumulated with scatter-add operations and
 committed at the block boundary.
 This makes the update scan-friendly: repair statistics form commutative monoids,
@@ -111,13 +143,15 @@ concepts that aggregate and refine token evidence.
 \paragraph{Backpropagation boundary.}
 CGA trains its slow parameters end-to-end:
 embeddings, read/write projections, output projections, and the language-model
-head receive gradient from the task loss.
+head receive gradient from the task loss. The write gate is also a slow neural
+parameter trained by the task loss and its sparsity penalty.
 The runtime graph mutation itself is not backpropagated through as a recurrent
 state trajectory.
 Routing decisions, concept allocation, counts, anchors, and edges are detached
 fast state.
-The value content written into concepts may remain differentiable so that a
-future concept read can train the value projection.
+The gated value content written into concepts remains differentiable so that a
+future concept read can train the value projection, the write gate, and the
+retention decay.
 This is the same high-level separation used by many stateful layers: slow
 parameters are trained by backpropagation, while fast memory changes during the
 forward pass by an algorithmic update.
@@ -132,10 +166,10 @@ forward pass by an algorithmic update.
     \State Project $q,k,v$ for all tokens in the block.
     \State Compute dense attention from block queries to active concept keys.
     \State Emit $z_t=\sum_j\alpha_{tj}m_j$ for all $t\in[s,e)$.
-    \State Form delayed write pairs $(k^{\rm write}_t,v^{\rm write}_t)$.
-    \State Propose new concepts for low-similarity writes.
-    \State Assign writes to proposed or existing concepts.
-    \State Scatter-add count, key, and value sufficient statistics.
+    \State Form delayed write pairs $(k^{\rm write}_t,v^{\rm write}_t)$, gates $g_t$, and retention $\rho_h$.
+    \State Propose new concepts using gate-weighted novelty scores.
+    \State Assign gated writes to proposed or existing concepts.
+    \State Decay old sufficient statistics and scatter-add gated count, key, and value updates.
     \State Commit concept repairs and accepted concept creations to $\calG$.
 \EndFor
 \State Return output projection of $(z_1,\ldots,z_T)$.

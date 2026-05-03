@@ -25,8 +25,9 @@ graph of concepts.
 Each concept has an address, a value memory, sufficient statistics, and optional
 distinction edges to other concepts.
 As tokens arrive, the graph is updated by local write rules: compatible
-observations repair an existing concept, while incompatible observations create
-or refine concepts.
+observations repair an existing concept, old concept statistics decay through
+trainable retention factors, and incompatible observations create or refine
+concepts.
 Thus the layer is attention-like in its readout but graph-memory-like in its
 state:
 \[
@@ -43,8 +44,9 @@ The potential advantage is that the number of memory slots is a concept budget
 $C$ rather than the sequence length $T$, giving a read cost of $O(TC)$ when
 $C\ll T$.
 More importantly, the memory slots are updateable runtime objects.
-They can aggregate repeated evidence, preserve key-value bindings, and carry
-local distinction structure across blocks.
+They can aggregate repeated evidence, preserve key-value bindings, forget stale
+context through learned retention, and carry local distinction structure across
+blocks.
 This makes CGA a candidate drop-in replacement for attention variants whose
 read can be interpreted as content-addressed retrieval: dense attention, sparse
 attention, grouped-query attention, sliding-window attention with global memory,
@@ -116,7 +118,8 @@ The paper makes three contributions.
 \begin{itemize}
     \item \textbf{Architecture.} We introduce Concept Graph Attention, a causal
     mixer that reads continuously from a dynamic concept graph and updates that
-    graph with local non-BPTT memory operations.
+    graph with gated writes, trainable retention decay, and local forward-time
+    memory operations.
     \item \textbf{Theory.} We formalize repair versus refinement for runtime
     information structures and relate concept creation to consequence-valued
     information gains.

@@ -5,6 +5,7 @@
 \item The theory is about explicit information structures or restricted hard-route classes.
 \item Full backpropagation through the representation is outside the repair-only lower bound.
 \item CGA's dense read is stable at small concept budgets, but large concept graphs will need sparse or fused kernels.
+\item The current retention decay is trainable and PoST-parameterized by default, but its best time-scale allocation for large language modeling remains empirical.
 \item Held-out guarantees require fresh or reusable validation data rather than adaptive reuse of the same scoring buffer.
 \item The experiments are sequence-modeling tests, not a complete large-scale language-model SOTA claim.
 \end{itemize}
@@ -17,8 +18,9 @@ trainable decoder.
 If CGA loses to optimized recurrent mixers, that is a real systems and
 algorithmic gap rather than a wording problem.
 The method still needs fused kernels, better budget policies, merge and
-eviction rules, nonlinear distinctions, and distributed concept sharding before
-it can be treated as a large-model systems result.
+eviction rules, retention-time-scale studies, nonlinear distinctions, and
+distributed concept sharding before it can be treated as a large-model systems
+result.
 
 The main point is the separation between two runtime operations.
 Repair improves predictions inside the current quotient; refinement changes the quotient when consequences reveal a missing distinction.
