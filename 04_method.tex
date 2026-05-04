@@ -288,19 +288,21 @@ Assume $L\in[0,1]$ and $\mathsf A$ is finite. Let $\widehat R_L(\Pi)$ be the emp
 Then with probability at least $1-\delta$,
 \begin{align*}
 R_L(\widehat\Pi)+\lambda\abs{\widehat\Pi}
-\le
+&\le
 \min_{\Pi\in\mathfrak P_B(\calU)}
 \left\{
 R_L(\Pi)+\lambda\abs{\Pi}
 \right\}
-+2\sqrt{
+\\
+&\quad
++2\left(
 \frac{
 B\log\abs{\calU}
 +m_0 2^B\log\abs{\mathsf A}
 +\log(B+1)
 +\log(2/\delta)}
 {2n}
-}.
+\right)^{1/2}.
 \end{align*}
 \end{theorem}
 
@@ -310,10 +312,7 @@ For any fixed sequence of at most $B$ distinctions and any assignment of actions
 
 \begin{theorem}[Local-split refinement oracle inequality]
 \label{thm:local-oracle-refinement:informal}
-Let $\mathfrak P_B^{\mathrm{loc}}(\calU)$ be the set of partitions reachable from an initial partition $\Pi_0$ with $m_0$ atoms by at most $B$ local splits, where each split chooses one current atom and one distinction $U\in\calU$ and applies the split only inside that atom.
-Assume $L\in[0,1]$ and $\mathsf A$ is finite.
-Let $\widehat\Pi$ minimize empirical penalized risk $\widehat R_L(\Pi)+\lambda|\Pi|$ over $\mathfrak P_B^{\mathrm{loc}}(\calU)$ on $n$ iid validation samples.
-Then, with probability at least $1-\delta$,
+Let $\mathfrak P_B^{\mathrm{loc}}(\calU)$ be the set of partitions reachable from an initial partition $\Pi_0$ with $m_0$ atoms by at most $B$ local splits, where each split chooses one current atom and one distinction $U\in\calU$ and applies the split only inside that atom. Assume $L\in[0,1]$ and $\mathsf A$ is finite. Let $\widehat\Pi$ minimize empirical penalized risk $\widehat R_L(\Pi)+\lambda|\Pi|$ over $\mathfrak P_B^{\mathrm{loc}}(\calU)$ on $n$ iid validation samples. Then, with probability at least $1-\delta$,
 \begin{align*}
 R_L(\widehat \Pi)+\lambda |\widehat \Pi|
 &\le
@@ -335,9 +334,5 @@ B\log(m_0+B)
 \end{theorem}
 
 \begin{proof}
-Every local-split partition has at most $m_0+B$ atoms.
-For a sequence length at most $B$, there are at most $|\calU|^B$ choices of distinctions and at most $(m_0+B)^B$ choices of current atoms to split, since the number of atoms never exceeds $m_0+B$.
-For any resulting partition, the number of atomwise action assignments is at most $|\mathsf A|^{m_0+B}$.
-Hoeffding's inequality and a union bound over sequence lengths, local split sequences, and action assignments give a uniform deviation with the square-root term without the leading factor $2$.
-The empirical-minimizer argument then adds the second copy of the deviation.
+Every local-split partition has at most $m_0+B$ atoms. For a sequence length at most $B$, there are at most $|\calU|^B$ choices of distinctions and at most $(m_0+B)^B$ choices of current atoms to split, since the number of atoms never exceeds $m_0+B$. For any resulting partition, the number of atomwise action assignments is at most $|\mathsf A|^{m_0+B}$. Hoeffding's inequality and a union bound over sequence lengths, local split sequences, and action assignments give a uniform deviation with the square-root term without the leading factor $2$. The empirical-minimizer argument then adds the second copy of the deviation.
 \end{proof}

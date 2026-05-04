@@ -19,8 +19,7 @@ Theorem~\ref{thm:repair-only-regret} states that any learner whose predictions r
 \begin{align*}
 T\left(R_L(\Pi)-R_L(\Pi^\star)\right)
 \end{align*}
-against a refined oracle $\Pi^\star$. Thus a positive refinement gap is not just a pointwise contradiction; it is a sequential lower bound.
-Corollary~\ref{cor:fixed-information-gradient-repair} clarifies the relationship to backpropagation: gradient updates are repair-only only when they update parameters downstream of a fixed information map. Full backpropagation through the representation can change the information structure and is not covered by this lower bound.
+against a refined oracle $\Pi^\star$. Thus a positive refinement gap is not just a pointwise contradiction; it is a sequential lower bound. Corollary~\ref{cor:fixed-information-gradient-repair} clarifies the relationship to backpropagation: gradient updates are repair-only only when they update parameters downstream of a fixed information map. Full backpropagation through the representation can change the information structure and is not covered by this lower bound.
 
 \paragraph{3. Useful refinements change the Bayes action.}
 Theorem~\ref{thm:loss-relevant-refinement:informal} states that, under uniqueness of the refined Bayes action, a refinement has zero value exactly when the refined action is already measurable under the old information, in the classical decision-theoretic sense of information value \citep{blackwell1953equivalent,berger1985statistical}. For finite $Y$ under log loss, Theorem~\ref{thm:log-value:informal} sharpens this to

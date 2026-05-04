@@ -1,33 +1,28 @@
 \section{Introduction}
 \label{sec:main-intro}
 
-Attention can be read as a memory operation.
-Given a prefix, a Transformer stores one key-value entry per token and later
-queries retrieve a weighted combination of those token values.
-This token table is powerful because the read is continuous and
-differentiable, but it fixes the unit of memory: the model attends to token
-events.
-Long-context architectures have explored recurrent states, state-space models,
-linear memories, sparse attention, and inference-time optimizers.
-These approaches change the systems tradeoff, but the central memory question
-remains: can the model attend over a smaller set of learned runtime concepts
-instead of attending over every previous token?
+A sequence model is not only an optimizer; it is an information structure. At any prediction time, its runtime state decides which past distinctions are still observable. If two histories induce the same state, every downstream predictor that factors through that state must treat them the same, no matter how much compute is spent repairing the local payload. This is the first-principles obstruction behind the paper: some errors are payload errors, and some errors are information errors. Payload errors can be repaired inside the current representation. Information errors require a refinement of the state space.
 
-We propose \emph{Concept Graph Attention} (CGA).
+This distinction is easy to hide in neural notation. A cache update, a recurrent update, an adapter step, and a test-time optimizer all change numbers. The question is whether they also change the quotient of histories that the predictor is allowed to condition on. We therefore start from a decision-theoretic model. A runtime representation induces a partition $\Pi$ of cases. A repair update changes the action or memory attached to each atom of $\Pi$ while preserving the partition. A refinement joins $\Pi$ with a new prediction-time observable distinction $U$. The central decomposition is
+\[
+R_L(f)-R_L(\Pi^\star)
+=
+\underbrace{R_L(f)-R_L(\Pi)}_{\text{repair gap}}
++
+\underbrace{R_L(\Pi)-R_L(\Pi^\star)}_{\text{refinement gap}},
+\]
+for any refined comparator $\Pi^\star$. The repair gap is the residual error of the current payload at fixed information. The refinement gap is the value of changing what the state can distinguish. If the second term is positive, a repair-only learner pays that gap every round in expectation.
+
+The theory also says which distinctions matter. A new bit is not valuable because it is balanced, surprising, or geometrically clean. It is valuable when it changes the Bayes action. For log loss, the value of splitting $\Pi$ by $U$ is exactly the conditional mutual information $I(Y;U\mid\Pi)$. For squared loss, it is the conditional mean-separation energy created by the split. These identities give the paper's guiding rule: propose distinctions broadly, but accept them only when a held-out, cost-penalized refinement gain beats the best repair gain by a statistical guard.
+
+Concept Graph Attention (CGA) is the sequence-modeling implementation of this refine-or-repair view. Fully general DGM-style memory can create new concepts and edges online. For large-scale language modeling, that raises systems and evaluation questions that obscure the core architectural test. CGA therefore uses a fixed concept budget: each layer has $C$ concept identities, and the online state is the value memory attached to those identities. The fixed bank is not a retreat from the theory; it is a controlled capacity model. The question becomes whether a bounded set of runtime concepts can serve as the memory basis for attention, replacing the token-indexed table while preserving a forward-time learning mechanism.
+
 CGA keeps the familiar attention read,
 \[
 \operatorname{read}(q_t)=
 \sum_{j=1}^{C}\operatorname{softmax}_j(s(q_t,c_{tj}))\,m_{tj},
 \]
-but changes the objects being read.
-Instead of a token-indexed key-value table, each layer maintains a fixed bank
-of $C$ concept slots.
-Each slot has a fixed concept identity and a value memory $m_{tj}$ that evolves
-causally over the prefix.
-The read is attention over concepts; the write is a gated
-continuous update into the concept bank.
-Thus the layer is attention-like in its readout but recurrent-memory-like in
-its state:
+but changes the objects being read. Instead of storing one key-value entry per previous token, each layer stores value contents over fixed concept slots. Tokens read from these slots with attention-style weights and write into them with gated continuous updates and trainable retention. Thus the layer is attention-like in its readout but recurrent-memory-like in its state:
 \[
 \begin{aligned}
 \text{Transformer: tokens}&\rightarrow\text{attention over token memory},\\
@@ -36,35 +31,14 @@ its state:
 \end{aligned}
 \]
 
-The fixed-bank design is deliberate.
-In language modeling and long synthetic recall, the data stream is effectively
-unbounded; a useful memory layer should eventually use its available capacity.
-CGA makes the capacity explicit from the first step and focuses the model on
-the harder problem:
-which concepts should be read and how should each token update them?
-The number of memory slots is a concept budget $C$ rather than the context
-length $T$, giving a dense read cost of $O(TC)$ when $C\ll T$.
-At a fixed runtime-state budget, CGA can trade the number of concept slots
-against the per-slot value width.
-
-This gives a different answer to the same question that motivates
-test-time-training sequence layers \citep{sun2025learning}.
-TTT layers make the hidden state a small model and update that model by a
-self-supervised learning step on the test sequence.
-CGA instead makes the hidden state a concept-indexed memory and updates that
-memory by a forward-only continuous write rule.
-Both mechanisms let a model adapt to information observed at inference time.
-The difference is the object being learned:
+This gives a different answer to the question that also motivates test-time-training sequence layers \citep{sun2025learning}. TTT layers make the hidden state a small model and update that model by a self-supervised learning step on the test sequence. CGA instead makes the hidden state a concept-indexed memory and updates that memory by a forward-only write rule:
 \[
 \begin{array}{ll}
 \text{TTT:} & \text{test-time learning of hidden model weights},\\
 \text{CGA:} & \text{test-time learning of concept-memory contents}.
 \end{array}
 \]
-We use ``learning'' here in the operational stateful sense: future predictions
-condition on a state estimated from the observed prefix.
-CGA does not update the global model parameters during inference and does not
-run an inference-time backward pass.
+CGA does not update global model parameters during inference and does not run an inference-time backward pass. Its fast adaptation is the causal update of concept memory.
 
 \begin{figure}[t]
 \centering
@@ -96,37 +70,16 @@ run an inference-time backward pass.
 }
 \node[lab,align=center,text width=3.0cm] at (5.05,-1.05) {read over fixed concepts; writes update value memory};
 \end{tikzpicture}
-\caption{CGA changes the memory object of attention. Standard attention reads
-from token memory. CGA performs a continuous attention read over a fixed bank of
-concept identities whose value memories are updated causally.}
+\caption{CGA changes the memory object of attention. Standard attention reads from token memory. CGA performs a continuous attention read over fixed concept identities whose value memories are updated causally.}
 \label{fig:cga-vs-token-attention}
 \end{figure}
 
-This paper makes three contributions.
+This paper makes four contributions.
 \begin{itemize}
-    \item \textbf{Architecture.} We introduce fixed-bank Concept Graph
-    Attention, a causal mixer with test-time concept learning: it reads
-    continuously from concept slots and updates them with gated writes and
-    trainable retention decay while model weights stay fixed at inference time.
-    \item \textbf{Theory.} We formalize CGA as attention over an online
-    concept value memory, specifying the state space, causal read/write
-    equations, state-size scaling, block-scan update structure, and training
-    boundary needed to compare it to recurrent, attention-like, and TTT-style
-    sequence mixers.
-    \item \textbf{Evaluation.} We implement CGA in the PoST/Zoology framework
-    and evaluate it as an attention-like sequence mixer on two standard
-    tracks: state-equalized multi-query associative recall and matched
-    language-model pretraining with zero-shot downstream evaluation at
-    180M--440M scale.
+    \item \textbf{First-principles theory.} We formalize runtime memory as an information partition and prove that repair-only learners suffer linear regret whenever the missing distinction has positive Bayes-risk value.
+    \item \textbf{Value of distinction.} We characterize useful refinements by consequence value, including the log-loss identity $V_{\log}(U\mid\Pi)=I(Y;U\mid\Pi)$, the squared-loss variance identity, and a guarded empirical acceptance rule that compares refinement against repair.
+    \item \textbf{Architecture.} We introduce fixed-bank CGA as a scalable sequence-modeling specialization of DGM: attention reads over concept identities, while causal writes update bounded concept value memory at inference time.
+    \item \textbf{Evaluation.} We implement CGA in the PoST/Zoology framework and evaluate it on state-equalized multi-query associative recall and matched language-model pretraining with zero-shot downstream evaluation.
 \end{itemize}
 
-The claim boundary is important.
-CGA is not presented as a new tokenizer, loss, or inference-time optimizer.
-It is a method proposal for changing the memory basis of attention from tokens
-to fixed runtime concepts.
-The current implementation trains slow projections by backpropagation, while
-the concept-memory update itself is a forward-time operation.
-This places CGA between attention, external memory, and efficient recurrent
-mixers: it uses differentiable content-addressed reads like attention, but the
-state being read is a compact, updateable concept memory rather than the entire
-prefix token table or a set of test-time-trained hidden weights.
+The claim boundary is important. CGA is not a new tokenizer, loss, or inference-time optimizer. It is a method for changing the memory basis of attention from tokens to runtime concepts. The fixed-bank version in the main experiments deliberately removes online slot allocation so the architectural question is isolated. The appendix restores the broader DGM theory: minimal joins, finite-sample refinement scores, graph data-structure costs, local repair, projection memory, and formal proofs.

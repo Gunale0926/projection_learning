@@ -75,8 +75,7 @@ Let $N$ be a finite candidate set and let
 \begin{align*}
 \alpha_j=\frac{\exp(-d_j/T)\chi_j}{\sum_{r\in N}\exp(-d_r/T)\chi_r}.
 \end{align*}
-If $j^\star_{\mathrm{hard}}\notin N$, where $j^\star_{\mathrm{hard}}$ is the exact hard-route selected concept, then this sparse soft read gives no guarantee for the omitted hard-route concept. Otherwise, assume $j^\star=j^\star_{\mathrm{hard}}\in N$.
-For an eligible competitor set $E\subseteq N\setminus\{j^\star\}$, if $d_j-d_{j^\star}\ge\delta>0$ and $\chi_j/\chi_{j^\star}\le C_E<\infty$ for all $j\in E$, then
+If $j^\star_{\mathrm{hard}}\notin N$, where $j^\star_{\mathrm{hard}}$ is the exact hard-route selected concept, then this sparse soft read gives no guarantee for the omitted hard-route concept. Otherwise, assume $j^\star=j^\star_{\mathrm{hard}}\in N$. For an eligible competitor set $E\subseteq N\setminus\{j^\star\}$, if $d_j-d_{j^\star}\ge\delta>0$ and $\chi_j/\chi_{j^\star}\le C_E<\infty$ for all $j\in E$, then
 \begin{align*}
 \sum_{j\in E}\alpha_j\le C_E\abs{E}\exp(-\delta/T).
 \end{align*}
@@ -417,8 +416,7 @@ W\phi_\calP(\omega)=We_i=w_i=f(\omega).
 Let $\calP=\{B_1,\ldots,B_n\}$ and let $\omega,\omega'\in B_i$. Suppose $v(\omega)\ne v(\omega')$. Let $k=\phi_\calP(\omega)=\phi_\calP(\omega')=e_i$. If a memory $W$ has already committed $We_i=v(\omega)$, then the evidence $We_i=v(\omega')$ has innovation $z=0$ relative to the old key span and residual $e\ne0$.
 \end{theorem}
 \begin{proof}
-Here the stored-key matrix $K$ is oriented with stored keys as columns, so $KK^\dagger$ is the orthogonal projector onto their column span.
-Since $\omega,\omega'\in B_i$,
+Here the stored-key matrix $K$ is oriented with stored keys as columns, so $KK^\dagger$ is the orthogonal projector onto their column span. Since $\omega,\omega'\in B_i$,
 \begin{align*}
 \phi_\calP(\omega)=\phi_\calP(\omega')=e_i.
 \end{align*}

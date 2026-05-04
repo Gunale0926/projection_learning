@@ -15,10 +15,4 @@ CGA's dense read avoids sparse candidate-recall assumptions at small concept bud
 
 The large-model layer is an architectural path rather than a completed scaling theorem. It gives a trainable read path, a gated write path, a trainable retention decay, and a default budget policy with explicit complexity, but it does not prove optimization guarantees for deep nonconvex backbones, nor does it solve distributed systems issues such as load balancing or stale concept shards. Budget maintenance is also outside the formal refinement theorem: merge, eviction, decay, and compression may discard distinctions, so their effect must be evaluated as a resource-management approximation.
 
-The experiments are a focused sequence-modeling benchmark suite, not a full
-large-model scaling result.
-They should not be read as evidence that CGA already dominates optimized
-attention, Mamba, RWKV, GDN, or TTT implementations at production scale.
-A complete empirical evaluation should include state-equalized MQAR, language
-modeling at multiple parameter and token budgets, latency and memory curves,
-and ablations of repair-only, refine-only, edge-free, and edge-gated variants.
+The experiments are a focused sequence-modeling benchmark suite, not a full large-model scaling result. They should not be read as evidence that CGA already dominates optimized attention, Mamba, RWKV, GDN, or TTT implementations at production scale. A complete empirical evaluation should include state-equalized MQAR, language modeling at multiple parameter and token budgets, latency and memory curves, and ablations of repair-only, refine-only, edge-free, and edge-gated variants.

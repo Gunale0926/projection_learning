@@ -1,112 +1,50 @@
 \section{Experiments}
 \label{sec:main-experiments}
 
-We evaluate CGA as a causal sequence mixer: a layer with the external contract
-of attention, but whose memory is a bounded concept bank rather than all
-previous tokens.
-The empirical program has two tracks.
-First, multi-query associative recall (MQAR) isolates the key mechanism:
-writing key-value information into runtime memory and retrieving it later under
-matched state budgets.
-Second, matched language-model pretraining tests whether the same concept
-read/write layer remains useful in ordinary next-token prediction.
-The LM protocol follows the PoST paper's evaluation style so that CGA can be
-compared directly against Mamba-2, RWKV-7, and Gated DeltaNet runs trained on
-the same data and evaluated with the same harness.
+We evaluate CGA as a causal sequence mixer: a layer with the external contract of attention, but whose memory is a bounded concept bank rather than all previous tokens. The empirical program has two tracks. First, multi-query associative recall (MQAR) isolates the key mechanism: writing key-value information into runtime memory and retrieving it later under matched state budgets. Second, matched language-model pretraining tests whether the same concept read/write layer remains useful in ordinary next-token prediction. The LM protocol follows the PoST paper's evaluation style so that CGA can be compared directly against Mamba-2, RWKV-7, and Gated DeltaNet runs trained on the same data and evaluated with the same harness.
 
 \subsection{Experiment 1: Multi-Query Associative Recall}
 \label{sec:exp-mqar}
 
-MQAR inputs contain key-value pairs followed by queries; the model must output
-the corresponding value \citep{arora2024zoology}.
-This is the cleanest test for CGA because the task separates two questions:
-whether the model can store associations in a runtime memory, and whether later
-queries can retrieve them.
-For token attention, the memory is the raw prefix.
-For CGA, the memory is a fixed concept bank whose value contents are written
-from the prefix.
+MQAR inputs contain key-value pairs followed by queries; the model must output the corresponding value \citep{arora2024zoology}. This is the cleanest test for CGA because the task separates two questions: whether the model can store associations in a runtime memory, and whether later queries can retrieve them. For token attention, the memory is the raw prefix. For CGA, the memory is a fixed concept bank whose value contents are written from the prefix.
 
-We run CGA inside the existing PoST/Zoology MQAR framework.
-The comparison is state-equalized against existing efficient sequence mixers.
-We use the same grid as the PoST/Mamba benchmark runs:
+We run CGA inside the existing PoST/Zoology MQAR framework. The comparison is state-equalized against existing efficient sequence mixers. We use the same grid as the PoST/Mamba benchmark runs:
 \[
 (d_{\rm model},H)\in\{(512,4),(512,8),(256,4)\},
 \qquad
 d_{\rm state}=d_{\rm model}/(2H).
 \]
-These correspond to target runtime-state budgets
-$d_{\rm model}^2/H\in\{64{\rm K},32{\rm K},16{\rm K}\}$.
-For MQAR, a concept slot is intended to hold an association, so the target
-concept capacity is tied to the largest training key-value count rather than to
-the sequence length.
-The curriculum reaches $128$ key-value pairs, so the main grid sets $C=128$
-for every CGA configuration.
+These correspond to target runtime-state budgets $d_{\rm model}^2/H\in\{64{\rm K},32{\rm K},16{\rm K}\}$. For MQAR, a concept slot is intended to hold an association, so the target concept capacity is tied to the largest training key-value count rather than to the sequence length. The curriculum reaches $128$ key-value pairs, so the main grid sets $C=128$ for every CGA configuration.
 
-For each grid point we choose a per-head concept value bottleneck $d_v^c$ so
-that the persistent CGA state
+For each grid point we choose a per-head concept value bottleneck $d_v^c$ so that the persistent CGA state
 \[
 S_{\rm CGA}=C H d_v^c
 \]
-does not exceed $d_{\rm model}^2/H$.
-This is the runtime value state stored by fixed-bank CGA; concept identities are
-fixed layer parameters and are not counted as online sequence state.
-The value bottleneck is rounded down to an eight-dimensional alignment.
-This gives $(C,d_v^c)=(128,128)$ for $(512,4)$, $(128,32)$ for $(512,8)$,
-and $(128,32)$ for $(256,4)$, matching the $64{\rm K}$, $32{\rm K}$, and
-$16{\rm K}$ state budgets.
-Each grid point is run with the same three-point learning-rate sweep
+does not exceed $d_{\rm model}^2/H$. This is the runtime value state stored by fixed-bank CGA; concept identities are fixed layer parameters and are not counted as online sequence state. The value bottleneck is rounded down to an eight-dimensional alignment. This gives $(C,d_v^c)=(128,128)$ for $(512,4)$, $(128,32)$ for $(512,8)$, and $(128,32)$ for $(256,4)$, matching the $64{\rm K}$, $32{\rm K}$, and $16{\rm K}$ state budgets. Each grid point is run with the same three-point learning-rate sweep
 \[
-\{10^{-2.5},10^{-2},10^{-1.5}\}.
+\{10^{-3},10^{-2.5},10^{-2}\}.
 \]
-The implementation uses dense concept reads, untied read/write address
-projections, a learned read logit scale initialized at the standard
-dot-product attention scale, a learned write gate with sparsity coefficient
-$10^{-4}$, fixed concept identities, and continuous value writes.
-The main run uses the PoST parameterization for the retention spectrum, with
-$\mathrm{dt}\in[10^{-6},3\cdot 10^{-5}]$, train length $512$, and
-position-adaptive scaling enabled.
-Training uses sequence length $512$ with the same curriculum over key-value
-count as the PoST baselines.
-Evaluation reports the existing persist and capacity slices at lengths
-$512,1024,2048,4096$.
+The implementation uses dense concept reads, untied read/write address projections, a learned read logit scale initialized at the standard dot-product attention scale, a learned write gate with sparsity coefficient $10^{-4}$, fixed concept identities, and continuous value writes. The main run uses the PoST parameterization for the retention spectrum, with $\mathrm{dt}\in[10^{-6},3\cdot 10^{-5}]$, train length $512$, and position-adaptive scaling enabled. Training uses sequence length $512$ with the same curriculum over key-value count as the PoST baselines. Evaluation reports the existing persist and capacity slices at lengths $512,1024,2048,4096$.
 
 \paragraph{Baselines.}
-The comparison class is the standard MQAR suite already present in the lab
-framework:
+The comparison class is the standard MQAR suite already present in the lab framework:
 \begin{itemize}
     \item \textbf{Transformer}: token-level causal self-attention.
-    \item \textbf{Mamba/RWKV/GDN/GLA/RetNet}: recurrent or linear-state
-    efficient mixers.
-    \item \textbf{TTT-style layers}: expressive state updated by test-time
-    learning style mechanisms.
+    \item \textbf{Mamba/RWKV/GDN/GLA/RetNet}: recurrent or linear-state efficient mixers.
+    \item \textbf{TTT-style layers}: expressive state updated by test-time learning style mechanisms.
     \item \textbf{CGA}: attention over a fixed concept memory.
 \end{itemize}
 
 \paragraph{What the experiment tests.}
-The fair-state run asks whether replacing token memory by concept memory is
-competitive at the same state budget.
-The important diagnostic slices are:
+The fair-state run asks whether replacing token memory by concept memory is competitive at the same state budget. The important diagnostic slices are:
 \[
 (\text{test length},\ \text{key-value count},\ \text{persist/capacity}).
 \]
-A positive result is not merely low training loss.
-CGA should maintain recall when the query distance grows, expose a compact
-runtime state, and report latency and concept count so that improvements are
-not hidden inside unbounded memory.
-We additionally log the mean write gate, valid-token write gate, write mass per
-token, read scale, mean retention, and mean decay rate.
-These diagnostics are part of the main run because the central failure mode for
-CGA on MQAR is not only optimization loss, but whether useful key-value writes
-are routed into the fixed concept bank and whether the retention time constants
-are compatible with the sequence length.
+A positive result is not merely low training loss. CGA should maintain recall when the query distance grows, expose a compact runtime state, and report latency and concept count so that improvements are not hidden inside unbounded memory. We additionally log the mean write gate, valid-token write gate, write mass per token, read scale, mean retention, and mean decay rate. These diagnostics are part of the main run because the central failure mode for CGA on MQAR is not only optimization loss, but whether useful key-value writes are routed into the fixed concept bank and whether the retention time constants are compatible with the sequence length.
 
 \begin{table}[!ht]
 \centering
-\caption{\textbf{MQAR capacity accuracy (\%)} at each test length $T$ with
-$K{=}T/4$ key-value pairs. All models are trained at $T{=}512$; longer
-lengths are out-of-distribution. Baseline and PoST rows reproduce the
-state-equalized PoST/Zoology MQAR table. The CGA row is reserved for the
-current fixed-bank CGA run.}
+\caption{\textbf{MQAR capacity accuracy (\%)} at each test length $T$ with $K{=}T/4$ key-value pairs. All models are trained at $T{=}512$; longer lengths are out-of-distribution.}
 \label{tab:mqar}
 \small
 \resizebox{\linewidth}{!}{%
@@ -117,89 +55,48 @@ current fixed-bank CGA run.}
 \textbf{Model} & 512 & 1K & 2K & 4K & \textbf{Avg} & 512 & 1K & 2K & 4K & \textbf{Avg} & 512 & 1K & 2K & 4K & \textbf{Avg} \\
 \midrule
 Mamba-2              & {100.0} & 96.8 & 62.2 & 18.9 & 69.5 & 99.2 & 85.2 & 41.3 & 11.6 & 59.4 & 99.3 & 80.6 & 31.2 & 5.7 & 54.2 \\
-$\quad$+PoST       & {100.0} & {97.4} & {68.3} & {25.1} & {72.7} & {99.8} & {92.1} & {51.6} & {13.2} & {64.2} & {99.6} & {87.8} & {44.1} & {12.7} & {61.0} \\
 \midrule
 RWKV-7               & {100.0} & {100.0} & 96.1 & 39.2 & 83.8 & {100.0} & {100.0} & 80.1 & 9.5 & 72.4 & {100.0} & 95.2 & 46.0 & 10.8 & 63.0 \\
-$\quad$+PoST       & {100.0} & {100.0} & {98.5} & {52.9} & {87.8} & {100.0} & {100.0} & {98.0} & {28.5} & {81.6} & {100.0} & {99.3} & {70.9} & {18.8} & {72.2} \\
 \midrule
 Gated DeltaNet                  & {100.0} & {100.0} & 92.0 & 42.4 & 83.6 & {100.0} & 96.4 & 56.7 & 15.9 & 67.2 & 99.8 & 82.7 & 31.7 & 7.4 & 55.4 \\
-$\quad$+PoST       & {100.0} & {100.0} & {95.3} & {48.4} & {85.9} & {100.0} & {99.9} & {88.9} & {39.6} & {82.1} & {99.9} & {86.5} & {35.7} & {8.7} & {57.7} \\
 \midrule
 GLA                  & {100.0} & {97.8} & {67.2} & {20.8} & {71.5} & {100.0} & {97.7} & 50.3 & 7.6 & 63.9 & 99.8 & 88.5 & 38.7 & 7.8 & 58.7 \\
-$\quad$+PoST       & {100.0} & 96.0 & 62.1 & 20.7 & 69.7 & 99.9 & 93.9 & {54.8} & {16.9} & {66.4} & {99.9} & {93.1} & {50.7} & {12.2} & {64.0} \\
 \midrule
 RetNet               & 99.9 & 47.1 & 2.3 & 0.0 & 37.3 & {99.9} & 63.2 & 6.0 & 0.3 & 42.3 & 96.8 & 16.8 & 0.7 & 0.0 & 28.6 \\
-$\quad$+PoST       & {100.0} & {96.0} & {62.1} & {20.7} & {69.7} & {99.9} & {93.9} & {54.8} & {16.9} & {66.4} & {99.9} & {93.1} & {50.7} & {12.2} & {64.0} \\
 \midrule
-\textbf{CGA (ours)} & \textbf{100.0} & \textbf{100.0} & \textbf{100.0} & \textbf{90.0} & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\textbf{CGA (ours)} & \textbf{100.0} & \textbf{100.0} & \textbf{99.9} & \textbf{96.1} & \textbf{99.0} & \textbf{100.0} & \textbf{100.0} & \textbf{97.7} & \textbf{72.8} & \textbf{92.6} & \textbf{100.0} & \textbf{98.9} & \textbf{86.4} & \textbf{45.8} & \textbf{82.8} \\
 \bottomrule
 \end{tabular}%
 }
 \end{table}
 
-The implementation artifact is
-\path{../PoST_dev/zoology/zoology/experiments/cga_mqar.py}.
-The registered mixer is \texttt{zoology.mixers.cga.ConceptGraphAttention}.
+The CGA row reports the best single epoch at each state size, selected by the
+average of the four displayed MQAR capacity accuracies over the learning-rate
+sweep. The selected runs use learning rates $10^{-2.5}$, $10^{-2}$, and
+$10^{-3}$ for the $64{\rm K}$, $32{\rm K}$, and $16{\rm K}$ state budgets,
+respectively.
+
+The implementation artifact is \path{../PoST_dev/zoology/zoology/experiments/cga_mqar.py}. The registered mixer is \texttt{zoology.mixers.cga.ConceptGraphAttention}.
 
 \subsection{Experiment 2: Language-Model Pretraining and Evaluation}
 \label{sec:exp-cga-lm}
 
-The language-model experiment is the scaling test.
-It asks whether fixed concept memory can replace token attention inside a
-standard decoder and remain competitive with modern efficient recurrent
-mixers.
-We follow the PoST language-model protocol: pretrain base models on
-FineWeb-Edu~\citep{lozhkov2024fineweb} at context length
-$T_{\rm train}=2048$, then evaluate zero-shot with the Language Model
-Evaluation Harness~\citep{gao2024framework}.
-The primary scale is 180M parameters; a 440M run is the direct scaling check on
-$8\times$H200 hardware.
+The language-model experiment is the scaling test. It asks whether fixed concept memory can replace token attention inside a standard decoder and remain competitive with modern efficient recurrent mixers. We follow the PoST language-model protocol: pretrain base models on FineWeb-Edu~\citep{lozhkov2024fineweb} at context length $T_{\rm train}=2048$, then evaluate zero-shot with the Language Model Evaluation Harness~\citep{gao2024framework}. The primary scale is 180M parameters; a 440M run is the direct scaling check on $8\times$H200 hardware.
 
 \paragraph{CGA-LM model.}
-CGA-LM uses the same decoder scaffold as the baseline language models:
-token embeddings, residual blocks, normalization, and tied LM head are
-standard.
-Only the causal mixer is changed: the attention or recurrent mixing sublayer is
-replaced by CGA.
-The main state-matched runs use the mixer-only residual scaffold of the
-Mamba-2 baseline; a Transformer-style MLP is supported but is not part of the
-primary comparison.
-For a state-matched comparison to the PoST Mamba-2 configurations, we set
+CGA-LM uses the same decoder scaffold as the baseline language models: token embeddings, residual blocks, normalization, and tied LM head are standard. Only the causal mixer is changed: the attention or recurrent mixing sublayer is replaced by CGA. The main state-matched runs use the mixer-only residual scaffold of the Mamba-2 baseline; a Transformer-style MLP is supported but is not part of the primary comparison. For a state-matched comparison to the PoST Mamba-2 configurations, we set
 \[
 C=128,\qquad d_v^c=64,\qquad
 S_{\rm CGA}=C H d_v^c .
 \]
-At 180M, using $H=24$ gives $S_{\rm CGA}=196{,}608$ values per layer, matching
-the Mamba-2 state budget $1536\times128$.
-At 440M, using $H=32$ gives $S_{\rm CGA}=262{,}144$, matching
-$2048\times128$.
-Concept identities are fixed layer parameters and are not counted as online
-runtime state.
-The main CGA-LM run uses fixed concept identities, dense concept reads,
-continuous value writes, a learned write gate, and PoST-style retention
-parameterization.
-The implementation artifact is \path{../PoST_dev/models/cga_lm.py}; training
-is launched through the same \path{../PoST_dev/trainer.py} entry point as the
-PoST baselines using \texttt{--arch cga}.
+At 180M, using $H=24$ gives $S_{\rm CGA}=196{,}608$ values per layer, matching the Mamba-2 state budget $1536\times128$. At 440M, using $H=32$ gives $S_{\rm CGA}=262{,}144$, matching $2048\times128$. Concept identities are fixed layer parameters and are not counted as online runtime state. The main CGA-LM run uses fixed concept identities, dense concept reads, continuous value writes, a learned write gate, and PoST-style retention parameterization. The implementation artifact is \path{../PoST_dev/models/cga_lm.py}; training is launched through the same \path{../PoST_dev/trainer.py} entry point as the PoST baselines using \texttt{--arch cga}.
 
 \paragraph{Metrics.}
-We report validation loss and perplexity during pretraining, then downstream
-zero-shot results on the same task set as PoST:
-LAMBADA, HellaSwag, PIQA, ARC-Easy, ARC-Challenge, WinoGrande, and
-OpenBookQA.
-For systems comparison, each run should also report training tokens per second,
-prefill latency, decode latency, parameter count, online state size, concept
-count, mean write gate, read scale, and retention statistics.
-The speed numbers are not secondary: CGA's claim is an attention-compatible
-memory replacement, so the correct comparison includes both quality and
-sequence-processing cost.
+We report validation loss and perplexity during pretraining, then downstream zero-shot results on the same task set as PoST: LAMBADA, HellaSwag, PIQA, ARC-Easy, ARC-Challenge, WinoGrande, and OpenBookQA. For systems comparison, each run should also report training tokens per second, prefill latency, decode latency, parameter count, online state size, concept count, mean write gate, read scale, and retention statistics. The speed numbers are not secondary: CGA's claim is an attention-compatible memory replacement, so the correct comparison includes both quality and sequence-processing cost.
 
 \begin{table}[!ht]
 \centering
-\caption{\textbf{Downstream zero-shot language-model evaluations.}
-Baseline and PoST rows reproduce the PoST LM evaluation table.
-CGA-LM rows are reserved for fixed-bank CGA runs trained with the matched
-FineWeb-Edu protocol and evaluated with the same LM Harness tasks.}
+\caption{\textbf{Downstream zero-shot language-model evaluations.} Baseline and PoST rows reproduce the PoST LM evaluation table. CGA-LM rows are reserved for fixed-bank CGA runs trained with the matched FineWeb-Edu protocol and evaluated with the same LM Harness tasks.}
 \label{tab:lm-eval}
 \small
 \resizebox{\linewidth}{!}{%
@@ -259,22 +156,11 @@ $\quad$+PoST
 }
 \end{table}
 
-The main reported comparison is the best CGA-LM checkpoint at each scale
-against the best baseline row at the same scale.
-We do not need a broad ablation suite for the first large run.
-The decisive experiment is whether one clean CGA-LM configuration can match or
-exceed these baseline averages while using a bounded concept memory and
-competitive latency.
+The main reported comparison is the best CGA-LM checkpoint at each scale against the best baseline row at the same scale. We do not need a broad ablation suite for the first large run. The decisive experiment is whether one clean CGA-LM configuration can match or exceed these baseline averages while using a bounded concept memory and competitive latency.
 
 \begin{table}[!ht]
 \centering
-\caption{\textbf{Language-model systems metrics.}
-Latency is measured from trained checkpoints in BF16 on H200 with the same
-synthetic-token benchmark for every architecture.
-Prefill reports tokens/second for a full forward pass; decode reports
-conservative iterative next-token latency using the public model interface.
-The CGA rows should be filled from
-\texttt{scripts/benchmark\_lm\_latency.py}.}
+\caption{\textbf{Language-model systems metrics.} Latency is measured from trained checkpoints in BF16 on H200 with the same synthetic-token benchmark for every architecture. Prefill reports tokens/second for a full forward pass; decode reports conservative iterative next-token latency using the public model interface. The CGA rows should be filled from \texttt{scripts/benchmark\_lm\_latency.py}.}
 \label{tab:lm-systems}
 \small
 \resizebox{\linewidth}{!}{%

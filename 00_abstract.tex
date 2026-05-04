@@ -1,28 +1,5 @@
-Self-attention stores one key-value entry per previous token and retrieves from
-that token table. This gives expressive content-addressed recall, but it ties
-the memory basis to token events and makes the read state grow with context
-length. We propose \emph{Concept Graph Attention} (CGA), a causal sequence
-layer that keeps the continuous readout of attention but replaces token memory
-with a fixed bank of concept identities. Each concept has a fixed address and a
-runtime value memory. Tokens read from the concept bank with attention-style
-softmax weights and write back to the same bank with gated continuous updates
-and trainable retention.
+Sequence memory is an information constraint: before a predictor can use a distinction, its runtime state must make that distinction observable. This paper develops Concept Graph Attention (CGA) from that first-principles view. We formalize a runtime state as an information partition, separate \emph{repair} updates that change payloads inside a fixed partition from \emph{refinement} updates that change the partition itself, and prove a repair-only obstruction: if the current partition merges cases whose refined Bayes actions differ, no amount of local repair, caching, or optimizer sophistication can remove the resulting linear regret against the refined oracle.
 
-CGA therefore changes where attention is computed: from token positions to a
-bounded concept memory whose contents evolve over the prefix. In the current
-formulation, the online state is only the concept value table, so the state size
-is $C H d_v^c$ for $C$ concepts, $H$ heads, and per-head concept value width
-$d_v^c$. During training, gradients flow through the concept read, the
-continuous write, the write gate, and the retention parameters. During
-inference, model weights remain fixed, but the concept memory is updated by the
-same forward rule from the observed prefix. This gives CGA test-time learning
-of memory contents without an inference-time backward pass.
+The theory identifies which distinctions are worth adding. A candidate bit has value only through risk reduction, not through geometric novelty or frequency. Under log loss, the population value of a binary distinction is $I(Y;U\mid\Pi)$; under squared loss, it is the conditional mean-separation energy induced by the split. We then give a guarded empirical refinement rule that accepts structural growth only when a held-out, cost-penalized refinement gain beats the best repair gain by a finite-sample margin. The full appendix gives the measure-theoretic join form, finite-class oracle inequalities, graph data-structure bounds, and projection-memory/CPM bridge proofs.
 
-Empirically, we organize the evaluation around two ML-community baselines:
-state-equalized multi-query associative recall in the PoST/Zoology framework,
-and matched language-model pretraining on FineWeb-Edu at 180M--440M scale with
-standard zero-shot LM Harness evaluation. The intended comparison class is
-modern efficient attention alternatives such as Mamba, RWKV, Gated DeltaNet,
-and TTT-style stateful layers. CGA keeps attention-like retrieval, but moves
-the persistent state from token memory or learned test-time weights to a
-bounded, updateable concept memory.
+CGA is the sequence-modeling specialization of this refine-or-repair program. It keeps attention's continuous readout but changes the memory basis from prefix tokens to a bounded bank of concept identities. Each concept has a fixed address and a runtime value memory. Tokens read from the concept bank with attention-style softmax weights and write back with gated continuous updates and trainable retention. During training, gradients flow through the read, write, gate, and retention parameters; during inference, model weights stay fixed while the concept value memory is updated by the same forward rule. Empirically, we evaluate CGA through state-equalized MQAR and matched language-model pretraining protocols against modern efficient sequence mixers.

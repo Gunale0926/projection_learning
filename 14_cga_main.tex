@@ -1,36 +1,26 @@
 \section{Concept Graph Attention}
 \label{sec:main-cga}
 
-CGA is an attention layer whose memory is a fixed bank of concept identities
-rather than a table of token keys and values.
-The ``graph'' is the runtime bipartite interaction between tokens and concept
-nodes, with soft read and write weights computed by attention.
-Each layer has $C$ concept slots and $H$ heads.
-For head $h$, slot $j$ has a fixed unit address
+CGA is the fixed-capacity sequence layer induced by the preceding refine-or-repair view. The general DGM picture allows the information structure to grow by accepting new distinctions; the fixed-bank CGA used here instead allocates a bounded set of concept identities in advance and studies whether forward-time writes into those identities can replace token-indexed attention memory. In that sense, a concept slot is an atom of runtime information with a trainable addressing rule and a mutable payload. A token can repair the payload by writing a new value; training can learn better read/write projections; and the concept budget $C$ controls how many runtime distinctions the layer can keep active.
+
+Operationally, CGA is an attention layer whose memory is a fixed bank of concept identities rather than a table of token keys and values. The ``graph'' is the runtime bipartite interaction between tokens and concept nodes, with soft read and write weights computed by attention. Each layer has $C$ concept slots and $H$ heads. For head $h$, slot $j$ has a fixed unit address
 \[
 a_{hj}\in \mathbb{R}^{d_a},
 \qquad
 \|a_{hj}\|_2=1 .
 \]
-The addresses are initialized once and remain fixed; they are concept
-identities, not online sequence state.
-The online state for a sequence is the value memory
+The addresses are initialized once and remain fixed; they are concept identities, not online sequence state. The online state for a sequence is the value memory
 \[
 M_b\in\mathbb{R}^{H\times C\times d_v^c},
 \]
-where $b$ indexes a causal processing block and $d_v^c$ is the per-head concept
-value width.
-Thus the persistent runtime state per layer is
+where $b$ indexes a causal processing block and $d_v^c$ is the per-head concept value width. Thus the persistent runtime state per layer is
 \[
 S_{\rm CGA}=C H d_v^c .
 \]
-This is the main state-size difference from token attention: attention stores a
-new key-value entry for every token, while CGA stores a bounded value table over
-fixed concept nodes.
+This is the main state-size difference from token attention: attention stores a new key-value entry for every token, while CGA stores a bounded value table over fixed concept nodes.
 
 \paragraph{Projection and normalization.}
-Given hidden states $x_t\in\mathbb{R}^{d_{\rm model}}$, CGA forms normalized
-read queries and write keys, concept values, write gates, and retention rates:
+Given hidden states $x_t\in\mathbb{R}^{d_{\rm model}}$, CGA forms normalized read queries and write keys, concept values, write gates, and retention rates:
 \[
 q_{th}=\operatorname{normalize}(Q_h x_t),\qquad
 k_{th}=\operatorname{normalize}(K_h x_t),
@@ -39,15 +29,10 @@ k_{th}=\operatorname{normalize}(K_h x_t),
 v_{th}=V_h x_t,\qquad
 g_t=\sigma(w_g^\top x_t+b_g).
 \]
-The query and key maps learn how tokens address the fixed concept identities.
-The value map learns what payload should be stored in concept memory, and the
-write gate learns how much a token should modify memory.
+The query and key maps learn how tokens address the fixed concept identities. The value map learns what payload should be stored in concept memory, and the write gate learns how much a token should modify memory.
 
 \paragraph{Dense concept read.}
-CGA reads by applying the standard attention softmax over concept slots rather
-than over prefix tokens.
-Let $\gamma>0$ be a learned read scale.
-For token $t$ in block $b$,
+CGA reads by applying the standard attention softmax over concept slots rather than over prefix tokens. Let $\gamma>0$ be a learned read scale. For token $t$ in block $b$,
 \[
 \alpha_{thj}
 =
@@ -60,21 +45,14 @@ The multi-head output is
 \[
 y_t=O[z_{t1};\ldots;z_{tH}].
 \]
-This is ordinary differentiable attention except that the keys are fixed
-concept identities and the values are runtime concept memories.
+This is ordinary differentiable attention except that the keys are fixed concept identities and the values are runtime concept memories.
 
 \paragraph{Continuous concept write.}
-CGA uses a read-before-write protocol.
-The tokens in a block first read the memory state $M_b$; after those outputs
-are emitted, the block writes its values into memory to produce $M_{b+1}$.
-For a write delay $\delta\ge0$, define
+CGA uses a read-before-write protocol. The tokens in a block first read the memory state $M_b$; after those outputs are emitted, the block writes its values into memory to produce $M_{b+1}$. For a write delay $\delta\ge0$, define
 \[
 \bar k_{th}=k_{t-\delta,h},
 \]
-with invalid delayed positions masked out.
-MQAR uses $\delta=1$ so that a key token can bind to the following value token;
-general language modeling can use $\delta=0$.
-The write distribution is another concept softmax:
+with invalid delayed positions masked out. MQAR uses $\delta=1$ so that a key token can bind to the following value token; general language modeling can use $\delta=0$. The write distribution is another concept softmax:
 \[
 \beta_{thj}
 =
@@ -91,45 +69,23 @@ M_{b+1,hj}
 \mathbf{1}_{t\ge \delta}\,
 g_t\,\beta_{thj}\,v_{th}.
 \]
-The write is continuous: every valid token can write to every concept with a
-different weight, and the soft weights make the write path differentiable
-during training.
+The write is continuous: every valid token can write to every concept with a different weight, and the soft weights make the write path differentiable during training.
 
 \paragraph{Trainable retention.}
-The factor $\rho_{bh}\in(0,1]$ controls how much old concept memory survives
-when a new block is written.
-CGA computes tokenwise positive decay rates $\lambda_{th}$ and accumulates them
-over the block:
+The factor $\rho_{bh}\in(0,1]$ controls how much old concept memory survives when a new block is written. CGA computes tokenwise positive decay rates $\lambda_{th}$ and accumulates them over the block:
 \[
 \rho_{bh}
 =
 \exp\left(-\sum_{t=s}^{e-1}\lambda_{th}\right).
 \]
-Our default parameterization uses a PoST-style ordered spectrum for the base
-decay rates:
+Our default parameterization uses a PoST-style ordered spectrum for the base decay rates:
 \[
 A_h=A_0+\sum_{i<h}\operatorname{softplus}(\Delta_i),
 \]
-combined with a learned input-dependent step size and optional
-position-adaptive scaling.
-This gives CGA the same kind of trainable forgetting mechanism used by modern
-recurrent mixers, but the recurrence acts on concept value memory rather than
-on token-indexed state.
+combined with a learned input-dependent step size and optional position-adaptive scaling. This gives CGA the same kind of trainable forgetting mechanism used by modern recurrent mixers, but the recurrence acts on concept value memory rather than on token-indexed state.
 
 \paragraph{Training and inference.}
-During training, CGA is optimized end-to-end with the task loss.
-Gradients flow through the read weights $\alpha$, the write weights $\beta$,
-the written values $v_t$, the write gate $g_t$, and the retention factors
-$\rho_{bh}$.
-The concept addresses $a_{hj}$ are fixed identities, so the model learns to use
-them by changing the query, key, value, gate, retention, and output
-projections.
-During inference, the learned parameters are fixed.
-The concept memory $M_b$ is still updated by the same forward rule, so future
-tokens condition on information written from the observed prefix.
-This is the sense in which CGA performs test-time learning: it learns the
-contents of a bounded memory during the forward pass, without running
-backpropagation at inference time.
+During training, CGA is optimized end-to-end with the task loss. Gradients flow through the read weights $\alpha$, the write weights $\beta$, the written values $v_t$, the write gate $g_t$, and the retention factors $\rho_{bh}$. The concept addresses $a_{hj}$ are fixed identities, so the model learns to use them by changing the query, key, value, gate, retention, and output projections. During inference, the learned parameters are fixed. The concept memory $M_b$ is still updated by the same forward rule, so future tokens condition on information written from the observed prefix. This is the sense in which CGA performs test-time learning: it learns the contents of a bounded memory during the forward pass, without running backpropagation at inference time.
 
 \paragraph{Relation to ordinary attention.}
 Standard causal attention computes
@@ -139,19 +95,14 @@ Standard causal attention computes
 \sum_{s<t}
 \operatorname{softmax}_s(q_t^\top K_s)V_s,
 \]
-where the memory basis is the set of prefix token positions.
-CGA computes
+where the memory basis is the set of prefix token positions. CGA computes
 \[
 \operatorname{CGA}(X)_t
 =
 \sum_{j=1}^{C}
 \operatorname{softmax}_j(q_t^\top a_j)M_{tj},
 \]
-where the memory basis is a fixed set of concept identities and only the value
-contents $M_{tj}$ evolve over the prefix.
-Thus CGA is not a different loss or optimizer around attention.
-It is an attention replacement that moves the read/write memory from tokens to
-concepts.
+where the memory basis is a fixed set of concept identities and only the value contents $M_{tj}$ evolve over the prefix. Thus CGA is not a different loss or optimizer around attention. It is an attention replacement that moves the read/write memory from tokens to concepts.
 
 \begin{algorithm}[t]
 \caption{\textsc{ConceptGraphAttentionForward}}

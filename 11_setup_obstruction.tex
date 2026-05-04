@@ -1,9 +1,7 @@
 \section{Online Prediction under Information Partitions}
 \label{sec:main-setup}
 
-Let $\Omega$ be a finite case space, $\omega\sim P$, $Y:\Omega\to\calY$ a consequence variable, $\mathsf A$ an action space, and $L:\calY\times\mathsf A\to\R$ a loss with finite expectations.
-An information structure is a partition $\Pi=\{B_1,\ldots,B_m\}$.
-A predictor is $\Pi$-measurable when it is constant inside each atom:
+Let $\Omega$ be a finite case space, $\omega\sim P$, $Y:\Omega\to\calY$ a consequence variable, $\mathsf A$ an action space, and $L:\calY\times\mathsf A\to\R$ a loss with finite expectations. An information structure is a partition $\Pi=\{B_1,\ldots,B_m\}$. A predictor is $\Pi$-measurable when it is constant inside each atom:
 \[
 \Pred(\Pi)
 =
@@ -18,21 +16,15 @@ R_L(\Pi)
 =
 \sum_{B\in\Pi}P(B)\inf_{a\in\mathsf A}\E[L(Y,a)\mid \omega\in B].
 \]
-A repair update changes the payload $a(B)$ assigned to existing atoms; a refinement changes the equivalence relation itself.
-If a runtime representation is an information map $I:\Omega\to\calZ$, then it induces $\Pi(I)=\{I^{-1}(z):I^{-1}(z)\ne\varnothing\}$, and every predictor of the form $a(I(\omega))$ is $\Pi(I)$-measurable.
-This is the bridge to neural or memory implementations: the theorem constrains the quotient induced by the runtime state, not the syntax of the optimizer used to update that state.
-All statements extend to sub-sigma-algebras; the full measure-theoretic version and base-information convention are in Appendix~\ref{sec:preliminaries}.
+A repair update changes the payload $a(B)$ assigned to existing atoms; a refinement changes the equivalence relation itself. If a runtime representation is an information map $I:\Omega\to\calZ$, then it induces $\Pi(I)=\{I^{-1}(z):I^{-1}(z)\ne\varnothing\}$, and every predictor of the form $a(I(\omega))$ is $\Pi(I)$-measurable. This is the bridge to neural or memory implementations: the theorem constrains the quotient induced by the runtime state, not the syntax of the optimizer used to update that state. All statements extend to sub-sigma-algebras; the full measure-theoretic version and base-information convention are in Appendix~\ref{sec:preliminaries}.
 
-A binary distinction is a prediction-time observable map $U:\Omega\to\{0,1\}$.
-We assume admissible distinctions lie in a pre-outcome observable class $\calU$, so $U_t$ does not depend on $Y_t$ after observation.
-The join refinement is
+A binary distinction is a prediction-time observable map $U:\Omega\to\{0,1\}$. We assume admissible distinctions lie in a pre-outcome observable class $\calU$, so $U_t$ does not depend on $Y_t$ after observation. The join refinement is
 \[
 \Pi\vee U
 =
 \{B\cap U^{-1}(0),B\cap U^{-1}(1):B\in\Pi\}\setminus\{\varnothing\}.
 \]
-In an online process, $\omega_t\sim P$, the learner predicts with $\hat f_t\in\Pred(\Pi_t)$, observes $Y_t$, and either repairs with $\Pi_{t+1}=\Pi_t$ or refines with $\Pi_{t+1}=\Pi_t\vee U_t$.
-The optional cost model charges $\lambda c(U_t)$ when a refinement is accepted; repair has no structural cost but may change local memories, sufficient statistics, or downstream parameters.
+In an online process, $\omega_t\sim P$, the learner predicts with $\hat f_t\in\Pred(\Pi_t)$, observes $Y_t$, and either repairs with $\Pi_{t+1}=\Pi_t$ or refines with $\Pi_{t+1}=\Pi_t\vee U_t$. The optional cost model charges $\lambda c(U_t)$ when a refinement is accepted; repair has no structural cost but may change local memories, sufficient statistics, or downstream parameters.
 
 For any $f_t\in\Pred(\Pi_t)$ and any comparator $\Pi^\star$ refining $\Pi_t$,
 \[
@@ -42,18 +34,11 @@ R_L(f_t)-R_L(\Pi^\star)
 +
 \underbrace{R_L(\Pi_t)-R_L(\Pi^\star)}_{\Delta_{\rm refine}}.
 \]
-Both terms are nonnegative.
-The first is residual risk at fixed information; the second is the population value of changing information.
-Thus the repair/refinement decision is not a choice between two optimizers, but a choice between two admissible prediction classes.
-For example, if two old atoms merely have poorly estimated Bernoulli probabilities, then $\Delta_{\rm repair}$ can dominate and more samples or a better local statistic are enough.
-If a single old atom mixes two subpopulations with different conditional labels, then $\Delta_{\rm refine}$ persists even after the best atomwise statistic has converged.
-The theorem below formalizes the latter case sequentially.
+Both terms are nonnegative. The first is residual risk at fixed information; the second is the population value of changing information. Thus the repair/refinement decision is not a choice between two optimizers, but a choice between two admissible prediction classes. For example, if two old atoms merely have poorly estimated Bernoulli probabilities, then $\Delta_{\rm repair}$ can dominate and more samples or a better local statistic are enough. If a single old atom mixes two subpopulations with different conditional labels, then $\Delta_{\rm refine}$ persists even after the best atomwise statistic has converged. The theorem below formalizes the latter case sequentially.
 
 \begin{theorem}[Repair-only linear regret]
 \label{thm:main-repair-only}
-Let $\Pi$ be fixed and let $\Pi^\star$ refine $\Pi$.
-Consider any adaptive learner such that, for every $t$, $\hat f_t\in\Pred(\Pi)$, possibly chosen using all previous observations.
-If $\omega_t\stackrel{\rm iid}{\sim}P$, then
+Let $\Pi$ be fixed and let $\Pi^\star$ refine $\Pi$. Consider any adaptive learner such that, for every $t$, $\hat f_t\in\Pred(\Pi)$, possibly chosen using all previous observations. If $\omega_t\stackrel{\rm iid}{\sim}P$, then
 \[
 \E\left[\sum_{t=1}^T L(Y_t,\hat f_t(\omega_t))\right]
 \ge
@@ -65,25 +50,16 @@ If Bayes actions exist under $\Pi^\star$, then regret against the refined oracle
 \ge
 T\left(R_L(\Pi)-R_L(\Pi^\star)\right).
 \]
-If the infimum under $\Pi^\star$ is not attained, then for every $\epsilon>0$ the same statement holds against an $\epsilon$-optimal refined oracle with right side $T(R_L(\Pi)-R_L(\Pi^\star)-\epsilon)$.
-If refinement cost is charged once as $\lambda C(\Pi^\star)$, subtract $\lambda C(\Pi^\star)$ from the bound.
+If the infimum under $\Pi^\star$ is not attained, then for every $\epsilon>0$ the same statement holds against an $\epsilon$-optimal refined oracle with right side $T(R_L(\Pi)-R_L(\Pi^\star)-\epsilon)$. If refinement cost is charged once as $\lambda C(\Pi^\star)$, subtract $\lambda C(\Pi^\star)$ from the bound.
 \end{theorem}
 
 \begin{proof}
-Condition on the history $\calH_{t-1}$ before round $t$.
-Since $\hat f_t\in\Pred(\Pi)$,
+Condition on the history $\calH_{t-1}$ before round $t$. Since $\hat f_t\in\Pred(\Pi)$,
 \[
 \E[L(Y_t,\hat f_t(\omega_t))\mid \calH_{t-1}]
 \ge R_L(\Pi).
 \]
-Taking expectation and summing over $t$ gives the first inequality.
-The refined oracle achieves $R_L(\Pi^\star)$ per round when Bayes actions exist; otherwise choose an $\epsilon$-optimal atomwise predictor under $\Pi^\star$.
-Subtracting its cumulative risk gives the regret statement, and a one-time refinement charge subtracts from the comparator advantage.
+Taking expectation and summing over $t$ gives the first inequality. The refined oracle achieves $R_L(\Pi^\star)$ per round when Bayes actions exist; otherwise choose an $\epsilon$-optimal atomwise predictor under $\Pi^\star$. Subtracting its cumulative risk gives the regret statement, and a one-time refinement charge subtracts from the comparator advantage.
 \end{proof}
 
-The theorem is simple but useful: once the information quotient is fixed, no optimizer can exploit distinctions outside it.
-It applies to caches, local sufficient statistics, adapters, or gradient steps only when they preserve the relevant information map.
-Backpropagation through a representation can change the quotient and is therefore outside the repair-only lower bound.
-The refined oracle is also intentionally generous: it receives $\Pi^\star$ for free except for the optional one-time cost term.
-The result therefore should not be read as a claim that a particular refinement algorithm will find $\Pi^\star$ quickly.
-It says that if the learner refuses to change the quotient at all, the gap is paid every round.
+The theorem is simple but useful: once the information quotient is fixed, no optimizer can exploit distinctions outside it. It applies to caches, local sufficient statistics, adapters, or gradient steps only when they preserve the relevant information map. Backpropagation through a representation can change the quotient and is therefore outside the repair-only lower bound. The refined oracle is also intentionally generous: it receives $\Pi^\star$ for free except for the optional one-time cost term. The result therefore should not be read as a claim that a particular refinement algorithm will find $\Pi^\star$ quickly. It says that if the learner refuses to change the quotient at all, the gap is paid every round.
