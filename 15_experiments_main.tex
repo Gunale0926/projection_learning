@@ -46,6 +46,9 @@ does not exceed $d_{\rm model}^2/H$.
 The value bottleneck is rounded down to an eight-dimensional alignment.
 This gives $(C,d_v^c)=(128,96)$ for $(512,4)$, $(128,24)$ for $(512,8)$, and
 $(128,16)$ for $(256,4)$, all within the same target state budgets.
+Concept creation is capacity-balanced across the 16 training blocks: each
+32-token block can add at most 8 new concepts, selected by gate-weighted
+novelty rather than by a fixed low similarity threshold alone.
 Each grid point is run with the same three-point learning-rate sweep
 $\{10^{-3.5},10^{-3},10^{-2.5}\}$.
 The implementation uses dense concept reads, untied read/write address
