@@ -5,7 +5,7 @@ The proofs below use standard tools from statistical decision theory, informatio
 
 Throughout the measurable-space statements, the action space $\mathsf A$ is equipped with a sigma-algebra $\Sigma_{\mathsf A}$, actions are measurable maps into $(\mathsf A,\Sigma_{\mathsf A})$, and losses are measurable with finite expectation for the actions under consideration.
 
-\begin{theorem}[Loss-relevant refinement, formal version of Theorem~\ref{thm:loss-relevant-refinement:informal}]
+\begin{theorem}[Loss-relevant refinement, formal version of Theorem~\ref{thm:main-loss-relevant}]
 \label{thm:loss-relevant-refinement:formal}
 Let $\calF\subseteq\calG\subseteq\calE$. Assume Bayes actions exist under $\calF$ and $\calG$, and that the $\calG$-Bayes action is almost surely unique. Then
 \begin{align*}
@@ -54,7 +54,7 @@ R_{\log}(\calF)-R_{\log}(\calG)
 I(Y;\calG\mid\calF)
 =
 \E\left[
-D_{\mathrm{KL}}\!\left(
+D_{\mathrm{KL}}\left(
 \mathbb P(Y\in\cdot\mid\calG)
 \middle\|
 \mathbb P(Y\in\cdot\mid\calF)
@@ -84,7 +84,7 @@ I(Y;\calG\mid\calF)=H(Y\mid\calF)-H(Y\mid\calG).
 The conditional-KL form follows from the tower property:
 \begin{align*}
 &\E\left[
-D_{\mathrm{KL}}\!\left(
+D_{\mathrm{KL}}\left(
 \mathbb P(Y\in\cdot\mid\calG)
 \middle\|
 \mathbb P(Y\in\cdot\mid\calF)
@@ -113,13 +113,13 @@ Combining proves the claim.
 Let $U\in\{0,1\}$ and $\calG=\calF\vee\sigma(U)$. Under log loss,
 \begin{align*}
 R_{\log}(\calF)-R_{\log}(\calG)
-\!&=
+&=
 I(Y;U\mid\calF)\\
 &=
-\E\!\left[
+\E\left[
 \sum_{u\in\{0,1\}}
 \mathbb P(U=u\mid\calF)
-D_{\mathrm{KL}}\!\left(
+D_{\mathrm{KL}}\left(
 \mathbb P(Y\in\cdot\mid\calF,U=u)
 \middle\|
 \mathbb P(Y\in\cdot\mid\calF)
@@ -160,7 +160,7 @@ Thus
 Rearranging proves the identity.
 \end{proof}
 
-\begin{theorem}[Minimal loss-sufficient refinement, formal version of Theorem~\ref{thm:minimal-loss-sufficient:informal}]
+\begin{theorem}[Minimal loss-sufficient refinement]
 \label{thm:minimal-loss-sufficient:formal}
 Let $\calF\subseteq\calG$ and assume the $\calG$-Bayes action $a_\calG^\star:\Omega\to\mathsf A$ exists as a $(\calG,\Sigma_{\mathsf A})$-measurable map and is almost surely unique. Also assume the Bayes infimum is attained for every intermediate sigma-algebra $\calH$ with $\calF\subseteq\calH\subseteq\calG$ that is considered below. Up to null sets, the smallest sigma-algebra $\calH$ satisfying
 \begin{align*}

@@ -1,8 +1,8 @@
 \section{Guarded Empirical Refinement}
 \label{sec:main-guard}
 
-Population value must be estimated before a runtime learner commits a new distinction. For an atom $B$ and candidate split $g:B\to\{0,1\}$, the classification score used in the experiments is empirical log-loss improvement:
-\[
+Population value must be estimated before a runtime learner commits a new distinction. For an atom $B$ and candidate split $g:B\to\{0,1\}$, the empirical log-loss improvement is
+\begin{align*}
 \widehat V_{\log}(B,g)
 =
 H(\widehat p_B)
@@ -11,11 +11,11 @@ H(\widehat p_B)
 \frac{|B_b|}{|B|}H(\widehat p_{B_b}),
 \qquad
 B_b=\{i\in B:g(x_i)=b\}.
-\]
+\end{align*}
 The analogous squared-loss score is $\operatorname{SSE}(B)-\operatorname{SSE}(B_0)-\operatorname{SSE}(B_1)$.
 
 For a state $S$ and held-out scoring buffer $\calB_t^{\rm score}$ of size $m_t$, define
-\[
+\begin{align*}
 \widehat R(S;\calB_t^{\rm score})
 =
 \frac1{m_t}\sum_{(\omega_i,Y_i)\in\calB_t^{\rm score}}
@@ -26,13 +26,13 @@ L(Y_i,f_S(\omega_i)),
 \widehat R(S_t;\calB_t^{\rm score})
 -
 \widehat R(S';\calB_t^{\rm score}).
-\]
-Let $\calC_t^{\rm rep}$ be repair candidates and $\calC_t^{\rm ref}$ refinement candidates. The best empirical repair gain is $\max_{S'\in\calC_t^{\rm rep}}\widehat G_t(S')$. The best penalized refinement gain is $\max_{S'\in\calC_t^{\rm ref}}\{\widehat G_t(S')-\lambda c(S')\}$. Candidate proposal may use a disjoint proposal buffer, but the scoring buffer must be held out from proposal and previous state-selection decisions for the concentration statement below. This sample split is the statistical version of the paper's conceptual split: proposal signals can be broad and heuristic, but acceptance is a consequence-scored comparison between repair and refinement. The identity state is included among repair candidates, so the best empirical repair gain is nonnegative and a harmful local update can be declined.
+\end{align*}
+Let $\calC_t^{\rm rep}$ be repair candidates and $\calC_t^{\rm ref}$ refinement candidates. Proposal may use a disjoint buffer, but the scoring buffer must be held out from proposal and previous state-selection decisions. The identity state is included among repair candidates, so a harmful local update can be declined.
 
-\begin{theorem}[Guarded empirical refinement]
+\begin{theorem}[Guarded empirical refinement, informal version of Theorem~\ref{thm:safe-refinement:formal}]
 \label{thm:main-guarded-refinement}
 Assume losses lie in $[0,1]$. At time $t$, let $\calC_t=\calC_t^{\rm rep}\cup\calC_t^{\rm ref}$ be predictable from the past and proposal buffer, and let $\calB_t^{\rm score}$ contain $m_t$ fresh held-out samples independent of candidate selection. Define
-\[
+\begin{align*}
 \epsilon_t
 =
 \sqrt{
@@ -42,28 +42,45 @@ Assume losses lie in $[0,1]$. At time $t$, let $\calC_t=\calC_t^{\rm rep}\cup\ca
 2m_t
 }
 }.
-\]
+\end{align*}
 Then with probability at least $1-\delta$, uniformly over all $t$ and $S'\in\calC_t$,
-\[
+\begin{align*}
 \left|\widehat G_t(S')-G_t(S')\right|
 \le 2\epsilon_t.
-\]
+\end{align*}
 Consequently, if a refinement $S_f$ is accepted because
-\[
+\begin{align*}
 \widehat G_t(S_f)-\lambda c(S_f)
 >
 \widehat G_t(S_r)+\tau+4\epsilon_t,
-\]
+\end{align*}
 where $S_r$ is the best empirical repair candidate, then
-\[
+\begin{align*}
 G_t(S_f)-\lambda c(S_f)
 >
 G_t(S_r)+\tau.
-\]
+\end{align*}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-Condition on the past filtration; the old state and candidate states are fixed. Hoeffding controls $|\widehat R(S)-R(S)|$ for the old state and all candidates, and a union bound over $|\calC_t|+1$ states and over $t$ with the $t^{-2}$ schedule gives the displayed high-probability event. A gain is a difference of two risks, hence its deviation is at most $2\epsilon_t$. Comparing a refinement gain to a repair gain subtracts two gain deviations, which is why the guard uses $4\epsilon_t$.
+Condition on the past filtration. The old state and all candidate states are fixed. Hoeffding and a union bound give, uniformly over the old state and $S'\in\calC_t$,
+\begin{align*}
+\left|\widehat R(S')-R(S')\right|
+\le \epsilon_t.
+\end{align*}
+Since a gain is a difference of two risks,
+\begin{align*}
+\left|\widehat G_t(S')-G_t(S')\right|
+\le 2\epsilon_t.
+\end{align*}
+On this event,
+\begin{align*}
+G_t(S_f)-\lambda c(S_f)
+&\ge \widehat G_t(S_f)-\lambda c(S_f)-2\epsilon_t\\
+&> \widehat G_t(S_r)+\tau+2\epsilon_t\\
+&\ge G_t(S_r)+\tau.
+\end{align*}
+The $t^{-2}$ schedule makes the bound simultaneous over all times.
 \end{proof}
 
-The theorem is a finite-sample guard, not a global training theorem. If the same validation buffer is reused adaptively, one needs reusable-holdout or adaptive-validation control; otherwise the rule should be read as an empirical heuristic. The margin also clarifies the role of the threshold $\tau$. The $4\epsilon_t$ term accounts for sampling uncertainty in the empirical comparison; $\tau$ is a modeling margin that can absorb unmodeled costs, numerical instability, or a desired minimum effect size. In CGA, $c(S')$ charges concept and edge growth, while repair candidates keep the accepted distinction set fixed. The result assumes a finite candidate class at the scoring time. Appendix~\ref{sec:value} gives broader greedy-recovery and oracle-inequality statements, including a local-split bound whose atom count grows as $m_0+B$ rather than $m_0 2^B$.
+The theorem is a finite-sample guard, not a global training theorem. The $4\epsilon_t$ term accounts for sampling uncertainty, while $\tau$ is a modeling margin for unmodeled costs or a desired minimum effect size. If the same validation buffer is reused adaptively, one needs reusable-holdout or adaptive-validation control. Appendix~\ref{sec:value} gives broader greedy-recovery and oracle-inequality statements.

@@ -1,85 +1,28 @@
 \section{Introduction}
 \label{sec:main-intro}
 
-A sequence model is not only an optimizer; it is an information structure. At any prediction time, its runtime state decides which past distinctions are still observable. If two histories induce the same state, every downstream predictor that factors through that state must treat them the same, no matter how much compute is spent repairing the local payload. This is the first-principles obstruction behind the paper: some errors are payload errors, and some errors are information errors. Payload errors can be repaired inside the current representation. Information errors require a refinement of the state space.
+We study a basic obstruction in online prediction with mutable memory. A runtime state is not merely a vector; it is an information structure determining which histories remain distinguishable. Once two cases induce the same state, every predictor that factors through that state must give them the same action. More computation, better local statistics, or a more elaborate optimizer can repair the action assigned to the state, but cannot use a distinction that the state has erased.
 
-This distinction is easy to hide in neural notation. A cache update, a recurrent update, an adapter step, and a test-time optimizer all change numbers. The question is whether they also change the quotient of histories that the predictor is allowed to condition on. We therefore start from a decision-theoretic model. A runtime representation induces a partition $\Pi$ of cases. A repair update changes the action or memory attached to each atom of $\Pi$ while preserving the partition. A refinement joins $\Pi$ with a new prediction-time observable distinction $U$. The central decomposition is
-\[
+The paper formalizes this point independently of architecture. A runtime representation induces a partition $\Pi$ of the case space. A \emph{repair} update changes the payload assigned to atoms of $\Pi$ while preserving the partition. A \emph{refinement} update joins $\Pi$ with a prediction-time observable distinction $U$, producing the finer partition $\Pi\vee U$. The question is therefore not whether a model updates at test time, but whether the update changes the events on which future predictions may condition.
+
+The first result is an algorithm-independent obstruction. For any predictor $f\in\Pred(\Pi)$ and any refined comparator $\Pi^\star$,
+\begin{align*}
 R_L(f)-R_L(\Pi^\star)
 =
 \underbrace{R_L(f)-R_L(\Pi)}_{\text{repair gap}}
 +
-\underbrace{R_L(\Pi)-R_L(\Pi^\star)}_{\text{refinement gap}},
-\]
-for any refined comparator $\Pi^\star$. The repair gap is the residual error of the current payload at fixed information. The refinement gap is the value of changing what the state can distinguish. If the second term is positive, a repair-only learner pays that gap every round in expectation.
+\underbrace{R_L(\Pi)-R_L(\Pi^\star)}_{\text{refinement gap}}.
+\end{align*}
+The first term can be attacked by estimation, optimization, caching, or local adaptation at fixed information. The second cannot. If every prediction remains $\Pi$-measurable, expected regret against a refined oracle is at least $T(R_L(\Pi)-R_L(\Pi^\star))$, up to a one-time refinement cost. Missing distinctions create linear regret not because the optimizer is weak, but because the admissible decision class is too coarse.
 
-The theory also says which distinctions matter. A new bit is not valuable because it is balanced, surprising, or geometrically clean. It is valuable when it changes the Bayes action. For log loss, the value of splitting $\Pi$ by $U$ is exactly the conditional mutual information $I(Y;U\mid\Pi)$. For squared loss, it is the conditional mean-separation energy created by the split. These identities give the paper's guiding rule: propose distinctions broadly, but accept them only when a held-out, cost-penalized refinement gain beats the best repair gain by a statistical guard.
+The second result identifies the unit of structural growth. A candidate bit is not valuable because it is balanced, geometrically salient, or frequent. It is valuable exactly to the extent that it changes the Bayes action. The minimal refinement is the join operation, and its value is the Bayes-risk decrease
+\begin{align*}
+V_L(U\mid\Pi)=R_L(\Pi)-R_L(\Pi\vee U).
+\end{align*}
+For log loss this is $I(Y;U\mid\Pi)$, and for squared loss it is $\E\|\E[Y\mid\Pi,U]-\E[Y\mid\Pi]\|_2^2$. Under uniqueness, a refinement has zero value iff the refined Bayes action already has an old-measurable version. This rules out accepting distinctions merely because they separate inputs rather than consequences.
 
-Concept Graph Attention (CGA) is the sequence-modeling implementation of this refine-or-repair view. Fully general DGM-style memory can create new concepts and edges online. For large-scale language modeling, that raises systems and evaluation questions that obscure the core architectural test. CGA therefore uses a fixed concept budget: each layer has $C$ concept identities, and the online state is the value memory attached to those identities. The fixed bank is not a retreat from the theory; it is a controlled capacity model. The question becomes whether a bounded set of runtime concepts can serve as the memory basis for attention, replacing the token-indexed table while preserving a forward-time learning mechanism.
+The third result is algorithmic. Population value is not directly observable, so refinement must be guarded. We give a sample-split rule: score repair and refinement candidates on a held-out buffer, charge structural cost, and accept refinement only when its penalized empirical gain beats the best repair gain by a uniform concentration margin. This is not a global training theorem; it is the statistical contract needed for a single adaptive structural update to mean what the theory says it means.
 
-CGA keeps the familiar attention read,
-\[
-\operatorname{read}(q_t)=
-\sum_{j=1}^{C}\operatorname{softmax}_j(s(q_t,c_{tj}))\,m_{tj},
-\]
-but changes the objects being read. Instead of storing one key-value entry per previous token, each layer stores value contents over fixed concept slots. Tokens read from these slots with attention-style weights and write into them with gated continuous updates and trainable retention. Thus the layer is attention-like in its readout but recurrent-memory-like in its state:
-\[
-\begin{aligned}
-\text{Transformer: tokens}&\rightarrow\text{attention over token memory},\\
-\text{CGA: tokens}&\rightarrow\text{fixed concept memory}
-\rightarrow\text{attention over concepts}.
-\end{aligned}
-\]
+The theory leads us to propose Conceptual Attention (CA). A concept is an operational object: a persistent address for a prediction-relevant information cell, not necessarily a human-semantic category. The general DGM picture allows online concept and edge growth, but language-model scale requires a controlled architectural test. We therefore propose fixed-bank CA: each layer has a bounded set of concept identities and a mutable concept-value memory. Tokens read with attention over concept identities and write by gated continuous updates with trainable retention.
 
-This gives a different answer to the question that also motivates test-time-training sequence layers \citep{sun2025learning}. TTT layers make the hidden state a small model and update that model by a self-supervised learning step on the test sequence. CGA instead makes the hidden state a concept-indexed memory and updates that memory by a forward-only write rule:
-\[
-\begin{array}{ll}
-\text{TTT:} & \text{test-time learning of hidden model weights},\\
-\text{CGA:} & \text{test-time learning of concept-memory contents}.
-\end{array}
-\]
-CGA does not update global model parameters during inference and does not run an inference-time backward pass. Its fast adaptation is the causal update of concept memory.
-
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[x=1cm,y=1cm,>=stealth]
-\tikzset{
-    token/.style={draw,rounded corners=1.5pt,fill=gray!8,minimum width=0.54cm,minimum height=0.34cm,font=\scriptsize},
-    concept/.style={circle,draw,fill=blue!7,minimum size=0.72cm,font=\scriptsize},
-    query/.style={draw,rounded corners=1.5pt,fill=green!10,minimum width=0.72cm,minimum height=0.36cm,font=\scriptsize},
-    lab/.style={font=\scriptsize},
-    arr/.style={->,thick}
-}
-\node[lab] at (0,1.35) {token attention};
-\foreach \i/\x in {1/-1.2,2/-0.6,3/0,4/0.6,5/1.2} {
-  \node[token] (t\i) at (\x,0.65) {$x_{\i}$};
-}
-\node[query] (qt) at (0,-0.4) {$q_t$};
-\foreach \i in {1,2,3,4,5} {
-  \draw[arr,gray] (qt) -- (t\i);
-}
-\node[lab,align=center,text width=2.6cm] at (0,-1.05) {read over token keys and values};
-
-\node[lab] at (5.0,1.35) {concept graph attention};
-\foreach \i/\x/\y in {1/4.0/0.42,2/4.55/0.98,3/5.15/0.48,4/5.75/1.02,5/6.15/0.42} {
-  \node[concept] (c\i) at (\x,\y) {$c_{\i}$};
-}
-\node[query] (qc) at (5.05,-0.4) {$q_t$};
-\foreach \i in {1,2,3,4,5} {
-  \draw[arr,gray] (qc) -- (c\i);
-}
-\node[lab,align=center,text width=3.0cm] at (5.05,-1.05) {read over fixed concepts; writes update value memory};
-\end{tikzpicture}
-\caption{CGA changes the memory object of attention. Standard attention reads from token memory. CGA performs a continuous attention read over fixed concept identities whose value memories are updated causally.}
-\label{fig:cga-vs-token-attention}
-\end{figure}
-
-This paper makes four contributions.
-\begin{itemize}
-    \item \textbf{First-principles theory.} We formalize runtime memory as an information partition and prove that repair-only learners suffer linear regret whenever the missing distinction has positive Bayes-risk value.
-    \item \textbf{Value of distinction.} We characterize useful refinements by consequence value, including the log-loss identity $V_{\log}(U\mid\Pi)=I(Y;U\mid\Pi)$, the squared-loss variance identity, and a guarded empirical acceptance rule that compares refinement against repair.
-    \item \textbf{Architecture.} We introduce fixed-bank CGA as a scalable sequence-modeling specialization of DGM: attention reads over concept identities, while causal writes update bounded concept value memory at inference time.
-    \item \textbf{Evaluation.} We implement CGA in the PoST/Zoology framework and evaluate it on state-equalized multi-query associative recall and matched language-model pretraining with zero-shot downstream evaluation.
-\end{itemize}
-
-The claim boundary is important. CGA is not a new tokenizer, loss, or inference-time optimizer. It is a method for changing the memory basis of attention from tokens to runtime concepts. The fixed-bank version in the main experiments deliberately removes online slot allocation so the architectural question is isolated. The appendix restores the broader DGM theory: minimal joins, finite-sample refinement scores, graph data-structure costs, local repair, projection memory, and formal proofs.
+This separation gives the paper's contribution structure. Sections~\ref{sec:main-setup}--\ref{sec:main-guard} are the theory: the repair-only obstruction, the value characterization, and the guarded refinement test. Section~\ref{sec:main-ca} presents CA as the proposed bounded-state sequence layer suggested by that theory. Section~\ref{sec:main-experiments} evaluates the proposal on state-equalized MQAR and matched language-model pretraining. The appendix contains the general DGM extension with online graph growth, finite-class oracle inequalities, data-structure bounds, projection-memory bridges, and full proofs.

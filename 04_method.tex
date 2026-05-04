@@ -22,7 +22,7 @@ In the finite partition model, the analogous value is $V_L(U\mid\Pi)=R_L(\Pi)-R_
 
 The first fact is purely order-theoretic. If $\calG$ contains all events in $\calF$, then every $\calF$-measurable predictor is also $\calG$-measurable. The decision class has only grown; this is the Bayes-risk analogue of Blackwell's monotonicity of decision value under more informative experiments \citep{blackwell1953equivalent}.
 
-\begin{theorem}[Bayes-risk monotonicity]
+\begin{theorem}[Bayes-risk monotonicity, informal version of Theorem~\ref{thm:risk-monotonicity:formal}]
 \label{thm:risk-monotonicity:informal}
 If $\calF\subseteq\calG$, then for every loss $L$ for which both risks are well-defined,
 \begin{align*}
@@ -34,13 +34,13 @@ R_L(\calG)\le R_L(\calF).
 Every $\calF$-measurable action is also $\calG$-measurable. Taking the infimum of the same expected loss over the larger feasible set gives the claim.
 \end{proof}
 
-This is a population statement. It says that information cannot hurt the best possible decision rule. It does not say that a finite implementation should refine without restraint. Statistical estimation, finite samples, and model selection can overfit; those are algorithmic questions, not failures of the information order. This is why the CGA algorithm later uses penalties, thresholds, and sample-split scoring before committing a new concept.
+This is a population statement. It says that information cannot hurt the best possible decision rule. It does not say that a finite implementation should refine without restraint. Statistical estimation, finite samples, and model selection can overfit; those are algorithmic questions, not failures of the information order. This is why the CA algorithm later uses penalties, thresholds, and sample-split scoring before committing a new concept.
 
 \subsection{Loss-relevant refinement}
 
 A distinction is useful only if it changes the Bayes-optimal decision. The next theorem is the decision-theoretic core of the paper: zero refinement value means the refined optimum was already expressible under the old information.
 
-\begin{theorem}[Loss-relevant refinement]
+\begin{theorem}[Loss-relevant refinement, informal version of Theorem~\ref{thm:loss-relevant-refinement:formal}]
 \label{thm:loss-relevant-refinement:informal}
 Let $\calF\subseteq\calG\subseteq\calE$. Assume Bayes actions exist under $\calF$ and $\calG$, and that the $\calG$-Bayes action is almost surely unique. Then
 \begin{align*}
@@ -61,7 +61,7 @@ Monotonicity gives the reverse inequality. Conversely, if the risks are equal an
 
 For a finite target variable $Y$, log loss asks the learner to output a conditional distribution. The optimal prediction under $\calF$ is the conditional law of $Y$ given $\calF$, and the optimal risk is conditional entropy, a standard identity for logarithmic scoring rules and information theory \citep{cover2006elements,gneiting2007strictly}.
 
-\begin{theorem}[Log-loss value]
+\begin{theorem}[Log-loss value, informal version of Theorem~\ref{thm:log-value:formal}]
 \label{thm:log-value:informal}
 Let $Y$ be finite and let the loss be $-\log q(Y)$. If $\calF\subseteq\calG$, then
 \begin{align*}
@@ -76,28 +76,27 @@ p_\calF(y)=\mathbb P(Y=y\mid\calF),
 p_\calG(y)=\mathbb P(Y=y\mid\calG),
 \end{align*}
 the same identity has the conditional-KL form
-\begin{align}
+\begin{align*}
 R_{\log}(\calF)-R_{\log}(\calG)
 =
 \E\left[
-D_{\mathrm{KL}}\!\left(p_\calG(\cdot)\middle\|p_\calF(\cdot)\right)
+D_{\mathrm{KL}}\left(p_\calG(\cdot)\middle\|p_\calF(\cdot)\right)
 \right].
-\label{eq:conditional-kl-value}
-\end{align}
+\end{align*}
 Thus, for classification and language modeling, a refinement is useful exactly when it changes the conditional consequence distribution with positive probability. If the new bit does not tell us anything about the next consequence beyond the old information, it is a gratuitous distinction, even if it separates inputs.
 
-\begin{corollary}[Binary distinction value]
+\begin{corollary}[Binary distinction value, informal version of Corollary~\ref{cor:binary-distinction-value:formal}]
 \label{cor:binary-distinction-value:informal}
 Let $U\in\{0,1\}$ be a candidate distinction and let $\calG=\calF\vee\sigma(U)$. Under log loss,
 \begin{align*}
 R_{\log}(\calF)-R_{\log}(\calG)
-\!&=
+&=
 I(Y;U\mid\calF)\\
 &=
-\E\!\left[
+\E\left[
 \sum_{u\in\{0,1\}}
 \mathbb P(U=u\mid\calF)
-D_{\mathrm{KL}}\!\left(
+D_{\mathrm{KL}}\left(
 \mathbb P(Y\in\cdot\mid\calF,U=u)
 \middle\|
 \mathbb P(Y\in\cdot\mid\calF)
@@ -110,7 +109,7 @@ D_{\mathrm{KL}}\!\left(
 
 For $Y\in L^2(\Omega;\R^d)$ and squared loss, the optimal predictor under $\calF$ is $\E[Y\mid\calF]$, the $L^2$ projection onto the closed subspace of $\calF$-measurable random variables \citep{billingsley1995probability,kallenberg2002foundations}. Refinement helps precisely when it changes the conditional mean.
 
-\begin{theorem}[Squared-loss value]
+\begin{theorem}[Squared-loss value, informal version of Theorem~\ref{thm:squared-value:formal}]
 \label{thm:squared-value:informal}
 Let $Y\in L^2(\Omega;\R^d)$ and let $L(Y,a)=\norm{Y-a}_2^2$. If $\calF\subseteq\calG$, then
 \begin{align*}
@@ -124,7 +123,7 @@ The identity is the Hilbert-space analogue of the log-loss result. A distinction
 
 Minimal refinement in Section~\ref{sec:minimal-refinement} adds the least information needed to observe a proposed variable. The loss-sufficient question is slightly different: among the refinements inside $\calG$, what is the least information needed to attain the $\calG$-Bayes risk?
 
-\begin{theorem}[Minimal loss-sufficient refinement]
+\begin{theorem}[Minimal loss-sufficient refinement, informal version of Theorem~\ref{thm:minimal-loss-sufficient:formal}]
 \label{thm:minimal-loss-sufficient:informal}
 Work in the measurable-action convention of Section~\ref{sec:preliminaries}. Let $\calF\subseteq\calG$ and assume the $\calG$-Bayes action $a_\calG^\star:\Omega\to\mathsf A$ exists as a $(\calG,\Sigma_{\mathsf A})$-measurable map and is almost surely unique. Also assume the Bayes infimum is attained for every intermediate sigma-algebra $\calH$ with $\calF\subseteq\calH\subseteq\calG$ that is considered below. Up to null sets, the smallest sigma-algebra $\calH$ satisfying
 \begin{align*}
@@ -191,14 +190,14 @@ It also has the between-cell form
 \end{align*}
 \end{definition}
 
-The population identities lead directly to these standard empirical split scores: information gain for classification and variance reduction for regression trees \citep{quinlan1986induction,breiman1984classification,domingos2000mining}. They implement the same principle as Definition~\ref{def:distinction-value}: split only when the proposed distinction has measurable consequence value. The CGA algorithm below turns this population rule into a guarded empirical decision.
+The population identities lead directly to these standard empirical split scores: information gain for classification and variance reduction for regression trees \citep{quinlan1986induction,breiman1984classification,domingos2000mining}. They implement the same principle as Definition~\ref{def:distinction-value}: split only when the proposed distinction has measurable consequence value. The CA algorithm below turns this population rule into a guarded empirical decision.
 
 \subsection{Distinction complexity}
 
 \begin{definition}[Distinction complexity]
 \label{def:distinction-complexity}
 Let $\Pi$ be an initial partition, let $\Pi^\star$ be a target refinement, and let $\calU\subseteq\{0,1\}^{\Omega}$ be a distinction class. For $\epsilon\ge0$, the loss-dependent distinction complexity is
-\begin{align}
+\begin{align*}
 d_L^\epsilon(\Pi,\Pi^\star;\calU)
 =
 \min\left\{
@@ -209,16 +208,15 @@ R_L(\Pi\vee U_1\vee\cdots\vee U_m)
 \le
 R_L(\Pi^\star)+\epsilon
 \right\},
-\label{eq:distinction-complexity}
-\end{align}
+\end{align*}
 with value $+\infty$ if no such sequence exists.
 \end{definition}
 
-The refinement gap measures the value of a target information structure. Distinction complexity measures how many admissible bits are needed to reach it. Repair-only learning is the case $m=0$. Decision trees, graph refinements, and prototype split systems differ partly in the distinction classes and ordering constraints they impose. CGA corresponds to a graph-generated class of local binary predicates proposed from confused runtime states.
+The refinement gap measures the value of a target information structure. Distinction complexity measures how many admissible bits are needed to reach it. Repair-only learning is the case $m=0$. Decision trees, graph refinements, and prototype split systems differ partly in the distinction classes and ordering constraints they impose. CA corresponds to a graph-generated class of local binary predicates proposed from confused runtime states.
 
 \subsection{Greedy recovery under realizability}
 
-The next theorem is a clean realizable upper bound for greedy refinement. It is intentionally stated for the abstract partition model rather than for Soft-CGA retrieval. The distinction class is understood to contain only prediction-time observable distinctions, as in Definition~\ref{def:refinable-online-prediction}.
+The next theorem is a clean realizable upper bound for greedy refinement. It is intentionally stated for the abstract partition model rather than for Soft-CA retrieval. The distinction class is understood to contain only prediction-time observable distinctions, as in Definition~\ref{def:refinable-online-prediction}.
 
 \begin{definition}[Target-respecting distinction]
 \label{def:target-respecting}
@@ -232,7 +230,7 @@ For an atom $B\in\Pi$, write $\Pi^\star|_B=\{C\in\Pi^\star:C\cap B\ne\varnothing
 V_L(B,U)
 =
 R_L(\{B\})-
-R_L\!\left(\{B\}\vee U\right),
+R_L\left(\{B\}\vee U\right),
 \end{align*}
 where the risks are conditional on $\omega\in B$. Under log loss, $V_{\log}(B,U)=I(Y;U\mid \omega\in B)$.
 \end{definition}

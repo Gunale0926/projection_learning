@@ -1,59 +1,69 @@
-\section{Which Distinctions Matter?}
+\section{Bayes-Risk Value of Refinement}
 \label{sec:main-value}
 
-Adding a distinction has a canonical minimal form. For $D=U^{-1}(1)$,
-\[
+The obstruction above says that a missing distinction can matter; it does not say which distinctions should be added. The answer is loss value. For $D=U^{-1}(1)$, the minimal way to add a binary observable $U$ is
+\begin{align*}
 \Pi\vee U
 =
 \{B\cap D,B\cap D^c:B\in\Pi\}\setminus\{\varnothing\}.
-\]
+\end{align*}
 
-\begin{proposition}[Minimal join]
+\begin{proposition}[Minimal join, informal version of Theorem~\ref{thm:minimal-refinement:formal}]
 \label{prop:main-minimal-join}
 $\Pi\vee U$ is the unique coarsest refinement of $\Pi$ that makes $U$ measurable.
 \end{proposition}
 
-The operation splits exactly the old atoms crossed by the new distinction and leaves all other atoms unchanged. To see minimality, let $\calQ$ be any refinement of $\Pi$ that makes $D=U^{-1}(1)$ measurable. Every atom $Q\in\calQ$ lies inside some old atom $B$ and, because $D$ is $\calQ$-measurable, lies either in $D$ or in $D^c$. Hence $Q$ lies inside either $B\cap D$ or $B\cap D^c$, so $\calQ$ refines $\Pi\vee U$. This matters operationally: refinement should not be equated with wholesale model growth. The canonical information update adds the least observability required by the proposed bit. Its value is task-dependent:
-\[
-V_L(U\mid\Pi)=R_L(\Pi)-R_L(\Pi\vee U).
-\]
-Risk monotonicity gives $V_L(U\mid\Pi)\ge0$ at the population optimum, because every old predictor remains feasible after refinement. Finite implementations can still overfit, which is why Section~\ref{sec:main-guard} uses held-out scoring and penalties before committing a split.
+\begin{proof}[Proof sketch]
+The nonempty sets $B\cap D$ and $B\cap D^c$ partition each old atom $B$, hence form a refinement of $\Pi$. Since
+\begin{align*}
+D=\bigcup_{B\in\Pi}(B\cap D),
+\end{align*}
+$U$ is measurable under $\Pi\vee U$. If $\calQ$ refines $\Pi$ and makes $D$ measurable, then every $Q\in\calQ$ is contained in either $B\cap D$ or $B\cap D^c$ for some $B\in\Pi$. Thus $\calQ$ refines $\Pi\vee U$.
+\end{proof}
 
-\begin{theorem}[Loss-relevant refinement]
+The population value of the distinction is
+\begin{align*}
+V_L(U\mid\Pi)=R_L(\Pi)-R_L(\Pi\vee U).
+\end{align*}
+Risk monotonicity gives $V_L(U\mid\Pi)\ge0$ at the population optimum, but finite implementations can overfit a split; Section~\ref{sec:main-guard} therefore scores refinements on held-out data before committing them.
+
+\begin{theorem}[Loss-relevant refinement, informal version of Theorem~\ref{thm:loss-relevant-refinement:formal}]
 \label{thm:main-loss-relevant}
 Let $\Pi'$ refine $\Pi$. Assume Bayes actions exist and the $\Pi'$-Bayes action is unique on positive-mass atoms. Then
-\[
+\begin{align*}
 R_L(\Pi)=R_L(\Pi')
-\]
-if and only if the $\Pi'$-Bayes action has a $\Pi$-measurable version. Equivalently, in the finite partition model, zero value means the refined Bayes action is constant across all refined atoms inside each old atom $B\in\Pi$.
+\end{align*}
+if and only if the $\Pi'$-Bayes action has a $\Pi$-measurable version. Equivalently, zero value means the refined Bayes action is constant across refined atoms inside each old atom.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-If the refined Bayes action is $\Pi$-measurable, it is feasible under $\Pi$, so $R_L(\Pi)\le R_L(\Pi')$; monotonicity gives equality. If risks are equal, any $\Pi$-Bayes action is also $\Pi'$-optimal. Uniqueness under $\Pi'$ forces agreement with the refined Bayes action on positive-mass atoms.
+If $a_{\Pi'}^\star$ is $\Pi$-measurable, it is feasible under $\Pi$, so
+\begin{align*}
+R_L(\Pi)\le R_L(\Pi').
+\end{align*}
+Monotonicity gives the reverse inequality. Conversely, if equality holds and $a_\Pi^\star$ is a $\Pi$-Bayes action, then $a_\Pi^\star$ is also optimal under $\Pi'$. Uniqueness gives
+\begin{align*}
+a_\Pi^\star=a_{\Pi'}^\star
+\end{align*}
+on every positive-mass refined atom.
 \end{proof}
 
-For finite $Y$ under log loss, $R_{\log}(\Pi)=H(Y\mid\Pi)$. The Bayes action in atom $B$ is the empirical or population conditional law $P(Y\mid B)$, and the risk is the conditional entropy averaged over atoms. For a binary distinction $U$,
-\[
+For finite $Y$ under log loss, $R_{\log}(\Pi)=H(Y\mid\Pi)$ and
+\begin{align*}
 V_{\log}(U\mid\Pi)
-=
-R_{\log}(\Pi)-R_{\log}(\Pi\vee U)
-=
-I(Y;U\mid\Pi).
-\]
-Equivalently,
-\[
-V_{\log}(U\mid\Pi)
-=
+&=
+I(Y;U\mid\Pi)\\
+&=
 \sum_{B\in\Pi}P(B)
 \sum_{u\in\{0,1\}}P(U=u\mid B)
-D_{\mathrm{KL}}\!\left(
-P(Y\mid B,U=u)\,\Vert\,P(Y\mid B)
+D_{\mathrm{KL}}\left(
+P(Y\mid B,U=u)
+\middle\|
+P(Y\mid B)
 \right).
-\]
-Thus all candidate bits may have the same marginal frequency while only consequence-relevant bits have positive conditional mutual information. This identity is the reason BalancedMask-HQS is a useful diagnostic: the stream makes all query bits equally frequent, so frequency or geometric novelty cannot identify the correct bit, while $I(Y;U\mid\Pi)$ can.
-
+\end{align*}
 For $Y\in L^2(\Omega;\R^d)$ and squared loss,
-\[
+\begin{align*}
 R_2(\Pi)-R_2(\Pi\vee U)
 =
 \E\left[
@@ -63,5 +73,5 @@ R_2(\Pi)-R_2(\Pi\vee U)
 \E[Y\mid \Pi]
 \right\|_2^2
 \right].
-\]
-We use standard value-of-information identities here, specialized to the refine-or-repair online setting \citep{cover2006elements,gneiting2007strictly}. The value of a distinction is not geometric novelty; it is consequence value. Consequently, a visually clean cluster split can be worthless if both children have the same Bayes action, while a low-level bit can be valuable if it changes the conditional consequence. This is also why the algorithm compares refinement against repair rather than accepting every statistically nonzero split: a split can have positive value but still be smaller than the gain from simply repairing stale payloads.
+\end{align*}
+Thus the value of a distinction is consequence value, not geometric novelty or marginal frequency. A clean cluster split can be worthless if both children have the same Bayes action, while a low-level bit can be valuable if it changes the conditional consequence. The appendix gives the full value-of-information identities and the coarsest loss-sufficient refinement.

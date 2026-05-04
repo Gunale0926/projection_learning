@@ -1,12 +1,13 @@
 \section{Appendix Roadmap}
 \label{app:roadmap}
 
-The appendix keeps secondary theoretical and implementation material out of the main method story. It first states limitations and extended related work, then preserves the full formal model, the longer refinement and concept-graph development, implementation extensions, the projection-memory bridge, and formal proofs.
+The appendix follows the same logical chain as the main text, but with all modeling assumptions, proof details, and implementation bridges made explicit. It first states what the results do not prove, then places the contribution relative to prior work, and only then develops the formal machinery. The proof appendices are ordered so that each later argument can reuse objects already defined earlier: partitions and joins, value identities, graph-generated information structures, guarded refinement, and finally projection-memory bridges.
+
 \begin{itemize}
-\item {\bf Part 1.} Appendix~\ref{app:limitations} clarifies what the theory proves and what it leaves to modeling, statistics, and experiments.
-\item {\bf Part 2.} Appendix~\ref{app:related} gives the extended related-work discussion.
-\item {\bf Part 3.} Appendices~\ref{sec:preliminaries}--\ref{sec:algorithms} retain the full model, value identities, and graph-refinement formalism.
-\item {\bf Part 4.} Appendix~\ref{sec:large-model-training} gives CGA-LM as an attention-replacement architecture; Appendix~\ref{app:dgm-extensions} collects tree special cases, data-structure costs, the optional adapter variant, systems notes, and closed-form local repair.
-\item {\bf Part 5.} Appendix~\ref{sec:projection-bridge} gives the Projection Memory and CPM bridge.
-\item {\bf Part 6.} Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs} give the formal proofs.
+\item {\bf Part 1.} Appendix~\ref{app:limitations} fixes the claim boundary: the lower bound is information-theoretic, the guarded rule is a sample-split validation statement, and the large-model layer is an architectural proposal rather than a scaling theorem.
+\item {\bf Part 2.} Appendix~\ref{app:related} compares CA to repair-only memories, refinement-only category systems, routing architectures, and decision-theoretic value-of-information results.
+\item {\bf Part 3.} Appendices~\ref{sec:preliminaries}--\ref{sec:finite-sample-refinement} give the full abstract model. They define partition-measurable predictors, repair and refinement, Bayes-risk gaps, minimal joins, value of a distinction, greedy realizability, and finite-class oracle inequalities.
+\item {\bf Part 4.} Appendix~\ref{sec:algorithms} turns the abstract model into a graph data structure. It defines hard-route CA, the edge-generated partition, the soft-routing approximation, the refine-or-repair acceptance rule, and the data-structure costs.
+\item {\bf Part 5.} Appendices~\ref{sec:large-model-training}, \ref{sec:projection-bridge}, and \ref{app:dgm-extensions} connect the theory to sequence models. They state the CALM read/write layer, the Projection Memory and CPM bridge, tree special cases, systems notes, and closed-form local repair.
+\item {\bf Part 6.} Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs} collect the formal proofs in dependency order: first minimal information updates, then Bayes-risk value identities, then graph-routing, validation, data-structure, and projection-memory statements.
 \end{itemize}

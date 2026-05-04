@@ -8,16 +8,15 @@ Adding a distinction has a canonical minimal form: split exactly the atoms cross
 \begin{definition}[Partition-measurable event and finite split]
 \label{def:partition-measurable-event}
 Let $\calP$ be a finite partition of $\Omega$. An event $D\subseteq\Omega$ is $\calP$-measurable if it is a union of atoms of $\calP$. For any event $D$, the finite split of $\calP$ by $D$ is
-\begin{align}
+\begin{align*}
 \calP_D
-&=\{B\cap D:B\in\calP, B\cap D\ne\varnothing\}\notag\\
+&=\{B\cap D:B\in\calP, B\cap D\ne\varnothing\}\\
 &{}\cup\{B\cap D^c:B\in\calP, B\cap D^c\ne\varnothing\}.
-\label{eq:finite-refinement}
-\end{align}
+\end{align*}
 This keeps exactly the nonempty pieces obtained by cutting each old atom by $D$.
 \end{definition}
 
-\begin{theorem}[Minimal finite refinement]
+\begin{theorem}[Minimal finite refinement, informal version of Theorem~\ref{thm:minimal-refinement:formal}]
 \label{thm:minimal-refinement:informal}
 Let $\calP$ be a finite partition of $\Omega$ and let $D\subseteq\Omega$. The partition $\calP_D$ is the unique minimal partition that refines $\calP$ and makes $D$ measurable. More precisely, if $\calQ$ refines $\calP$ and $D$ is $\calQ$-measurable, then $\calQ$ refines $\calP_D$.
 \end{theorem}
@@ -35,10 +34,9 @@ The theorem gives a canonical update. The evidence determines the least refined 
 \subsection{The sigma-algebra form}
 
 For general spaces, the same operation is the join of sigma-algebras. If the current information is $\calF_t$ and the evidence is a variable $U_t$, the minimal updated information is
-\begin{align}
+\begin{align*}
 \calF_{t+1}=\calF_t\vee\sigma(U_t).
-\label{eq:join-update}
-\end{align}
+\end{align*}
 
 \begin{definition}[Generated sigma-algebra and join]
 \label{def:sigma-join}
@@ -49,7 +47,7 @@ For a random variable $U$, $\sigma(U)$ denotes the smallest sigma-algebra with r
 the smallest sigma-algebra containing both. In particular, $\calF\vee\sigma(U)$ is the information structure obtained by adding observability of $U$ to $\calF$.
 \end{definition}
 
-\begin{theorem}[Minimal sigma-algebra refinement]
+\begin{theorem}[Minimal sigma-algebra refinement, informal version of Theorem~\ref{thm:sigma-refinement:formal}]
 \label{thm:sigma-refinement:informal}
 Let $\calF\subseteq\calE$ be a sigma-algebra and let $U$ be a random variable. The join $\calF\vee\sigma(U)$ is the smallest sigma-algebra $\calG$ such that $\calF\subseteq\calG$ and $U$ is $\calG$-measurable.
 \end{theorem}

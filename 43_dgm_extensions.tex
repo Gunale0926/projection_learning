@@ -1,20 +1,20 @@
-\section{CGA Implementation Extensions}
+\section{CA Implementation Extensions}
 \label{app:dgm-extensions}
 
-This appendix collects CGA mechanics and large-model details that are useful for implementations but secondary to the main refine-or-repair argument.
+This appendix collects CA mechanics and large-model details that are useful for implementations but secondary to the main refine-or-repair argument.
 
 \subsection{Trees as a hard-routing special case}
 
 A tree stores distinctions as a hierarchy. A mistake near the root changes every downstream routing decision. A graph stores distinctions locally between concepts. Creating a new concept does not rewrite old paths; it adds a local alternative and edges explaining why the new concept differs from its neighbors. Trees are still contained in the view below, but as a constrained hard-routing case.
 
-\begin{proposition}[Trees as generalized hard-CGAs]
+\begin{proposition}[Trees as generalized hard-CAs, informal version of Proposition~\ref{prop:tree-as-dgm:formal}]
 \label{prop:tree-as-dgm:informal}
-Given a binary distinction tree, construct one generalized hard-route CGA concept for each leaf and attach the path distinctions as hard eligibility constraints for that concept. If the generalized hard route selects the unique eligible leaf concept and each concept memory equals the tree leaf predictor, then the generalized CGA and the tree make identical predictions.
+Given a binary distinction tree, construct one generalized hard-route CA concept for each leaf and attach the path distinctions as hard eligibility constraints for that concept. If the generalized hard route selects the unique eligible leaf concept and each concept memory equals the tree leaf predictor, then the generalized CA and the tree make identical predictions.
 \end{proposition}
 
 Thus the distinction-graph view contains trees after allowing arbitrary concept-level eligibility constraints. A decision tree is the sparse case in which distinctions are forced into a rooted hierarchy and routing is hard and single-path.
 
-\subsection{CGA data-structure cost}
+\subsection{CA data-structure cost}
 
 Let
 \begin{align*}
@@ -30,9 +30,9 @@ O(N_t(2d+\bar s)+\abs{E_t}d).
 \end{align*}
 An embedding-mean variant instead uses $O(N_t(2d+d_e)+\abs{E_t}d)$ memory, but it is not a calibrated log-loss memory without an additional probability model.
 
-\begin{theorem}[CGA data-structure bound]
+\begin{theorem}[CA data-structure bound, informal version of Theorem~\ref{thm:dgm-complexity:formal}]
 \label{thm:dgm-complexity:informal}
-For exact search over $N_t$ centroids in $\R^d$, one edge-gated CGA prediction costs $O(N_td+Q d+\abs{N}d+C_{\mathrm{local}})$, where $N=N(h)$ and $Q=Q(h)$ is an edge count. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ guarded distinction edges costs an additional $O(d+qd)$ plus anchor-order query bookkeeping. With sparse categorical memories of average support $\bar s$, the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
+For exact search over $N_t$ centroids in $\R^d$, one edge-gated CA prediction costs $O(N_td+Q d+\abs{N}d+C_{\mathrm{local}})$, where $N=N(h)$ and $Q=Q(h)$ is an edge count. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ guarded distinction edges costs an additional $O(d+qd)$ plus anchor-order query bookkeeping. With sparse categorical memories of average support $\bar s$, the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
 \end{theorem}
 
 \subsection{Ridge local memory}
@@ -47,24 +47,24 @@ Projection Memory and CPM are advanced repair rules inside $M_j$ after the graph
 
 \subsection{Training modes for representation drift}
 
-Anchors, centroids, and edges live in query space. If the encoder or query map changes rapidly while the CGA state persists, old anchors and edges describe stale geometry. Reports should therefore state which training mode is used.
+Anchors, centroids, and edges live in query space. If the encoder or query map changes rapidly while the CA state persists, old anchors and edges describe stale geometry. Reports should therefore state which training mode is used.
 
 \paragraph{Mode A: frozen encoder.}
-Train the backbone and query map first, then freeze $\phi_\theta$, $Q$, and the backbone distribution used for CGA smoothing while running CGA runtime learning. This is the cleanest protocol for the first experiments and is the default interpretation of the theory.
+Train the backbone and query map first, then freeze $\phi_\theta$, $Q$, and the backbone distribution used for CA smoothing while running CA runtime learning. This is the cleanest protocol for the first experiments and is the default interpretation of the theory.
 
 \paragraph{Mode B: EMA query encoder.}
 Maintain a slowly moving query encoder
 \begin{align*}
 \bar\theta\leftarrow \beta\bar\theta+(1-\beta)\theta,
 \end{align*}
-and create anchors, centroids, and edge generators in the query space of $\phi_{\bar\theta}$ and $Q_{\bar\theta}$. The backbone can still train, but the CGA state is tied to the slower geometry.
+and create anchors, centroids, and edge generators in the query space of $\phi_{\bar\theta}$ and $Q_{\bar\theta}$. The backbone can still train, but the CA state is tied to the slower geometry.
 
 \paragraph{Mode C: periodic state rebuild.}
-During end-to-end training, rebuild or clear the CGA state every $K$ optimization steps, or rebuild it from a replay buffer under the current query map. The formal guarantees then apply within a rebuild interval. Cross-interval state carryover is a systems approximation, not a claim of anchor-stable refinement.
+During end-to-end training, rebuild or clear the CA state every $K$ optimization steps, or rebuild it from a replay buffer under the current query map. The formal guarantees then apply within a rebuild interval. Cross-interval state carryover is a systems approximation, not a claim of anchor-stable refinement.
 
 \subsection{Non-canonical adapter extension}
 
-Beyond the categorical next-token memory in Appendix~\ref{sec:large-model-training}, a richer optional adapter-style layer stores a local linear repair map, related to parameter-efficient adapter and LoRA modules but updated as a local CGA memory \citep{houlsby2019parameter,hu2022lora}. It requires an explicit residual target and should not be conflated with the calibrated next-token memory mechanism:
+Beyond the categorical next-token memory in Appendix~\ref{sec:large-model-training}, a richer optional adapter-style layer stores a local linear repair map, related to parameter-efficient adapter and LoRA modules but updated as a local CA memory \citep{houlsby2019parameter,hu2022lora}. It requires an explicit residual target and should not be conflated with the calibrated next-token memory mechanism:
 \begin{align*}
 \calS_t^{\mathrm{adp}}=\{a_j,c_j,W_j,n_j\}_{j=1}^{N_t}\cup G_t,
 \qquad
@@ -89,14 +89,14 @@ Equivalently, a memory may maintain small ridge sufficient statistics and solve 
 
 \subsection{Cost and systems notes}
 
-During sequential detached training, backpropagation sees the selected read computation, while the CGA state is updated in the same order as streaming inference. The important comparison is with test-time gradient adaptation \citep{sun2020test,wang2021tent,niu2022eata,zhang2022memo,sun2025learning}. A TTT-style layer typically performs an inner backward pass at inference time. A CGA layer performs retrieval, sparse local read, and closed-form or sufficient-statistic repair. The cost is forward-only:
+During sequential detached training, backpropagation sees the selected read computation, while the CA state is updated in the same order as streaming inference. The important comparison is with test-time gradient adaptation \citep{sun2020test,wang2021tent,niu2022eata,zhang2022memo,sun2025learning}. A TTT-style layer typically performs an inner backward pass at inference time. A CA layer performs retrieval, sparse local read, and closed-form or sufficient-statistic repair. The cost is forward-only:
 \begin{align*}
-\text{CGA inference}=\text{backbone forward}+\text{retrieval}+\text{sparse local repair}.
+\text{CA inference}=\text{backbone forward}+\text{retrieval}+\text{sparse local repair}.
 \end{align*}
 
-\begin{theorem}[CGA layer cost]
+\begin{theorem}[CA layer cost, informal version of Theorem~\ref{thm:dgm-layer-cost:formal}]
 \label{thm:dgm-layer-cost:informal}
-Consider a CGA adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $\abs{N}$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
+Consider a CA adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $\abs{N}$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
 \begin{align*}
 O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}dr).
 \end{align*}
@@ -104,16 +104,16 @@ If the write path is detached and uses rank-one local repair, the write overhead
 \begin{align*}
 O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}(d_q+dr)).
 \end{align*}
-For a block of length $L$, the CGA state history need not be stored for backpropagation; the additional activation memory is the selected read computation, not the full sequence of memory states. The CGA-LM mixer replaces the $\abs{N}dr$ adapter term by sparse concept lookup, edge-gated value aggregation, and detached graph-write costs.
+For a block of length $L$, the CA state history need not be stored for backpropagation; the additional activation memory is the selected read computation, not the full sequence of memory states. The CALM mixer replaces the $\abs{N}dr$ adapter term by sparse concept lookup, edge-gated value aggregation, and detached graph-write costs.
 \end{theorem}
 
 The concept bank can be sharded by the same principle used in retrieval and sparse expert systems. Each device owns a subset of concepts. A query is routed to a small set of shards, each shard returns local top-$k$ candidates, and a final top-$k$ merge selects the memories used by the read path. Only selected memories receive gradients. Detached writes are sent back to the owning shards.
 
-Budgeting is necessary for long training. A practical CGA layer maintains $N_t\le N_{\max}$, merges only compatible unprotected concepts, and otherwise evicts or compresses low-score memories. These budget actions are maintenance operations, not learning operations in the formal refine-or-repair sense. The refine-or-repair theorems apply between maintenance events; merge, eviction, and compression may destroy information and must be evaluated as resource-management approximations.
+Budgeting is necessary for long training. A practical CA layer maintains $N_t\le N_{\max}$, merges only compatible unprotected concepts, and otherwise evicts or compresses low-score memories. These budget actions are maintenance operations, not learning operations in the formal refine-or-repair sense. The refine-or-repair theorems apply between maintenance events; merge, eviction, and compression may destroy information and must be evaluated as resource-management approximations.
 
 \subsection{Closed-form local repair}
 
-Ridge memory is the main closed-form adapter used in our checks. Let $X_{\mathrm{sup}}\in\R^{n\times d}$ be normalized support embeddings stored by a CGA memory and let $Y\in\R^{n\times C}$ be one-hot consequences. The adapter computes the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}
+Ridge memory is the main closed-form adapter used in our checks. Let $X_{\mathrm{sup}}\in\R^{n\times d}$ be normalized support embeddings stored by a CA memory and let $Y\in\R^{n\times C}$ be one-hot consequences. The adapter computes the dual ridge/Tikhonov solution \citep{tikhonov1977solutions,hoerl1970ridge}
 \begin{align*}
 \Gamma=(X_{\mathrm{sup}}X_{\mathrm{sup}}^\top+\lambda I)^{-1}Y,
 \qquad

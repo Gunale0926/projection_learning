@@ -25,8 +25,8 @@ $\Pi\vee U$ & partition obtained by splitting $\Pi$ by $U$ \\
 $\calF,\calG$ & sigma-algebras or information structures \\
 $V_L(\calF,\calG)$ & value of refining $\calF$ to $\calG$ \\
 $d_L^\epsilon$ & loss-dependent distinction complexity \\
-$a_j,c_j,M_j$ & CGA anchor, centroid, and local memory for concept $j$ \\
-$E_t,g_e,\calP_t^G$ & CGA edge set, edge generator, and graph-generated partition \\
+$a_j,c_j,M_j$ & CA anchor, centroid, and local memory for concept $j$ \\
+$E_t,g_e,\calP_t^G$ & CA edge set, edge generator, and graph-generated partition \\
 $\calB_t^{\mathrm{score}}$ & held-out scoring buffer for empirical refinement tests \\
 $\widehat\Delta_{\mathrm{repair}},\widehat\Delta_{\mathrm{refine}}$ & empirical repair and refinement gains \\
 \bottomrule
@@ -60,7 +60,7 @@ Equivalently, a $\Pi$-measurable predictor is a map $a:\Pi\to\mathsf A$ evaluate
 \begin{definition}[Bayes risk under a partition]
 \label{def:partition-bayes-risk}
 For $f:\Omega\to\mathsf A$, write $R_L(f)=\E[L(Y,f)]$. The Bayes risk achievable under partition $\Pi$ is
-\begin{align}
+\begin{align*}
 R_L(\Pi)
 =
 \inf_{f\in\Pred(\Pi)}
@@ -68,8 +68,7 @@ R_L(\Pi)
 =
 \sum_{B\in\Pi}P(B)
 \inf_{a\in\mathsf A}\E[L(Y,a)\mid \omega\in B],
-\label{eq:partition-bayes-risk}
-\end{align}
+\end{align*}
 where atoms with $P(B)=0$ may be assigned arbitrary actions. Thus $R_L(\Pi)$ is the best possible risk after the representation has committed to the equivalence relation $\sim_\Pi$, i.e., the Bayes risk under constrained information \citep{berger1985statistical}.
 \end{definition}
 
@@ -144,28 +143,25 @@ If the partition is fixed, the learner cannot beat the Bayes risk of that partit
 \begin{definition}[Repair gap and refinement gap]
 \label{def:repair-refinement-gaps}
 For a concrete predictor $f\in\Pred(\Pi)$ and a candidate refined partition $\Pi^\star$ that refines $\Pi$, define
-\begin{align}
+\begin{align*}
 \Delta_{\mathrm{repair}}(f,\Pi)
-&=R_L(f)-R_L(\Pi),
-\label{eq:repair-gap}\\
+&=R_L(f)-R_L(\Pi),\\
 \Delta_{\mathrm{refine}}(\Pi,\Pi^\star)
 &=R_L(\Pi)-R_L(\Pi^\star).
-\label{eq:refinement-gap}
-\end{align}
+\end{align*}
 The first gap is the residual error of the current predictor at fixed equivalence relation. The second is the value of changing the equivalence relation.
 \end{definition}
 
-\begin{theorem}[Runtime error decomposition]
+\begin{theorem}[Runtime error decomposition, formal version of Theorem~\ref{thm:main-decomposition}]
 \label{thm:error-decomposition}
 Let $f_t\in\Pred(\Pi_t)$ and let $\Pi^\star$ refine $\Pi_t$. Then
-\begin{align}
+\begin{align*}
 R_L(f_t)-R_L(\Pi^\star)
 =
 \Delta_{\mathrm{repair}}(f_t,\Pi_t)
 +
 \Delta_{\mathrm{refine}}(\Pi_t,\Pi^\star).
-\label{eq:error-decomposition}
-\end{align}
+\end{align*}
 Both terms are nonnegative.
 \end{theorem}
 
@@ -227,7 +223,7 @@ Add and subtract $R_L(\Pi_t)$. The repair gap is nonnegative because $f_t$ is fe
 
 The pointwise contradiction inside a cell becomes a sequential lower bound. If the current partition collapses states that a refined oracle separates, no repair-only learner can avoid paying the corresponding Bayes-risk gap every round.
 
-\begin{theorem}[Repair-only linear regret]
+\begin{theorem}[Repair-only linear regret, formal version of Theorem~\ref{thm:main-repair-only}]
 \label{thm:repair-only-regret}
 Let $\Pi$ be a fixed partition and let $\Pi^\star$ be a refinement. Consider any learner whose round-$t$ prediction $\hat f_t$ is always in $\Pred(\Pi)$, possibly chosen adaptively from all previous observations. Then, for iid $\omega_t\sim P$,
 \begin{align*}
@@ -275,7 +271,7 @@ Then $\hat f_t\in\Pred(\Pi(I))$ for all $t$, so Theorem~\ref{thm:repair-only-reg
 Let $\Omega=\{0,1\}$, $P(0)=P(1)=1/2$, and $Y=\omega$. Under the trivial partition $\Pi=\{\{0,1\}\}$, the best log-loss predictor is $q(Y=0)=q(Y=1)=1/2$, so $R_{\log}(\Pi)=\log 2$. The refined partition $\Pi^\star=\{\{0\},\{1\}\}$ has $R_{\log}(\Pi^\star)=0$ in the noiseless case when point-mass predictions are allowed. Therefore any repair-only learner has expected regret $T\log 2$ against the refined oracle. This example is not about neural networks, caches, or trees. It is about equivalence relations: a learner that identifies two states cannot assign them two different consequences.
 \end{example}
 
-\begin{corollary}[Contradiction requires distinction]
+\begin{corollary}[Contradiction requires distinction, informal version of Theorem~\ref{thm:contradiction:formal}]
 \label{thm:contradiction:informal}
 Let $\Pi$ be a partition and let $y:\Omega\to\mathsf A$ be a required deterministic output. If $\omega,\omega'$ lie in the same atom of $\Pi$ but $y(\omega)\ne y(\omega')$, then no predictor in $\Pred(\Pi)$ satisfies both requirements.
 \end{corollary}
@@ -309,7 +305,7 @@ When the infimum is attained, any minimizer is an $\calF$-Bayes action and is de
 
 For a finite partition $\Pi$, Definition~\ref{def:F-measurable-predictor} recovers Definition~\ref{def:partition-measurable} by taking $\calF=\sigma(\Pi)$ and the action space discrete.
 
-Implementations often have fixed pre-existing prediction outputs that are not created by the runtime refinement mechanism, such as a backbone distribution or other fixed pre-outcome features used outside CGA routing. We write this base information as a sigma-algebra $\calB$ and measure runtime refinements through the total information $\calB\vee\calF_t$. The full hidden state used to propose or instantiate distinctions should not automatically be included as freely conditionable base information: if $\calB$ contains $h$, then every edge predicate $g_e(h)$ and anchor-order event is already $\calB$-measurable, so the unrestricted sigma-algebra refinement gap becomes trivial. Thus the refinement gap relative to a target $\calF^\star$ is
+Implementations often have fixed pre-existing prediction outputs that are not created by the runtime refinement mechanism, such as a backbone distribution or other fixed pre-outcome features used outside CA routing. We write this base information as a sigma-algebra $\calB$ and measure runtime refinements through the total information $\calB\vee\calF_t$. The full hidden state used to propose or instantiate distinctions should not automatically be included as freely conditionable base information: if $\calB$ contains $h$, then every edge predicate $g_e(h)$ and anchor-order event is already $\calB$-measurable, so the unrestricted sigma-algebra refinement gap becomes trivial. Thus the refinement gap relative to a target $\calF^\star$ is
 \begin{align*}
 R_L(\calB\vee\calF_t)-R_L(\calB\vee\calF^\star).
 \end{align*}

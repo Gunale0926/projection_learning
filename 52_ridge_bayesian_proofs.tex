@@ -1,4 +1,4 @@
-\section{CGA Algorithm and Projection-Bridge Proofs}
+\section{CA Algorithm and Projection-Bridge Proofs}
 \label{app:algorithm-bridge-proofs}
 
 This appendix combines elementary finite graph/partition arguments with standard concentration and linear-algebra tools: Hoeffding sample-split validation bounds, adaptive-holdout caveats, nearest-neighbor indexing costs, Moore-Penrose projections, and ridge/Tikhonov least squares \citep{hoeffding1963probability,devroye1996probabilistic,dwork2015reusable,dwork2015generalization,indyk1998approximate,johnson2019billion,penrose1955generalized,tikhonov1977solutions,hoerl1970ridge}.
@@ -31,7 +31,7 @@ u^\top a_j-b&=u^\top a_j-\frac{1}{2}u^\top a_i-\frac{1}{2}u^\top a_j\\
 
 The construction is used only for separated anchors. In implementations, proposed edges with $\norm{a_i-a_j}_2\le\eta_{\mathrm{anchor}}$ are skipped or replaced by a fallback distinction, so the normalized direction is never formed from duplicate or numerically indistinguishable anchors.
 
-\begin{theorem}[CGA graph generates a finite edge-skeleton information structure, formal version of Theorem~\ref{thm:dgm-graph-partition:informal}]
+\begin{theorem}[CA graph generates a finite edge-skeleton information structure, formal version of Theorem~\ref{thm:dgm-graph-partition:informal}]
 \label{thm:dgm-graph-partition:formal}
 Let $S$ be a finite set of binary generators $g_s:\mathsf H\to\{0,1\}$. Define
 \begin{align*}
@@ -212,9 +212,9 @@ Rearranging gives the claim.
 
 The theorem is local to the fixed scoring buffer used in its statement. If the scoring buffer changes over time, these inequalities alone do not define a common global descent potential.
 
-\begin{theorem}[Statistically safe adaptive refinement, formal version of Theorem~\ref{thm:safe-refinement:informal}]
+\begin{theorem}[Statistically safe adaptive refinement, formal version of Theorem~\ref{thm:main-guarded-refinement}]
 \label{thm:safe-refinement:formal}
-Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing the past stream, current CGA state, and all proposal-buffer information available before scoring at time $t$. Let $\calC_t$ be a finite candidate class predictable with respect to $\mathfrak H_t$, and let $\calB_t^{\mathrm{score}}$ contain $m_t$ fresh held-out samples, or samples not previously used to choose proposals or update the state, independent of $\mathfrak H_t$ conditional on the current scoring distribution. For candidate $g$, let $\widehat G_t(g)$ be the empirical raw risk decrease on $\calB_t^{\mathrm{score}}$ before complexity cost and let $G_t(g)$ be the corresponding population raw gain. Define
+Assume losses lie in $[0,1]$. Let $(\mathfrak H_t)$ be the filtration containing the past stream, current CA state, and all proposal-buffer information available before scoring at time $t$. Let $\calC_t$ be a finite candidate class predictable with respect to $\mathfrak H_t$, and let $\calB_t^{\mathrm{score}}$ contain $m_t$ fresh held-out samples, or samples not previously used to choose proposals or update the state, independent of $\mathfrak H_t$ conditional on the current scoring distribution. For candidate $g$, let $\widehat G_t(g)$ be the empirical raw risk decrease on $\calB_t^{\mathrm{score}}$ before complexity cost and let $G_t(g)$ be the corresponding population raw gain. Define
 \begin{align*}
 \epsilon_t=
 \sqrt{
@@ -263,17 +263,17 @@ for a fixed $L_{\max}>0$. If the scoring buffer, empirical raw gain, and populat
 The clipped score satisfies $0\le \ell_{\mathrm{clip}}\le 1$. Substituting this bounded loss into Theorem~\ref{thm:safe-refinement:formal} gives the claim directly. The statement is only about the clipped score; raw negative log likelihood is unbounded and would require a separate concentration assumption.
 \end{proof}
 
-\begin{theorem}[Anchor-stable CGA information structure, formal version of Theorem~\ref{thm:anchor-stable:informal}]
+\begin{theorem}[Anchor-stable CA information structure, formal version of Theorem~\ref{thm:anchor-stable:informal}]
 \label{thm:anchor-stable:formal}
 Let
 \begin{align*}
-\calF_t^{\mathrm{CGA}}
+\calF_t^{\mathrm{CA}}
 =
 \sigma(g_e:e\in E_t)
 \vee
-\sigma\!\left(\{h:\norm{h-a_i}_2^2\le \norm{h-a_j}_2^2\}:1\le i,j\le N_t\right).
+\sigma\left(\{h:\norm{h-a_i}_2^2\le \norm{h-a_j}_2^2\}:1\le i,j\le N_t\right).
 \end{align*}
-Suppose every edge generator $g_e(h)=\one\{u_e^\top h>b_e\}$ is computed from frozen endpoint anchors $a_i,a_j$. Any repair step that changes only centroids $c_j$, local memories $M_j$, and counts $n_j$, while keeping anchors and edges fixed, leaves $\calF_t^{\mathrm{CGA}}$ unchanged. If a refinement adds a new anchor and new edge generators, then $\calF_{t+1}^{\mathrm{CGA}}$ is $\calF_t^{\mathrm{CGA}}$ joined with the new anchor-order events and the new edge generators.
+Suppose every edge generator $g_e(h)=\one\{u_e^\top h>b_e\}$ is computed from frozen endpoint anchors $a_i,a_j$. Any repair step that changes only centroids $c_j$, local memories $M_j$, and counts $n_j$, while keeping anchors and edges fixed, leaves $\calF_t^{\mathrm{CA}}$ unchanged. If a refinement adds a new anchor and new edge generators, then $\calF_{t+1}^{\mathrm{CA}}$ is $\calF_t^{\mathrm{CA}}$ joined with the new anchor-order events and the new edge generators.
 \end{theorem}
 \begin{proof}
 For an edge $e=(i,j)$, both
@@ -282,7 +282,7 @@ u_e=\frac{a_i-a_j}{\norm{a_i-a_j}_2},
 \qquad
 b_e=\frac{1}{2}u_e^\top(a_i+a_j)
 \end{align*}
-are deterministic functions of the frozen anchors. A repair step does not change these anchors, so it does not change $u_e$, $b_e$, or $g_e$. It also does not change any anchor-distance comparison event because all anchors are fixed. Hence both sigma-algebras in the join defining $\calF_t^{\mathrm{CGA}}$ are unchanged.
+are deterministic functions of the frozen anchors. A repair step does not change these anchors, so it does not change $u_e$, $b_e$, or $g_e$. It also does not change any anchor-distance comparison event because all anchors are fixed. Hence both sigma-algebras in the join defining $\calF_t^{\mathrm{CA}}$ are unchanged.
 
 If a refinement adds anchor $a_{\mathrm{new}}$ and edge generators $E_{\mathrm{new}}$, the new edge sigma-algebra is $\sigma(g_e:e\in E_t)\vee\sigma(g_e:e\in E_{\mathrm{new}})$, and the new anchor-order sigma-algebra is the old anchor-order sigma-algebra joined with the pairwise comparisons involving $a_{\mathrm{new}}$. This is exactly the stated join.
 \end{proof}
@@ -299,17 +299,17 @@ After $m$ accepted refinements,
 Since $\Phi(\calS_m)\ge0$, we have $m\le \Phi(\calS_0)/\tau$.
 \end{proof}
 
-\begin{proposition}[Trees as generalized hard-route CGAs, formal version of Proposition~\ref{prop:tree-as-dgm:informal}]
+\begin{proposition}[Trees as generalized hard-route CAs, formal version of Proposition~\ref{prop:tree-as-dgm:informal}]
 \label{prop:tree-as-dgm:formal}
-Let $\calT$ be a binary decision tree whose internal nodes compute binary distinctions $g_\nu(h)\in\{0,1\}$ and whose leaves have predictors $M_\ell$. Construct a generalized hard-route CGA with one concept $c_\ell$ and memory $M_\ell$ for each leaf $\ell$, where the generalized model permits arbitrary finite binary eligibility constraints in addition to pairwise distinction edges. For each leaf, add hard eligibility constraints equal to the signed distinctions along the root-to-leaf path. If the generalized hard route selects the unique eligible leaf concept, then its prediction equals the tree prediction for every $h$.
+Let $\calT$ be a binary decision tree whose internal nodes compute binary distinctions $g_\nu(h)\in\{0,1\}$ and whose leaves have predictors $M_\ell$. Construct a generalized hard-route CA with one concept $c_\ell$ and memory $M_\ell$ for each leaf $\ell$, where the generalized model permits arbitrary finite binary eligibility constraints in addition to pairwise distinction edges. For each leaf, add hard eligibility constraints equal to the signed distinctions along the root-to-leaf path. If the generalized hard route selects the unique eligible leaf concept, then its prediction equals the tree prediction for every $h$.
 \end{proposition}
 \begin{proof}
 For any input $h$, the tree follows exactly one root-to-leaf path. The leaf reached by the tree is the unique leaf whose path constraints are all satisfied by $h$. By construction, the corresponding generalized hard-route concept has exactly those eligibility constraints, and all other leaf concepts violate at least one path constraint at the first node where their path differs from the tree path. Therefore the generalized hard route selects the same leaf and applies the same memory $M_\ell$.
 \end{proof}
 
-\begin{theorem}[CGA data-structure bound, formal version of Theorem~\ref{thm:dgm-complexity:informal}]
+\begin{theorem}[CA data-structure bound, formal version of Theorem~\ref{thm:dgm-complexity:informal}]
 \label{thm:dgm-complexity:formal}
-Assume CGA has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)d+\abs{N(h)}d+C_{\mathrm{local}})$ for dense linear edge gates. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ guarded distinction edges costs an additional $O(d+qd)$ plus anchor-order query bookkeeping. If each concept stores an anchor, a centroid, and a sparse categorical memory with average support $\bar s$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
+Assume CA has $N_t$ concepts in $\R^d$, exact centroid and anchor retrieval, candidate set $N(h)$, selected incident edge-gate count $Q(h)=\sum_{j\in N(h)}\abs{\operatorname{Inc}_t(j)}$, and local-memory evaluation cost $C_{\mathrm{local}}$. Then one prediction costs $O(N_td+Q(h)d+\abs{N(h)}d+C_{\mathrm{local}})$ for dense linear edge gates. One observation that repairs a selected concept costs this plus the guarded local repair scoring cost. One observation that creates a new anchor-centroid pair and $q$ guarded distinction edges costs an additional $O(d+qd)$ plus anchor-order query bookkeeping. If each concept stores an anchor, a centroid, and a sparse categorical memory with average support $\bar s$, and each edge stores a linear distinction in $\R^d$, then the runtime state uses $O(N_t(2d+\bar s)+\abs{E_t}d)$ memory.
 \end{theorem}
 \begin{proof}
 A distance computation between $h\in\R^d$ and one concept center costs $O(d)$. Exact centroid and anchor retrieval over $N_t$ concepts therefore costs
@@ -341,9 +341,9 @@ O(\abs{E_t}d).
 Adding the two terms proves the claimed bound.
 \end{proof}
 
-\begin{theorem}[CGA layer cost, formal version of Theorem~\ref{thm:dgm-layer-cost:informal}]
+\begin{theorem}[CA layer cost, formal version of Theorem~\ref{thm:dgm-layer-cost:informal}]
 \label{thm:dgm-layer-cost:formal}
-Consider a CGA adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $\abs{N}$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
+Consider a CA adapter extension with hidden dimension $d$, query dimension $d_q$, local rank $r$, candidate count $\abs{N}$, selected incident edge-gate count $Q_N$, and concept-bank query cost $C_{\mathrm{ret}}(N_t,d_q)$. For one token, the read overhead is
 \begin{align*}
 O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}dr).
 \end{align*}
@@ -351,7 +351,7 @@ If the write path is detached and uses rank-one local repair, the write overhead
 \begin{align*}
 O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}(d_q+dr)).
 \end{align*}
-For a block of length $L$, backpropagation through the slow parameters does not require storing the full CGA state history $\calS_1,\ldots,\calS_L$.
+For a block of length $L$, backpropagation through the slow parameters does not require storing the full CA state history $\calS_1,\ldots,\calS_L$.
 \end{theorem}
 \begin{proof}
 For a token hidden state $h\in\R^d$, the query computation
@@ -379,11 +379,11 @@ Finally, the update rule is applied as
 \begin{align*}
 \calS_{t+1}
 =
-\operatorname{stopgrad}\!\left(
-\operatorname{CGAObserve}(\operatorname{stopgrad}(\calS_t),\operatorname{stopgrad}(h_t),x_{t+1})
+\operatorname{stopgrad}\left(
+\operatorname{CAObserve}(\operatorname{stopgrad}(\calS_t),\operatorname{stopgrad}(h_t),x_{t+1})
 \right).
 \end{align*}
-Thus the computational graph for the loss contains the selected read computation, but not the chain of state-update maps from $\calS_1$ through $\calS_L$ or the write-time hidden states used to mutate the fast state. Therefore full CGA state history is not required for backpropagation through the slow parameters.
+Thus the computational graph for the loss contains the selected read computation, but not the chain of state-update maps from $\calS_1$ through $\calS_L$ or the write-time hidden states used to mutate the fast state. Therefore full CA state history is not required for backpropagation through the slow parameters.
 \end{proof}
 
 \begin{theorem}[One-hot memory is partition-measurable, formal version of Theorem~\ref{thm:one-hot-measurable:informal}]

@@ -1,7 +1,7 @@
 \section{From Distinctions to Projection Memory}
 \label{sec:projection-bridge}
 
-CGA uses refinement and repair in the same runtime object. Distinction learning asks what the learner can tell apart. Projection learning assumes such a representation and asks how a state inside it should be minimally repaired. The repair side is related to Bregman projection, Moore-Penrose projection, ridge/Tikhonov repair, passive-aggressive learning, online regression, and fast-weight memory updates \citep{bregman1967relaxation,penrose1955generalized,tikhonov1977solutions,hoerl1970ridge,crammer2006online,vovk1997competitive,ba2016using,schlag2021linear}. This section makes the relation formal in the finite one-hot case.
+CA uses refinement and repair in the same runtime object. Distinction learning asks what the learner can tell apart. Projection learning assumes such a representation and asks how a state inside it should be minimally repaired. The repair side is related to Bregman projection, Moore-Penrose projection, ridge/Tikhonov repair, passive-aggressive learning, online regression, and fast-weight memory updates \citep{bregman1967relaxation,penrose1955generalized,tikhonov1977solutions,hoerl1970ridge,crammer2006online,vovk1997competitive,ba2016using,schlag2021linear}. This section makes the relation formal in the finite one-hot case.
 
 \subsection{One-hot partition memory}
 
@@ -15,7 +15,7 @@ f_W(\omega)=W\phi_\calP(\omega).
 \end{align*}
 This is exactly a table over the atoms of $\calP$: every state inside the same atom receives the same value.
 
-\begin{theorem}[One-hot partition memory]
+\begin{theorem}[One-hot partition memory, informal version of Theorem~\ref{thm:one-hot-measurable:formal}]
 \label{thm:one-hot-measurable:informal}
 For every $W\in\R^{m\times n}$, the map $f_W(\omega)=W\phi_\calP(\omega)$ is $\calP$-measurable. Conversely, every $\calP$-measurable map $f:\Omega\to\R^m$ is represented by some $W$ through $f=f_W$.
 \end{theorem}
@@ -25,14 +25,13 @@ Thus a one-hot associative memory is not merely analogous to a partition. It is 
 \subsection{CPM conflict as missing distinction}
 
 We take $K$ to be the matrix whose columns are stored keys, so $KK^\dagger$ is the orthogonal projector onto their span. For old key matrices $K$, a new key $k$ has CPM innovation
-\begin{align}
+\begin{align*}
 z=(I-KK^\dagger)k.
-\label{eq:cpm-innovation}
-\end{align}
+\end{align*}
 
 Conservative Projection Memory detects conflict when a new key has zero innovation but nonzero residual. In the one-hot finite representation, this diagnostic is exactly the statement that two world states have been placed in the same atom despite requiring different values.
 
-\begin{theorem}[CPM conflict equals missing distinction]
+\begin{theorem}[CPM conflict equals missing distinction, informal version of Theorem~\ref{thm:cpm-conflict-distinction:formal}]
 \label{thm:cpm-conflict-distinction:informal}
 Let $\omega,\omega'\in B_i$ for an atom $B_i\in\calP$, and suppose required values satisfy $v(\omega)\ne v(\omega')$. Let $k=\phi_\calP(\omega)=\phi_\calP(\omega')=e_i$. If $We_i=v(\omega)$ has already been committed, then evidence requiring $We_i=v(\omega')$ has CPM innovation $z=0$ and residual $e\ne0$.
 \end{theorem}
