@@ -1,33 +1,30 @@
 \section{Concept Graph Attention}
 \label{sec:main-cga}
 
-CGA is an attention layer whose memory is a fixed bank of runtime concepts
+CGA is an attention layer whose memory is a bounded graph of runtime concepts
 rather than a table of token keys and values.
 For each sequence and layer, the state before block $b$ is
 \[
-\mathcal{M}_b =
-\left\{
-(a_j,s^k_{jh},s^v_{jh},n_{jh})_{h=1}^{H}
-\right\}_{j=1}^{C}.
+\calG_b =
+\left(
+\{a_j,s^k_{jh},s^v_{jh},n_{jh}\}_{j=1,h=1}^{N_b,H},
+E_b
+\right),
+\qquad N_b\le C.
 \]
-Here $a_j$ is a fixed slot prior used to break symmetry, $s^k_{jh}$ is the key
-sufficient statistic for slot $j$ and head $h$, $s^v_{jh}$ is the value
-sufficient statistic, and $n_{jh}$ is a count or mass statistic.
-All $C$ concept slots are available from the beginning of the sequence.
-Each slot also has a fixed edge predicate
-$e_j=(u_j,b_j,\sigma_j)$ derived from the random slot priors.
-For the main implementation, $u_j$ is the separating direction between slot
-$j$'s prior and its nearest neighboring prior, $b_j$ is the midpoint bias, and
-$\sigma_j$ is the side containing slot $j$.
+Here $a_j$ is a stable concept anchor, $s^k_{jh}$ is the key sufficient
+statistic for concept $j$ and head $h$, $s^v_{jh}$ is the value statistic,
+$n_{jh}$ is a count or mass statistic, and $E_b$ is a set of distinction
+edges.
+The concept budget $C$ is a model hyperparameter analogous to a recurrent-state
+budget.
+Unlike token attention, $N_b$ need not grow with the sequence length.
 The slot addresses and memories used by the read are
 \[
 c_{jh}=\operatorname{normalize}\!\left(s^k_{jh}/\max(n_{jh},1)\right),
 \qquad
 m_{jh}=s^v_{jh}/\max(n_{jh},1).
 \]
-At initialization, $n_{jh}=n_0$, $s^k_{jh}=n_0a_{jh}$, and $s^v_{jh}=0$.
-The concept budget $C$ is a model hyperparameter analogous to a recurrent-state
-budget.
 The value memory may use a concept bottleneck dimension $d_v^c$ smaller than
 the ordinary attention head value dimension.
 For address dimension $d_a$, value bottleneck $d_v^c$, and $H$ heads, the
@@ -35,52 +32,43 @@ persistent per-sequence state scales as
 \[
 S_{\rm CGA}
 =
-C\,H(d_a+d_v^c+1).
+C\left[H(d_a+d_v^c+1)+2d_a+4\right].
 \]
-The formula counts per-head key sums, value sums, and counts.
-Slot priors and edge predicates are fixed layer buffers rather than
-per-sequence runtime state.
-The important scaling point is that $S_{\rm CGA}$ depends on $C$, not on the
-context length.
+This counts per-head key sums, value sums, counts, anchors, edge normals, and
+graph masks.
+The important scaling point is that $S_{\rm CGA}$ depends on the concept budget
+$C$, not directly on the context length.
 
 \paragraph{What learns at inference time.}
 During training, CGA learns slow parameters: projections, output maps, write
 gates, and retention parameters.
 During inference, these slow parameters are fixed.
-What changes is the per-sequence concept memory $\mathcal{M}_b$.
-After each block, the layer updates key statistics, value statistics, and count
-statistics using the prefix it has just observed.
-We call this \emph{test-time concept learning}: it is learning because later
-predictions condition on a concept state estimated online from the test prefix,
-but it is not test-time gradient descent on model weights.
-This distinction is central to the method.
-The hidden state is not a token cache, because writes aggregate information into
-concept slots; it is not a learned inner-loop model, because the update is a
-forward-only sufficient-statistic rule.
+What changes is the per-sequence graph $\calG_b$: the layer creates concepts,
+repairs concept sufficient statistics, and adds distinction edges from the
+observed prefix.
+We call this \emph{test-time concept learning}: later predictions condition on
+a concept graph estimated online from the test prefix, but there is no
+inference-time gradient descent on model weights.
 
 \paragraph{Dense concept read.}
-Given normalized query $q_{th}$ and concept addresses $c_{jh}$, CGA reads by
-continuous attention over edge-eligible concept slots.
-Let
-\[
-\bar q_t=\operatorname{normalize}\!\left(\frac1H\sum_{h=1}^{H}q_{th}\right),
-\qquad
-E_t=\{j:\mathbf{1}[u_j^\top\bar q_t>b_j]=\sigma_j\}.
-\]
-If $E_t$ is empty, CGA falls back to all concept slots.
+Given normalized query $q_{th}$ and active concept addresses $c_{jh}$, CGA
+reads by continuous attention over graph-eligible concepts.
+Let $A_b(t)$ be the eligible active concept set for token $t$ under the current
+edge predicates; when edges are disabled, $A_b(t)$ is simply the active concept
+set.
+If graph predicates leave no eligible concept, CGA falls back to all active
+concepts.
 The read is
 \[
 \alpha_{thj}
 =
 \frac{\exp(\gamma q_{th}^{\top}c_{jh})}
-{\sum_{r\in E_t}\exp(\gamma q_{th}^{\top}c_{rh})},
+{\sum_{r\in A_b(t)}\exp(\gamma q_{th}^{\top}c_{rh})},
 \qquad
-z_{th}=\sum_{j\in E_t}\alpha_{thj}m_{jh}.
+z_{th}=\sum_{j\in A_b(t)}\alpha_{thj}m_{jh}.
 \]
 The scale $\gamma$ is learned and initialized at the standard dot-product
 attention scale.
-The output projection maps the concatenated head readout
-$(z_{t1},\ldots,z_{tH})$ back to $d_{\rm model}$.
 Thus the read path is ordinary differentiable attention, but the keys and
 values are concept memories rather than token memories.
 
@@ -98,15 +86,44 @@ k^{\rm write}_t=k_{t-1},\qquad v^{\rm write}_t=v_t.
 \]
 For general language modeling, the delay can be set to zero or treated as a
 task-dependent write convention.
-The write is routed to the most compatible concept slot:
+The gate is trained only by the task loss and a small sparsity penalty.
+It is not supervised by MQAR labels.
+
+For each block, CGA first proposes a bounded number of new concepts.
+Candidate creation scores are gate-weighted novelty scores:
 \[
-j_t
+\operatorname{score}_t
 =
-\arg\max_{j\le C}
-\frac1H\sum_{h=1}^{H}(k^{\rm write}_{th})^\top c_{jh}
+\operatorname{sg}(g_t)
+\left(1-\max_{j\in A_b(t)}
+\frac1H\sum_{h=1}^{H}
+(k^{\rm write}_{th})^\top c_{jh}
+\right)_+ .
 \]
-The route $j_t$ is detached fast state.
-The value write and gate remain differentiable through future concept reads.
+The block accepts at most $K_{\rm new}$ candidate concepts, up to the remaining
+capacity.
+All valid writes are then assigned either to an accepted new concept or to the
+best compatible existing concept.
+Existing concepts are repaired by adding sufficient statistics:
+\[
+n_{j_t h} \leftarrow
+\operatorname{sg}(\rho_{bh})n_{j_t h}
++\operatorname{sg}(g_t),
+\]
+\[
+s^k_{j_t h} \leftarrow
+\operatorname{sg}(\rho_{bh})s^k_{j_t h}
++\operatorname{sg}(g_t)k^{\rm write}_{th},
+\]
+\[
+s^v_{j_t h} \leftarrow
+\rho_{bh}s^v_{j_t h}
++g_t v^{\rm write}_{th}.
+\]
+Here $\operatorname{sg}$ denotes stop-gradient.
+The key and count updates are detached routing state.
+The value payload, write gate, and retention decay remain differentiable
+through future concept reads.
 
 \paragraph{Trainable retention.}
 CGA maintains a trainable retention decay over old concept statistics.
@@ -127,37 +144,25 @@ The default parameterization of $A_h$ is PoST-style:
 A_h=A_0+\sum_{i<h}\operatorname{softplus}(\Delta_i),
 \]
 which gives ordered decay spectra across heads.
-The implementation also exposes a free per-head $A_h$ parameterization for
-ablation.
 This decay plays the same role as the $A$ or retention gate in Mamba-style
 state-space layers, but it acts on concept sufficient statistics rather than on
 a fixed token-indexed recurrent state.
 
-\paragraph{Block update.}
-Within a block, CGA accumulates writes with scatter-add operations and commits
-them at the block boundary:
+\paragraph{Edges as distinctions.}
+When a new concept is created from a confused parent, CGA may add a distinction
+edge.
+For endpoints $a_i,a_j$, the edge predicate is
 \[
-n_{j_t h} \leftarrow
-\operatorname{sg}(\rho_{bh})n_{j_t h}
-+\operatorname{sg}(g_t),
+u_{ij}=\frac{a_i-a_j}{\|a_i-a_j\|_2},
+\qquad
+b_{ij}=\frac12u_{ij}^{\top}(a_i+a_j),
+\qquad
+g_{ij}(h)=\mathbf 1\{u_{ij}^{\top}h>b_{ij}\}.
 \]
-\[
-s^k_{j_t h} \leftarrow
-\operatorname{sg}(\rho_{bh})s^k_{j_t h}
-+\operatorname{sg}(g_t)k^{\rm write}_{th},
-\]
-\[
-s^v_{j_t h} \leftarrow
-\rho_{bh}s^v_{j_t h}
-+g_t v^{\rm write}_{th}.
-\]
-Here $\operatorname{sg}$ denotes stop-gradient.
-The key and count updates are detached routing state.
-The value payload, write gate, and retention decay receive gradients through
-future reads.
-Because writes are sums over assigned observations and decay is multiplicative
-per block, the update is scan-friendly: implementations can fuse dense concept
-reads and use parallel scatter reductions for the write side.
+Edges are detached graph state.
+They restrict read eligibility and record accepted local distinctions.
+Repairs change $m_j,c_j,n_j$ while keeping anchors and edges fixed; refinements
+add concepts or edges.
 
 \paragraph{Relation to ordinary attention.}
 Let $K_{\rm tok},V_{\rm tok}$ be token-level keys and values.
@@ -172,23 +177,21 @@ CGA instead computes
 \[
 \operatorname{CGA}(X)_t
 =
-\sum_{j\in E_t}
+\sum_{j\le N_t}
 \operatorname{softmax}_j(q_t^\top c_{tj})m_{tj},
 \]
-where $c_{tj},m_{tj}$ are produced by the concept-bank update over the prefix.
+where $c_{tj},m_{tj}$ are produced by the concept-graph update over the prefix.
 Attention uses one memory entry per token event; CGA uses a bounded set of
-concept slots that aggregate token evidence.
-This is why CGA can be viewed as a memory-basis replacement for attention:
-the read remains attention, but the state being attended to is concept-indexed
-rather than token-indexed.
+runtime concepts that aggregate and refine token evidence.
 
 \paragraph{Learning and backpropagation boundary.}
 CGA trains its slow parameters end-to-end:
 embeddings, read/write projections, output projections, retention parameters,
 and the language-model head receive gradient from the task loss.
-The runtime concept update itself is not backpropagated through as a recurrent
+The runtime graph mutation itself is not backpropagated through as a recurrent
 state trajectory.
-Routing decisions, key sums, counts, and slot priors are detached fast state.
+Routing decisions, concept allocation, key sums, counts, anchors, and edges are
+detached fast state.
 The gated value content remains differentiable so that future concept reads can
 train the value projection, write gate, and retention decay.
 Thus CGA is neither a backprop-free language model nor a test-time optimizer
@@ -201,14 +204,16 @@ trained by ordinary backpropagation.
 \caption{\textsc{ConceptGraphAttentionForward}}
 \label{alg:main-cga}
 \begin{algorithmic}[1]
-\Statex Input: hidden states $x_{1:T}$, concept count $C$, block size $B$.
-\State Initialize fixed concept bank with random priors $a_j$, edge predicates $e_j$, counts $n_0$, and zero values.
+\Statex Input: hidden states $x_{1:T}$, concept budget $C$, block size $B$.
+\State Initialize empty concept graph $\calG_0$.
 \For{blocks $[s,e)$}
     \State Project block queries, write keys, values, gates, and retention rates.
-    \State Read edge-eligible concept slots with dense attention, falling back to all slots when needed.
+    \State Read active graph-eligible concepts with dense attention.
     \State Emit block outputs through the output projection.
-    \State Route each valid write to the most similar concept slot.
+    \State Propose new concepts using gate-weighted novelty scores.
+    \State Assign valid writes to proposed or existing concepts.
     \State Decay old sufficient statistics and scatter-add gated count, key, and value updates.
+    \State Commit concept repairs, accepted concept creations, and distinction edges.
 \EndFor
 \State Return output projection of concept readouts.
 \end{algorithmic}

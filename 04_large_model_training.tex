@@ -1,4 +1,4 @@
-\section{CGA-LM: Replacing Token Attention with Fixed Concept Attention}
+\section{CGA-LM: Replacing Token Attention with Concept Graph Attention}
 \label{sec:large-model-training}
 
 For language modeling, the world state is a prefix and the consequence is the
@@ -23,15 +23,17 @@ gate, and retention-decay projections:
 q_t=Q_\ell x_t,\qquad k_t=K_\ell x_t,\qquad v_t=V_\ell x_t,\qquad
 g_t=\sigma(w_g^\top x_t+b_g).
 \]
-The layer-local CGA state is a fixed concept bank
+The layer-local CGA state is a bounded concept graph
 \[
-\mathcal{M}_t^\ell
+\mathcal{G}_t^\ell
 =
-\{(a_j,s^k_{jh},s^v_{jh},n_{jh})_{h=1}^{H}\}_{j=1}^{C}.
+\left(
+\{(a_j,s^k_{jh},s^v_{jh},n_{jh})_{h=1}^{H}\}_{j=1}^{N_t},
+E_t^\ell
+\right),
+\qquad N_t\le C.
 \]
-The fixed slot priors also define static edge predicates that restrict each
-read to an eligible subset of concept slots, with fallback to the full bank
-when no slot is eligible.
+The graph can create concepts and distinction edges online.
 The read is causal: token $t$ reads only concept contents produced by earlier
 writes.
 For eligible concept slots $E_t^\ell$,
@@ -53,18 +55,18 @@ multi-head attention does.
 
 The update order is the same during training and autoregressive inference:
 \[
-\text{read from }\mathcal{M}_t^\ell
+\text{read from }\mathcal{G}_t^\ell
 \rightarrow
 \text{emit }y_t
 \rightarrow
 \text{decay and write }(k_t,v_t,g_t)
 \rightarrow
-\text{update }\mathcal{M}_{t+1}^\ell .
+\text{update }\mathcal{G}_{t+1}^\ell .
 \]
 This prevents a token from reading its own write.
 The inference-time update is the test-time learning mechanism in CGA-LM:
-the model weights are fixed, but the concept bank changes after every causal
-block and future tokens condition on that updated bank.
+the model weights are fixed, but the concept graph changes after every causal
+block and future tokens condition on that updated graph.
 Both MQAR and language-model variants use a learned write gate.
 For general text, the update includes a trainable retention factor
 $\rho_h=\exp(-\sum_t\lambda_{th})$ over old concept statistics, with the
@@ -75,13 +77,13 @@ parameterization for ablation.
 
 Slow neural parameters are trained by ordinary next-token backpropagation
 through the CGA read path.
-The concept-bank routing state is detached:
+The concept-graph routing state is detached:
 \[
-\mathcal{M}_{t+1}^\ell
+\mathcal{G}_{t+1}^\ell
 =
 \operatorname{CGAWrite}
 \left(
-\operatorname{stopgrad}(\mathcal{M}_t^\ell),
+\operatorname{stopgrad}(\mathcal{G}_t^\ell),
 \operatorname{stopgrad}(k_t),
 v_t,
 g_t,
@@ -92,20 +94,21 @@ Thus CGA-LM is not a backprop-free language model.
 It is an attention replacement whose fast state is updated by a forward-time
 concept-memory rule while the slow projections are trained end-to-end.
 The gated value content and retention factors remain differentiable through
-future reads; routing, key statistics, counts, and slot priors are detached.
+future reads; routing, concept allocation, key statistics, counts, anchors, and
+edges are detached.
 
 \begin{algorithm}[H]
 \caption{\textsc{CGALayerForward}}
 \label{alg:cga-lm}
 \begin{algorithmic}[1]
-\State \textbf{Input:} hidden states $x_{1:L}$, fixed concept bank $\mathcal{M}$
+\State \textbf{Input:} hidden states $x_{1:L}$, empty concept graph $\mathcal{G}_0$
 \For{causal blocks}
 \State project block queries, write keys, and values
-\State read edge-eligible concept slots with continuous attention weights
+\State read graph-eligible concepts with continuous attention weights
 \State emit block outputs through the output projection
 \State form write pairs, write gates, and retention factors
-\State route writes to concept slots
-\State decay old concept statistics, scatter-add new statistics, and commit bank updates
+\State propose new concepts and route writes to proposed or existing concepts
+\State decay old concept statistics, scatter-add new statistics, and commit graph updates
 \EndFor
 \State \Return contextualized hidden states
 \end{algorithmic}
