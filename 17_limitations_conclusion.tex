@@ -2,31 +2,33 @@
 \label{sec:main-limitations}
 
 \begin{itemize}
-\item The theory is about explicit information structures or restricted hard-route classes.
-\item Full backpropagation through the representation is outside the repair-only lower bound.
-\item CGA's dense read is stable at small concept budgets, but large concept graphs will need sparse or fused kernels.
-\item The current retention decay is trainable and PoST-parameterized by default, but its best time-scale allocation for large language modeling remains empirical.
-\item Held-out guarantees require fresh or reusable validation data rather than adaptive reuse of the same scoring buffer.
-\item The experiments are sequence-modeling tests, not a complete large-scale language-model SOTA claim.
+\item CGA's dense read is stable at small concept budgets, but large concept
+banks will need fused kernels and eventually sparse concept retrieval.
+\item The current retention decay is trainable and PoST-parameterized by
+default, but its best time-scale allocation for large language modeling remains
+empirical.
+\item Fixed-bank CGA removes online slot-allocation complexity, but it makes
+the concept count $C$ a real capacity hyperparameter.
+\item The experiments are sequence-modeling tests, not a complete large-scale
+language-model SOTA claim.
 \end{itemize}
+
 The empirical claim is deliberately narrow: CGA is evaluated as an
 attention-like causal sequence mixer on MQAR and small language modeling.
-MQAR should show whether the concept graph can write and retrieve key-value
+MQAR should show whether the concept bank can write and retrieve key-value
 information under matched state budgets.
 CGA-LM should show whether the same mechanism can replace token attention in a
 trainable decoder.
-If CGA loses to optimized recurrent mixers, that is a real systems and
-algorithmic gap rather than a wording problem.
-The method still needs fused kernels, better budget policies, merge and
-eviction rules, retention-time-scale studies, nonlinear distinctions, and
-distributed concept sharding before it can be treated as a large-model systems
-result.
+If CGA loses to optimized recurrent mixers, that is a real systems or modeling
+gap rather than a wording problem.
+The method still needs stronger fused kernels, larger-scale LM runs,
+retention-time-scale studies, and distributed concept-bank implementations
+before it can be treated as a large-model systems result.
 
-The main point is the separation between two runtime operations.
-Repair improves predictions inside the current quotient; refinement changes the quotient when consequences reveal a missing distinction.
-CGA gives one graph-attention implementation of that decision: read
-continuously from concepts, accept consequence-valued distinctions as graph
-structure, otherwise repair concept memories.
-That framing is the intended contribution: an attention-compatible concept
-graph layer, a decision-theoretic obstruction, and a value criterion for when a
-runtime memory should refine rather than merely repair.
+The main point is the memory-basis replacement.
+Attention reads from token-indexed memory.
+CGA reads from concept-indexed memory whose contents are updated by a causal
+forward-time rule.
+This gives a clean attention-compatible path for testing whether concept-level
+runtime state can compete with token memory and recurrent state under matched
+state budgets.

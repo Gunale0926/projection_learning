@@ -1,10 +1,19 @@
 \section*{NeurIPS Paper Checklist}
 
-This file is retained only for the conference-template branch of \texttt{main.tex}. The current draft is configured as an arXiv-style theoretical paper via \texttt{\textbackslash def\textbackslash isarxiv\{1\}} in \texttt{\_0\_vars.tex}, so this checklist is not included in the compiled manuscript.
+This file is retained only for the conference-template branch of
+\texttt{main.tex}.
 
 \begin{itemize}
-\item {\bf Claims.} The abstract and introduction state the paper's scope as a method proposal with a theoretical diagnosis: runtime excess risk decomposes into $\Delta_{\mathrm{repair}}$ and $\Delta_{\mathrm{refine}}$, and Concept Graph Attention estimates these gaps by repairing local concept memories or refining the information structure with concepts and distinction edges.
-\item {\bf Limitations.} Appendix~\ref{app:limitations} states the main limitations, including distinction search, finite-sample estimation, and the restricted exact bridge to one-hot partition memories.
-\item {\bf Theory assumptions and proofs.} The assumptions appear in the theorem statements in Sections~\ref{sec:preliminaries}, \ref{sec:algorithms}, and \ref{sec:guarantees}; full proofs are in Appendices~\ref{app:refinement-proofs}--\ref{app:algorithm-bridge-proofs}.
-\item {\bf Experiments.} The draft centers on MQAR as the controlled recall benchmark and CGA-LM as the sequence-modeling scaling target.
+\item {\bf Claims.} The abstract and introduction state the paper's scope as a
+method proposal: CGA replaces token-indexed attention memory with a fixed bank
+of runtime concept slots.
+\item {\bf Limitations.} Section~\ref{sec:main-limitations} states the main
+limitations, including kernel optimization, retention tuning, concept-count
+selection, and the absence of a large-scale SOTA language-model claim.
+\item {\bf Theory.} Section~\ref{sec:main-cga} gives the state definition,
+read/write equations, state-size accounting, and backpropagation boundary for
+fixed-bank CGA.
+\item {\bf Experiments.} Section~\ref{sec:main-experiments} centers on MQAR as
+the controlled recall benchmark and CGA-LM as the sequence-modeling scaling
+target.
 \end{itemize}

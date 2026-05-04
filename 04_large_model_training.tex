@@ -1,4 +1,4 @@
-\section{CGA-LM: Replacing Token Attention with Concept Graph Attention}
+\section{CGA-LM: Replacing Token Attention with Fixed Concept Attention}
 \label{sec:large-model-training}
 
 For language modeling, the world state is a prefix and the consequence is the
@@ -23,28 +23,25 @@ gate, and retention-decay projections:
 q_t=Q_\ell x_t,\qquad k_t=K_\ell x_t,\qquad v_t=V_\ell x_t,\qquad
 g_t=\sigma(w_g^\top x_t+b_g).
 \]
-The layer-local CGA state is a graph
+The layer-local CGA state is a fixed concept bank
 \[
-\calG_t^\ell
+\mathcal{M}_t^\ell
 =
-\left(
-\{a_j,c_j,m_j,n_j\}_{j=1}^{N_t},
-E_t
-\right).
+\{(a_j,s^k_{jh},s^v_{jh},n_{jh})_{h=1}^{H}\}_{j=1}^{C}.
 \]
-The read is causal: token $t$ reads only concepts created from earlier tokens.
-For active concepts,
+The read is causal: token $t$ reads only concept contents produced by earlier
+writes.
+For all concept slots,
 \[
-\alpha_{tj}
+\alpha_{thj}
 =
-\operatorname{softmax}_{j\le N_t}
-\left(\gamma_\ell q_t^\top c_j\right),
+\operatorname{softmax}_{j\le C}
+\left(\gamma_\ell q_{th}^\top c_{j h}\right),
 \qquad
-z_t=\sum_{j\le N_t}\alpha_{tj}m_j,
+z_{th}=\sum_{j\le C}\alpha_{thj}m_{j h},
 \qquad
-y_t=O_\ell z_t .
+y_t=O_\ell[z_{t1};\ldots;z_{tH}].
 \]
-The scale $\gamma_\ell$ is learned.
 Multi-head CGA uses independent address and value subspaces per head and
 concatenates the head outputs before the output projection, exactly as
 multi-head attention does.
@@ -53,21 +50,17 @@ multi-head attention does.
 
 The update order is the same during training and autoregressive inference:
 \[
-\text{read from }\calG_t^\ell
+\text{read from }\mathcal{M}_t^\ell
 \rightarrow
 \text{emit }y_t
 \rightarrow
 \text{decay and write }(k_t,v_t,g_t)
 \rightarrow
-\text{repair or refine }\calG_{t+1}^\ell .
+\text{update }\mathcal{M}_{t+1}^\ell .
 \]
 This prevents a token from reading its own write.
-A repair updates an existing concept's sufficient statistics.
-A refinement creates a new concept and optional distinction edges.
-The MQAR implementation uses delayed writes so that a key token can bind to the
-following value token.
 Both MQAR and language-model variants use a learned write gate.
-For general text, the same update includes a trainable retention factor
+For general text, the update includes a trainable retention factor
 $\rho_h=\exp(-\sum_t\lambda_{th})$ over old concept statistics, with the
 default PoST-style ordered decay parameterization and an optional free per-head
 parameterization for ablation.
@@ -76,13 +69,13 @@ parameterization for ablation.
 
 Slow neural parameters are trained by ordinary next-token backpropagation
 through the CGA read path.
-The graph mutation itself is detached:
+The concept-bank routing state is detached:
 \[
-\calG_{t+1}^\ell
+\mathcal{M}_{t+1}^\ell
 =
 \operatorname{CGAWrite}
 \left(
-\operatorname{stopgrad}(\calG_t^\ell),
+\operatorname{stopgrad}(\mathcal{M}_t^\ell),
 \operatorname{stopgrad}(k_t),
 v_t,
 g_t,
@@ -91,23 +84,22 @@ g_t,
 \]
 Thus CGA-LM is not a backprop-free language model.
 It is an attention replacement whose fast state is updated by a forward-time
-concept-graph rule while the slow projections are trained end-to-end.
+concept-memory rule while the slow projections are trained end-to-end.
 The gated value content and retention factors remain differentiable through
-future reads; routing, allocation, counts, anchors, and distinction edges are
-detached.
+future reads; routing, key statistics, counts, and slot priors are detached.
 
 \begin{algorithm}[H]
 \caption{\textsc{CGALayerForward}}
 \label{alg:cga-lm}
 \begin{algorithmic}[1]
-\State \textbf{Input:} hidden states $x_{1:L}$, empty concept graph $\calG$
+\State \textbf{Input:} hidden states $x_{1:L}$, fixed concept bank $\mathcal{M}$
 \For{causal blocks}
 \State project block queries, write keys, and values
-\State read all active concepts with continuous attention weights
+\State read all concept slots with continuous attention weights
 \State emit block outputs through the output projection
-\State form delayed write pairs, write gates, and retention factors
-\State assign writes to compatible concepts or proposed new concepts
-\State decay old concept statistics, scatter-add new statistics, and commit graph updates
+\State form write pairs, write gates, and retention factors
+\State route writes to concept slots
+\State decay old concept statistics, scatter-add new statistics, and commit bank updates
 \EndFor
 \State \Return contextualized hidden states
 \end{algorithmic}
@@ -117,8 +109,8 @@ detached.
 
 The reference CGA implementation uses dense concept reads.
 This is appropriate for state-equalized MQAR where the concept budget is small.
-For large concept graphs, sparse retrieval, fused dense-read kernels,
-budget-aware merge and eviction, and sharded concept banks are systems work.
+For larger concept banks, fused dense-read kernels, sparse concept retrieval,
+and sharded concept banks are systems work.
 The paper therefore separates the architectural claim from the kernel claim:
 CGA changes the memory basis of attention from tokens to concepts; optimized
 implementations should then choose dense or sparse concept attention depending

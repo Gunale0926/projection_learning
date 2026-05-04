@@ -3,7 +3,7 @@
 
 The empirical claim is intentionally narrow.
 We evaluate CGA as a causal sequence mixer: a layer with the external contract
-of attention, but whose memory is a bounded concept graph rather than all
+of attention, but whose memory is a bounded concept bank rather than all
 previous tokens.
 The main experiment is multi-query associative recall (MQAR), because MQAR
 directly measures whether a mixer can write key-value information and retrieve
@@ -20,7 +20,8 @@ This is the cleanest test for CGA because the task separates two questions:
 whether the model can store associations in a runtime memory, and whether later
 queries can retrieve them.
 For token attention, the memory is the raw prefix.
-For CGA, the memory is a concept graph constructed from the prefix.
+For CGA, the memory is a fixed concept bank whose slot contents are updated
+from the prefix.
 
 We run CGA inside the existing PoST/Zoology MQAR framework.
 The comparison is state-equalized against existing efficient sequence mixers.
@@ -32,33 +33,34 @@ d_{\rm state}=d_{\rm model}/(2H).
 \]
 These correspond to target runtime-state budgets
 $d_{\rm model}^2/H\in\{64{\rm K},32{\rm K},16{\rm K}\}$.
-For MQAR, a concept slot is intended to hold an association, so the target
-concept capacity is tied to the largest training key-value count rather than to
-the sequence length.
-The curriculum reaches $128$ key-value pairs, so the main grid sets
-$C=128$ for every CGA configuration.
-For each grid point we then choose a per-head concept value bottleneck $d_v^c$
-so that the persistent CGA state
+For MQAR, a concept slot is intended to hold an association, so the concept
+capacity is tied to the largest training key-value count rather than to the
+sequence length.
+The curriculum reaches $128$ key-value pairs, so the main grid sets $C=128$
+for every CGA configuration.
+All slots are active from the first block.
+
+For each grid point we then choose a per-head concept value bottleneck
+$d_v^c$ so that the persistent CGA state
 \[
-S_{\rm CGA}=C\left[H(d_a+d_v^c+1)+2d_a+4\right]
+S_{\rm CGA}=C\,H(d_a+d_v^c+1)
 \]
 does not exceed $d_{\rm model}^2/H$.
 The value bottleneck is rounded down to an eight-dimensional alignment.
-This gives $(C,d_v^c)=(128,96)$ for $(512,4)$, $(128,24)$ for $(512,8)$, and
+This gives $(C,d_v^c)=(128,104)$ for $(512,4)$, $(128,24)$ for $(512,8)$, and
 $(128,16)$ for $(256,4)$, all within the same target state budgets.
-Concept creation is capacity-balanced across the 16 training blocks: each
-32-token block can add at most 8 new concepts, selected by gate-weighted
-novelty rather than by a fixed low similarity threshold alone.
 Each grid point is run with the same three-point learning-rate sweep
-$\{10^{-3.5},10^{-3},10^{-2.5}\}$.
+\[
+\{10^{-3.5},10^{-3},10^{-2.5}\}.
+\]
 The implementation uses dense concept reads, untied read/write address
-projections, a learned read logit scale initialized at the standard dot-product
-attention scale, a learned write gate with sparsity coefficient $10^{-4}$, and
-a trainable retention decay over concept sufficient statistics.
-The main run uses the PoST parameterization for the decay spectrum, with
-$\mathrm{dt}\in[10^{-6},3\cdot 10^{-5}]$, train length $512$, and position-adaptive
-scaling enabled. The code also exposes a free per-head decay parameterization
-for direct ablation, but this ablation is not part of the main grid.
+projections, a learned read logit scale initialized at the standard
+dot-product attention scale, a learned write gate with sparsity coefficient
+$10^{-4}$, a fixed slot prior count $n_0=1$, and a load penalty
+$\eta=0.1$ in the write route.
+The main run uses the PoST parameterization for the retention spectrum, with
+$\mathrm{dt}\in[10^{-6},3\cdot 10^{-5}]$, train length $512$, and
+position-adaptive scaling enabled.
 Training uses sequence length $512$ with the same curriculum over key-value
 count as the PoST baselines.
 Evaluation reports the existing persist and capacity slices at lengths
@@ -73,7 +75,7 @@ framework:
     efficient mixers.
     \item \textbf{TTT-style layers}: expressive state updated by test-time
     learning style mechanisms.
-    \item \textbf{CGA}: attention over a runtime concept graph.
+    \item \textbf{CGA}: attention over a fixed runtime concept bank.
 \end{itemize}
 
 \paragraph{What the experiment tests.}
@@ -85,15 +87,16 @@ The important diagnostic slices are:
 \]
 A positive result is not merely low training loss.
 CGA should maintain recall when the query distance grows, expose a compact
-runtime state, and report latency and concept count so that improvements are not
-hidden inside unbounded memory.
+runtime state, and report latency so that improvements are not hidden inside
+unbounded memory.
 We additionally log the mean write gate, valid-token write gate, write mass per
-token, assignment rate, concept saturation, edge count, read scale, mean
-retention, and mean decay rate. These diagnostics are part of the main run
-because the central failure mode for CGA on MQAR is not only optimization loss,
-but whether useful key-value writes can be selected without filling the concept
-budget with random non-query tokens and whether the retention time constants
-are compatible with the sequence length.
+token, assignment rate, slot-usage entropy, slot-load coefficient of variation,
+read scale, mean retention, and mean decay rate.
+These diagnostics are part of the main run because the central failure mode for
+CGA on MQAR is not only optimization loss, but whether useful key-value writes
+can be selected without collapsing all evidence into a small number of concept
+slots and whether the retention time constants are compatible with the sequence
+length.
 
 The implementation artifact is
 \path{../PoST_dev/zoology/zoology/experiments/cga_mqar.py}.
@@ -112,7 +115,7 @@ The matched comparison is:
 Both models should use the same tokenizer, depth, width, optimizer, training
 tokens, and evaluation split.
 The reported metrics are validation negative log likelihood, perplexity,
-prefill latency, decode latency, parameter count, concept count, edge count,
+prefill latency, decode latency, parameter count, slot-usage diagnostics,
 write-gate statistics, retention statistics, and runtime state size.
 
 The language-model result is not meant to be a large-scale SOTA claim in this
@@ -127,11 +130,11 @@ an attention replacement with the same external block interface.
 
 Earlier drafts included CIFAR test-time adaptation, LoRA-style adapters,
 entropy minimization, readout-only language-model memory, and synthetic
-refinement diagnostics.
+diagnostics.
 Those experiments are removed from the main claim.
 They test different questions and obscure the central message:
 \[
-\text{CGA replaces token attention memory with a dynamic concept graph.}
+\text{CGA replaces token attention memory with fixed runtime concept memory.}
 \]
 MQAR tests controlled concept-memory recall.
 CGA-LM tests whether the same operation can be trained as a causal

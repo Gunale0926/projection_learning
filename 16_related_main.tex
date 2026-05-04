@@ -7,29 +7,36 @@ Transformers use content-addressed attention over previous tokens
 Mamba, RWKV, GDN, GLA, RetNet, and related models replace attention with
 efficient recurrent or linear state updates
 \citep{gu2023mamba,peng2023rwkv,yang2025gated,yang2024gated,sun2023retentive}.
-TTT-style models instead make the hidden state expressive by running a
-learned update rule at test time \citep{sun2025learning}.
+TTT-style models instead make the hidden state expressive by running a learned
+update rule at test time \citep{sun2025learning}.
 Our experiments place CGA in this comparison class: CGA is an attention-like
-causal mixer whose state is a runtime graph of concepts, memories, and
-distinction edges rather than a token table.
+causal mixer whose persistent state is a bounded concept memory rather than a
+token table.
 
-\paragraph{Repair without refinement.}
-Cache language models, $k$NN-LMs, retrieval-augmented systems, fast weights, online ridge or RLS memories, adapters, LoRA, and test-time adaptation repair state inside a representation or optimize a surrogate at inference time \citep{grave2017improving,khandelwal2020generalization,lewis2020retrieval,ba2016using,schlag2021linear,crammer2006online,houlsby2019parameter,hu2022lora,sun2020test,wang2021tent}.
-They address $\Delta_{\rm repair}$; our obstruction asks when fixed-information repair is structurally insufficient.
-Some of these methods can change information if they update the representation itself; in our terminology those updates are refinements rather than counterexamples to the repair-only bound.
+\paragraph{Attention variants.}
+Sparse attention, sliding-window attention, grouped-query attention, and
+compressed-memory attention mainly alter which token keys and values are read
+or how the token table is stored.
+CGA is orthogonal: it changes the basis being attended to.
+The read still has the same softmax form, so optimized attention kernels and
+attention variants can in principle be adapted to concept slots instead of
+token positions.
 
-\paragraph{Refinement without local repair.}
-Decision trees, Hoeffding trees, adaptive trees, Mondrian forests, ART, SOMs, neural gas, growing neural gas, and prototype methods create or refine categories using split tests, mismatch, or geometry \citep{quinlan1986induction,breiman1984classification,domingos2000mining,bifet2009adaptive,lakshminarayanan2014mondrian,carpenter1987massively,kohonen1990self,fritzke1995growing}.
-CGA shares the refinement motivation but stores accepted distinctions as graph edges and continues repairing local memories after creation.
-The empirical split scores we use are the same classical information-gain and variance-reduction quantities; the distinction is the online repair-vs-refine comparison and the graph-memory state.
+\paragraph{Associative and external memory.}
+Cache language models, $k$NN-LMs, retrieval-augmented systems, fast weights,
+online ridge or RLS memories, Memory Networks, Neural Turing Machines, and
+Differentiable Neural Computers all use forms of stateful retrieval or local
+memory repair
+\citep{grave2017improving,khandelwal2020generalization,lewis2020retrieval,ba2016using,schlag2021linear,crammer2006online,weston2015memory,graves2014neural,graves2016hybrid}.
+CGA shares the associative-memory goal but keeps the decoder-block interface of
+attention: each token reads from concept slots and writes back through a gated
+causal update.
 
-\paragraph{Routing and memory.}
-Mixture-of-experts, Switch Transformers, Product-Key Memory, Memory Networks, Neural Turing Machines, and Differentiable Neural Computers route to trained or external capacity \citep{shazeer2017outrageously,fedus2022switch,lample2019large,weston2015memory,graves2014neural,graves2016hybrid}.
-CGA differs in write semantics: attended objects are runtime-created concepts
-whose edges generate an information structure.
-This places CGA between attention and neural memory: it borrows continuous
-content-addressed reads from the former, concept creation from online
-refinement systems, and local memory repair from external-memory models.
-The key difference from token attention is not the softmax read; it is the
-runtime concept graph being read.
-Appendix~\ref{app:related} gives the extended comparison.
+\paragraph{Routing and capacity.}
+Mixture-of-experts, Switch Transformers, and Product-Key Memory route tokens or
+queries to trained capacity
+\citep{shazeer2017outrageously,fedus2022switch,lample2019large}.
+CGA also routes writes, but the routed capacity is runtime state rather than a
+bank of trained expert parameters.
+The fixed concept count $C$ makes this capacity explicit and state-equalizable
+against recurrent mixers.

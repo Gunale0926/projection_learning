@@ -1,23 +1,23 @@
-Self-attention computes over token memory: each previous token contributes a
-key and value, and later tokens retrieve from this token table.  This gives
-expressive content-addressed recall, but the memory size grows with sequence
-length and every stored object remains a token-level event.  We propose
-\emph{Concept Graph Attention} (CGA), a causal sequence layer that keeps the
-continuous readout of attention but changes the memory being attended to.  CGA
-builds a runtime graph of latent concepts from the prefix; each concept stores
-an address, a value memory, counts, and optional distinction edges.  Tokens read
-from all active concepts with attention-style softmax weights, then write to
-the graph by local sufficient-statistic updates.  Thus CGA replaces attention
-over tokens with attention over a dynamic concept graph.
+Self-attention stores one key-value entry per previous token and retrieves from
+that token table. This gives expressive content-addressed recall, but it ties
+the memory basis to token events and makes the read state grow with context
+length. We propose \emph{Concept Graph Attention} (CGA), a causal sequence
+layer that keeps the continuous readout of attention but replaces token memory
+with a fixed bank of runtime concepts. Each concept slot stores an address,
+value memory, count statistics, and trainable retention dynamics. Tokens read
+from all concept slots with attention-style softmax weights, then write back by
+gated sufficient-statistic updates. CGA therefore changes where attention is
+computed: from token positions to a compact concept bank whose contents evolve
+over the prefix.
 
-Theoretically, we view the graph as a refinable runtime information structure:
-repair updates change payloads inside existing concepts, while refinement
-updates create new concepts or distinction edges.  This connects CGA to a
-repair-versus-refinement decomposition of online prediction error and explains
-why concept creation is not merely a cache-management heuristic.  Empirically,
-we evaluate CGA as an attention-like mixer in the PoST/Zoology sequence-modeling
-framework, focusing on state-equalized multi-query associative recall and a
-small causal language-model setting.  The intended comparison class is modern
-efficient attention alternatives such as Mamba, RWKV, GDN, and TTT-style
-stateful layers: CGA keeps differentiable attention-style reads, but moves the
-state from token memory to a compact, updateable concept graph.
+Theoretically, fixed-bank CGA is an attention-compatible state layer with a
+clear scan-friendly update: reads are differentiable concept attention, while
+writes are local associative-memory repairs with detached routing and
+differentiable value/gate paths. This separates slow neural training from fast
+runtime state mutation without requiring an inference-time backward pass.
+Empirically, we evaluate CGA in the PoST/Zoology sequence-modeling framework on
+state-equalized multi-query associative recall and a small causal
+language-model setup. The intended comparison class is modern efficient
+attention alternatives such as Mamba, RWKV, GDN, and TTT-style stateful layers:
+CGA keeps attention-like retrieval, but moves the persistent state from a token
+table to a bounded, updateable concept memory.
