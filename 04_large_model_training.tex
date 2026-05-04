@@ -29,16 +29,19 @@ The layer-local CGA state is a fixed concept bank
 =
 \{(a_j,s^k_{jh},s^v_{jh},n_{jh})_{h=1}^{H}\}_{j=1}^{C}.
 \]
+The fixed slot priors also define static edge predicates that restrict each
+read to an eligible subset of concept slots, with fallback to the full bank
+when no slot is eligible.
 The read is causal: token $t$ reads only concept contents produced by earlier
 writes.
-For all concept slots,
+For eligible concept slots $E_t^\ell$,
 \[
 \alpha_{thj}
 =
-\operatorname{softmax}_{j\le C}
+\operatorname{softmax}_{j\in E_t^\ell}
 \left(\gamma_\ell q_{th}^\top c_{j h}\right),
 \qquad
-z_{th}=\sum_{j\le C}\alpha_{thj}m_{j h},
+z_{th}=\sum_{j\in E_t^\ell}\alpha_{thj}m_{j h},
 \qquad
 y_t=O_\ell[z_{t1};\ldots;z_{tH}].
 \]
@@ -98,7 +101,7 @@ future reads; routing, key statistics, counts, and slot priors are detached.
 \State \textbf{Input:} hidden states $x_{1:L}$, fixed concept bank $\mathcal{M}$
 \For{causal blocks}
 \State project block queries, write keys, and values
-\State read all concept slots with continuous attention weights
+\State read edge-eligible concept slots with continuous attention weights
 \State emit block outputs through the output projection
 \State form write pairs, write gates, and retention factors
 \State route writes to concept slots

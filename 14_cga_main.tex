@@ -14,6 +14,11 @@ Here $a_j$ is a fixed slot prior used to break symmetry, $s^k_{jh}$ is the key
 sufficient statistic for slot $j$ and head $h$, $s^v_{jh}$ is the value
 sufficient statistic, and $n_{jh}$ is a count or mass statistic.
 All $C$ concept slots are available from the beginning of the sequence.
+Each slot also has a fixed edge predicate
+$e_j=(u_j,b_j,\sigma_j)$ derived from the random slot priors.
+For the main implementation, $u_j$ is the separating direction between slot
+$j$'s prior and its nearest neighboring prior, $b_j$ is the midpoint bias, and
+$\sigma_j$ is the side containing slot $j$.
 The slot addresses and memories used by the read are
 \[
 c_{jh}=\operatorname{normalize}\!\left(s^k_{jh}/\max(n_{jh},1)\right),
@@ -33,7 +38,8 @@ S_{\rm CGA}
 C\,H(d_a+d_v^c+1).
 \]
 The formula counts per-head key sums, value sums, and counts.
-Slot priors are fixed layer buffers rather than per-sequence runtime state.
+Slot priors and edge predicates are fixed layer buffers rather than
+per-sequence runtime state.
 The important scaling point is that $S_{\rm CGA}$ depends on $C$, not on the
 context length.
 
@@ -54,14 +60,22 @@ forward-only sufficient-statistic rule.
 
 \paragraph{Dense concept read.}
 Given normalized query $q_{th}$ and concept addresses $c_{jh}$, CGA reads by
-continuous attention over concept slots:
+continuous attention over edge-eligible concept slots.
+Let
+\[
+\bar q_t=\operatorname{normalize}\!\left(\frac1H\sum_{h=1}^{H}q_{th}\right),
+\qquad
+E_t=\{j:\mathbf{1}[u_j^\top\bar q_t>b_j]=\sigma_j\}.
+\]
+If $E_t$ is empty, CGA falls back to all concept slots.
+The read is
 \[
 \alpha_{thj}
 =
 \frac{\exp(\gamma q_{th}^{\top}c_{jh})}
-{\sum_{r=1}^{C}\exp(\gamma q_{th}^{\top}c_{rh})},
+{\sum_{r\in E_t}\exp(\gamma q_{th}^{\top}c_{rh})},
 \qquad
-z_{th}=\sum_{j=1}^{C}\alpha_{thj}m_{jh}.
+z_{th}=\sum_{j\in E_t}\alpha_{thj}m_{jh}.
 \]
 The scale $\gamma$ is learned and initialized at the standard dot-product
 attention scale.
@@ -84,21 +98,13 @@ k^{\rm write}_t=k_{t-1},\qquad v^{\rm write}_t=v_t.
 \]
 For general language modeling, the delay can be set to zero or treated as a
 task-dependent write convention.
-The write is routed to the most compatible concept slot with a small load
-penalty:
+The write is routed to the most compatible concept slot:
 \[
 j_t
 =
 \arg\max_{j\le C}
-\left[
 \frac1H\sum_{h=1}^{H}(k^{\rm write}_{th})^\top c_{jh}
--\eta\log(\bar n_j)
-\right],
-\qquad
-\bar n_j=\frac1H\sum_{h=1}^{H}n_{jh}.
 \]
-The load term prevents early slot collapse without changing the fixed-bank
-capacity.
 The route $j_t$ is detached fast state.
 The value write and gate remain differentiable through future concept reads.
 
@@ -166,7 +172,7 @@ CGA instead computes
 \[
 \operatorname{CGA}(X)_t
 =
-\sum_{j=1}^{C}
+\sum_{j\in E_t}
 \operatorname{softmax}_j(q_t^\top c_{tj})m_{tj},
 \]
 where $c_{tj},m_{tj}$ are produced by the concept-bank update over the prefix.
@@ -196,12 +202,12 @@ trained by ordinary backpropagation.
 \label{alg:main-cga}
 \begin{algorithmic}[1]
 \Statex Input: hidden states $x_{1:T}$, concept count $C$, block size $B$.
-\State Initialize fixed concept bank with priors $a_j$, counts $n_0$, zero values.
+\State Initialize fixed concept bank with random priors $a_j$, edge predicates $e_j$, counts $n_0$, and zero values.
 \For{blocks $[s,e)$}
     \State Project block queries, write keys, values, gates, and retention rates.
-    \State Read all $C$ concept slots with dense attention.
+    \State Read edge-eligible concept slots with dense attention, falling back to all slots when needed.
     \State Emit block outputs through the output projection.
-    \State Route each valid write to a concept slot using similarity minus load penalty.
+    \State Route each valid write to the most similar concept slot.
     \State Decay old sufficient statistics and scatter-add gated count, key, and value updates.
 \EndFor
 \State Return output projection of concept readouts.

@@ -56,8 +56,8 @@ Each grid point is run with the same three-point learning-rate sweep
 The implementation uses dense concept reads, untied read/write address
 projections, a learned read logit scale initialized at the standard
 dot-product attention scale, a learned write gate with sparsity coefficient
-$10^{-4}$, a fixed slot prior count $n_0=1$, and a load penalty
-$\eta=0.1$ in the write route.
+$10^{-4}$, a fixed slot prior count $n_0=1$, and one fixed edge predicate per
+concept slot derived from the random slot priors.
 The main run uses the PoST parameterization for the retention spectrum, with
 $\mathrm{dt}\in[10^{-6},3\cdot 10^{-5}]$, train length $512$, and
 position-adaptive scaling enabled.
@@ -91,7 +91,7 @@ runtime state, and report latency so that improvements are not hidden inside
 unbounded memory.
 We additionally log the mean write gate, valid-token write gate, write mass per
 token, assignment rate, slot-usage entropy, slot-load coefficient of variation,
-read scale, mean retention, and mean decay rate.
+edge count, read scale, mean retention, and mean decay rate.
 These diagnostics are part of the main run because the central failure mode for
 CGA on MQAR is not only optimization loss, but whether useful key-value writes
 can be selected without collapsing all evidence into a small number of concept

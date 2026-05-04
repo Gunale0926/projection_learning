@@ -5,10 +5,10 @@ length. We propose \emph{Concept Graph Attention} (CGA), a causal sequence
 layer that keeps the continuous readout of attention but replaces token memory
 with a fixed bank of runtime concepts. Each concept slot stores an address,
 value memory, count statistics, and trainable retention dynamics. Tokens read
-from all concept slots with attention-style softmax weights, then write back by
-gated sufficient-statistic updates. CGA therefore changes where attention is
-computed: from token positions to a compact concept bank whose contents evolve
-over the prefix.
+from edge-eligible concept slots with attention-style softmax weights, then
+write back by gated sufficient-statistic updates. CGA therefore changes where
+attention is computed: from token positions to a compact concept bank whose
+contents evolve over the prefix.
 
 Theoretically, fixed-bank CGA is an attention-compatible state layer with a
 clear scan-friendly update: reads are differentiable concept attention, while
