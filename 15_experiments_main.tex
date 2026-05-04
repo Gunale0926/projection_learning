@@ -35,18 +35,17 @@ $d_{\rm model}^2/H\in\{64{\rm K},32{\rm K},16{\rm K}\}$.
 For MQAR, a concept slot is intended to hold an association, so the target
 concept capacity is tied to the largest training key-value count rather than to
 the sequence length.
-The curriculum reaches $128$ key-value pairs, and the main grid targets at
-least $1.25\times128=160$ concept slots.
+The curriculum reaches $128$ key-value pairs, so the main grid sets
+$C=128$ for every CGA configuration.
 For each grid point we then choose a per-head concept value bottleneck $d_v^c$
 so that the persistent CGA state
 \[
 S_{\rm CGA}=C\left[H(d_a+d_v^c+1)+2d_a+4\right]
 \]
 does not exceed $d_{\rm model}^2/H$.
-The value bottleneck is rounded down to an eight-dimensional alignment, and
-the remaining budget is used to increase $C$.
-This gives $(C,d_v^c)=(167,72)$ for $(512,4)$, $(182,16)$ for $(512,8)$, and
-$(186,8)$ for $(256,4)$, all within the same target state budgets.
+The value bottleneck is rounded down to an eight-dimensional alignment.
+This gives $(C,d_v^c)=(128,96)$ for $(512,4)$, $(128,24)$ for $(512,8)$, and
+$(128,16)$ for $(256,4)$, all within the same target state budgets.
 Each grid point is run with the same three-point learning-rate sweep
 $\{10^{-3.5},10^{-3},10^{-2.5}\}$.
 The implementation uses dense concept reads, untied read/write address
