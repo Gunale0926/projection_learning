@@ -6,7 +6,7 @@ We evaluate the fixed-bank CA layer from Section~\ref{sec:main-ca} on state-equa
 \subsection{Experiment 1: Multi-Query Associative Recall}
 \label{sec:exp-mqar}
 
-MQAR asks a model to output the value associated with a queried key \citep{arora2024zoology}. We state-equalize CA against efficient sequence mixers with $(d_{\rm model},H)\in\{(512,4),(512,8),(256,4)\}$ and $d_{\rm state}=d_{\rm model}/(2H)$, giving online-state budgets $64{\rm K}$, $32{\rm K}$, and $16{\rm K}$. CA uses $C=128$ concept slots and chooses $d_v^c$ so that $S_{\rm CA}=C H d_v^c$ stays within the matched budget.
+MQAR asks a model to output the value associated with a queried key \citep{arora2024zoology}. We state-equalize CA against efficient sequence mixers with $(d_{\rm model},H)\in\{(512,4),(512,8),(256,4)\}$ and $d_{\rm state}=d_{\rm model}/(2H)$, giving online-state budgets $64{\rm K}$, $32{\rm K}$, and $16{\rm K}$. The evaluated implementation is fixed-bank and edge-free: $C=128$ fixed random concept identities are active from the start, the block size is $32$, the MQAR write key is shifted by one token, and Triton dense reads are enabled. The per-head concept value width is chosen so that $S_{\rm CA}=C H d_v^c$ stays within the matched budget, giving $d_v^c=128$ for $64{\rm K}$ and $d_v^c=32$ for the $32{\rm K}$ and $16{\rm K}$ settings.
 
 \begin{table}[!ht]
 \centering
@@ -35,7 +35,7 @@ RetNet               & 99.9 & 47.1 & 2.3 & 0.0 & 37.3 & {99.9} & 63.2 & 6.0 & 0.
 \subsection{Experiment 2: Matched Language Modeling}
 \label{sec:exp-lm}
 
-CALM replaces only the sequence mixer by CA, keeps the PoST FineWeb-Edu setup, and evaluates base checkpoints with the Language Model Evaluation Harness. Table~\ref{tab:lm-main} transcribes the PoST zero-shot accuracy table and reserves CALM rows. With $C=128$ and $d_v^c=64$, $S_{\rm CA}=C H d_v^c$ gives $196{\rm K}$ online state variables at 180M and $262{\rm K}$ at 440M; final same-corpus PPL uses the tail-sample protocol in Appendix~\ref{app:lm-eval-details}.
+CALM replaces only the sequence mixer by fixed-bank CA, keeps the PoST FineWeb-Edu setup, and evaluates base checkpoints with the Language Model Evaluation Harness. The LM code uses $C=128$, $d_v^c=64$, block size $128$, write-key shift $0$, PoST-style position-adaptive retention, write-gate regularization $10^{-4}$, and Triton dense reads. Table~\ref{tab:lm-main} transcribes the PoST zero-shot accuracy table and reserves CALM rows. With $S_{\rm CA}=C H d_v^c$, CALM has $196{\rm K}$ online state variables per layer at 180M and $262{\rm K}$ at 440M; final same-corpus PPL uses the tail-sample protocol in Appendix~\ref{app:lm-eval-details}.
 
 \begin{table}[H]
 \centering

@@ -1,7 +1,42 @@
 \section{Conceptual Attention as a Data Structure for Refinable Partitions}
 \label{sec:algorithms}
 
-CA implements refinable information structures as a graph: edges generate distinctions and nodes store repairable memories. The ingredients are related to decision-tree refinement, adaptive category creation, prototype memories, and external neural memories, but CA uses them to implement the repair/refinement distinction \citep{breiman1984classification,domingos2000mining,carpenter1987massively,grossberg2013adaptive,kohonen1990self,weston2015memory,graves2016hybrid}. The theory so far gives a diagnostic: decide whether an observed error is better explained by $\Delta_{\mathrm{repair}}$ at fixed information or by $\Delta_{\mathrm{refine}}$ from missing distinctions. A runtime implementation therefore needs a state representation that can both repair local statistics and add distinctions. CA is the data-structure realization of the abstract refinable-partition model.
+This appendix describes the graph-growing CA extension that realizes literal partition refinement. The main experiments use the simpler fixed-bank specialization from Section~\ref{sec:main-ca}: concept identities are preallocated, all slots are active, edge gates are disabled, and the online operation is gated value-memory repair inside a bounded concept bank. The distinction matters for claims. The fixed-bank layer tests whether preallocated concept capacity and forward-time repair can replace token-indexed memory; the graph-growing extension below is the implementation route for accepting new distinctions online.
+
+In the graph-growing extension, CA implements refinable information structures as a graph: edges generate distinctions and nodes store repairable memories. The ingredients are related to decision-tree refinement, adaptive category creation, prototype memories, and external neural memories, but CA uses them to implement the repair/refinement distinction \citep{breiman1984classification,domingos2000mining,carpenter1987massively,grossberg2013adaptive,kohonen1990self,weston2015memory,graves2016hybrid}. The theory so far gives a diagnostic: decide whether an observed error is better explained by $\Delta_{\mathrm{repair}}$ at fixed information or by $\Delta_{\mathrm{refine}}$ from missing distinctions. A runtime implementation therefore needs a state representation that can both repair local statistics and add distinctions. Graph-growing CA is the data-structure realization of the abstract refinable-partition model.
+
+\subsection{Fixed-bank specialization and block kernels}
+\label{sec:fixed-bank-kernel}
+
+The fixed-bank layer used for MQAR and CALM can be read as a finite concept-memory state machine. For a block of length $B$, heads $H$, concepts $C$, address width $d_a$, and value width $d_v^c$, the dense read computes
+\begin{align*}
+S_{b,thj}=\gamma q_{b,th}^{\top}a_{hj},
+\qquad
+\alpha_{b,thj}=\operatorname{softmax}_j S_{b,thj},
+\qquad
+z_{b,th}=\sum_{j=1}^{C}\alpha_{b,thj}M_{b,hj}.
+\end{align*}
+The dense write computes delayed write scores
+\begin{align*}
+R_{b,thj}=\gamma \bar k_{b,th}^{\top}a_{hj},
+\qquad
+\beta_{b,thj}=\operatorname{softmax}_j R_{b,thj},
+\end{align*}
+and updates
+\begin{align*}
+M_{b+1,hj}
+=
+\rho_{bh}M_{b,hj}
++
+\sum_{t=1}^{B}m_{bt}g_{bt}\beta_{b,thj}v_{b,th},
+\end{align*}
+where $m_{bt}$ masks invalid delayed writes. The online state is only $M_b$, with size $C H d_v^c$; the concept identities $a_{hj}$ are fixed buffers or parameters of the layer, not sequence state.
+
+The arithmetic cost per block is
+\begin{align*}
+O(B H C d_a + B H C d_v^c)
+\end{align*}
+for the read and the same order for the dense write, plus projection costs shared with the surrounding decoder block. The Triton read kernel used in the current code tiles the concept, address, value, and block dimensions and applies the same equations under the implementation bounds used by the CUDA path, namely block length at most $128$, concept count at most $256$, address width at most $128$, and value width at most $256$. These bounds are engineering constraints of the fused dense kernel, not assumptions in the partition theory. Proposition~\ref{prop:main-block-ca} gives the mathematical interface: block size one is token-streaming CA, while larger blocks trade within-block memory visibility for parallelism.
 
 \subsection{Why a graph, not a tree?}
 

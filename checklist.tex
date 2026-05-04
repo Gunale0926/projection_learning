@@ -4,7 +4,7 @@ This file is retained only for the conference-template branch of \texttt{main.te
 
 \begin{itemize}
 \item {\bf Claims.} The abstract and introduction state the paper's scope as a method proposal: CA replaces token-indexed attention memory with a fixed bank of runtime concept slots.
-\item {\bf Limitations.} Appendix~\ref{app:limitations} states the main limitations, including kernel optimization, retention tuning, concept-count selection, and the fact that 180M--440M LM results require completed training and latency reporting before any large-scale win can be claimed.
-\item {\bf Theory.} Section~\ref{sec:main-ca} gives the state definition, read/write equations, state-size accounting, and backpropagation boundary for fixed-bank CA.
+\item {\bf Limitations.} Appendix~\ref{app:limitations} states the main limitations, including the block-causal approximation, remaining kernel and sparse-retrieval work, retention tuning, concept-count selection, and the fact that 180M--440M LM results require completed training and latency reporting before any large-scale win can be claimed.
+\item {\bf Theory.} Section~\ref{sec:main-ca} gives the state definition, read/write equations, block-causal interface, state-size accounting, and backpropagation boundary for fixed-bank CA.
 \item {\bf Experiments.} Section~\ref{sec:main-experiments} centers on MQAR as the controlled recall benchmark and a PoST-style CALM pretraining/evaluation protocol as the large-scale sequence-modeling test.
 \end{itemize}

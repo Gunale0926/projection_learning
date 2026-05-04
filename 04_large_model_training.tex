@@ -61,13 +61,13 @@ M_{t+1,hj}^{\ell}
 \rho_{th}M_{t,hj}^{\ell}
 +g_t\beta_{thj}v_{th}.
 \end{align*}
-For parallel training, the implementation groups tokens into causal blocks: all tokens in a block read the memory from before the block, then their writes are accumulated into one block update. Setting block size one recovers the exact token-streaming update.
+For parallel training, the implementation groups tokens into causal blocks: all tokens in a block read the memory from before the block, then their writes are accumulated into one block update. Setting block size one recovers the exact token-streaming update. For block size $B>1$, CA is causal at block boundaries rather than at every token: writes from token $t$ become visible to later blocks, not to later tokens in the same block. This is the implementation used for the reported runs because it exposes the dense concept read and write matrices to GPU kernels.
 
-Both MQAR and language-model variants use a learned write gate. The current experiments also use a trainable retention factor with a PoST-style ordered decay parameterization. This is a parameterization choice for the forgetting spectrum, not the definition of CA itself; CA can be run with a free retention parameterization for ablations.
+Both MQAR and language-model variants use a learned write gate initialized with negative bias and regularized by a small L1 penalty. The current experiments also use a trainable retention factor with a PoST-style ordered decay parameterization, input-dependent step sizes in a bounded range, and optional position-adaptive scaling. These are parameterization choices for stable allocation of forgetting time scales, not the definition of CA itself; CA can be run with a free retention parameterization for ablations.
 
 \subsection{Training boundary}
 
-Slow neural parameters are trained by ordinary next-token backpropagation through both the CA read and the continuous write. Gradients flow through the read weights, write weights, value projection, write gate, retention factors, and output projection. At inference time there is no gradient step and no update to model weights. The only state that changes is the forward-updated concept value memory. Thus CALM is not a backprop-free language model and not a test-time optimizer over hidden model weights. It is an attention replacement whose fast state is a bounded concept memory.
+Slow neural parameters are trained by ordinary next-token backpropagation through both the CA read and the continuous write. In the fixed-bank implementation used by CALM, gradients flow through the read weights, write weights, value projection, write gate, retention factors, output projection, and the block-to-block value-memory recurrence. The dynamic graph bookkeeping path can detach routing state, but that is not the main fixed-bank experimental path. At inference time there is no gradient step and no update to model weights. The only state that changes is the forward-updated concept value memory. Thus CALM is not a backprop-free language model and not a test-time optimizer over hidden model weights. It is an attention replacement whose fast state is a bounded concept memory.
 
 \begin{algorithm}[H]
 \caption{\textsc{CALayerForward}}
@@ -88,7 +88,7 @@ $a_{1:C}$, zero value memory $M_0$
 
 \subsection{Scaling path}
 
-The reference CA implementation uses dense concept reads. This is appropriate for state-equalized MQAR and for the first language-model runs with $C=128$. The large-scale implementation target is a fused dense CA kernel that combines concept-score computation, softmax, value read, retention, and gated write accumulation inside the mixer. For substantially larger concept banks, sparse concept retrieval and sharded concept banks become systems work. The paper therefore separates the architectural claim from the kernel claim: CA changes the memory basis of attention from tokens to concepts; optimized implementations should then choose dense or sparse concept attention depending on the concept budget.
+The reference CA implementation uses dense concept reads. This is appropriate for state-equalized MQAR and for the first language-model runs with $C=128$. The current CUDA path includes fused Triton kernels for the dense read: concept-score computation, active-slot masking, softmax, value aggregation, route-score output, and the corresponding backward passes. The dynamic graph path also includes a fused retention-and-scatter value commit kernel for hard assigned writes. The fixed-bank write used in the main experiments is the dense block update in the equations above, implemented as batched concept softmax and accumulation. These kernels change constants and memory traffic, not the mathematical CA layer. For substantially larger concept banks, sparse concept retrieval, fused fixed-bank write kernels, and sharded concept banks become systems work. The paper therefore separates the architectural claim from the kernel claim: CA changes the memory basis of attention from tokens to concepts; optimized implementations should then choose dense or sparse concept attention depending on the concept budget.
 
 \section{Language-Model Evaluation Details}
 \label{app:lm-eval-details}
@@ -139,11 +139,15 @@ Number of layers & 24 & 48 \\
 Heads $H$ & 24 & 32 \\
 Concepts $C$ & 128 & 128 \\
 Concept value width $d_v^c$ & 64 & 64 \\
+Block size & 128 & 128 \\
+Write-key shift & 0 & 0 \\
 CA online state $C H d_v^c$ & 196,608 & 262,144 \\
 Matched Mamba-2 state $d_{\rm inner}d_{\rm state}$ & 1,536$\times$128 & 2,048$\times$128 \\
 Concept identities & fixed random unit addresses & fixed random unit addresses \\
+Concept edges & disabled in fixed-bank runs & disabled in fixed-bank runs \\
 Read/write addressing & untied projections & untied projections \\
 Retention & trainable, PoST-style parameterization & trainable, PoST-style parameterization \\
+Dense read kernel & Triton enabled & Triton enabled \\
 \bottomrule
 \end{tabular}
 }

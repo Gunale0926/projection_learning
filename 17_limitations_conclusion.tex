@@ -2,13 +2,14 @@
 \label{sec:main-limitations}
 
 \begin{itemize}
-\item CA's dense read is stable at small concept budgets, but large concept banks will need fused kernels and eventually sparse concept retrieval.
+\item CA's dense read is stable at small concept budgets and now has a fused Triton read path, but large concept banks will still need sparse concept retrieval, fused write paths, and sharded concept memory.
 \item The current retention decay is trainable and PoST-parameterized by default, but its best time-scale allocation for large language modeling remains empirical.
 \item Fixed-bank CA removes online slot-allocation complexity, but it makes the concept count $C$ a real capacity hyperparameter.
+\item The reported implementation is block-causal for parallelism: writes become visible at block boundaries, so block size is a real modeling and systems hyperparameter.
 \item CA's test-time learning is prefix-local in the current formulation: the concept value memory is reset per sequence unless a separate persistent-memory protocol is added.
 \item The 180M--440M language-model runs are the intended SOTA-readiness test, but they still require completed training and latency reporting before the paper can claim a large-scale win.
 \end{itemize}
 
-The empirical claim is deliberately scoped: CA is evaluated as an attention-like causal sequence mixer on MQAR and matched language-model pretraining. MQAR should show whether the concept bank can write and retrieve key-value information under matched state budgets. CALM should show whether the same mechanism can replace token attention in a trainable decoder at 180M--440M scale. If CALM loses to optimized recurrent mixers, that is a real systems or modeling gap rather than a wording problem. The method still needs stronger fused kernels, retention-time-scale studies, and distributed concept-bank implementations before it can be treated as a fully optimized large-model systems result.
+The empirical claim is deliberately scoped: CA is evaluated as an attention-like block-causal sequence mixer on MQAR and matched language-model pretraining. MQAR should show whether the fixed concept bank can write and retrieve key-value information under matched state budgets. CALM should show whether the same mechanism can replace token attention in a trainable decoder at 180M--440M scale. If CALM loses to optimized recurrent mixers, that is a real systems or modeling gap rather than a wording problem. The method still needs stronger write kernels, retention-time-scale studies, and distributed concept-bank implementations before it can be treated as a fully optimized large-model systems result.
 
-The main point is the memory-basis replacement. Attention reads from token-indexed memory. CA reads from fixed concept identities whose value memories are updated by a causal forward-time rule during inference. This gives a clean attention-compatible path for testing whether concept-level test-time learning can compete with token memory, recurrent state, and TTT-style hidden-model updates under matched state budgets.
+The main point is the memory-basis replacement. Attention reads from token-indexed memory. CA reads from fixed concept identities whose value memories are updated by a forward-time rule during inference. This gives a clean attention-compatible path for testing whether concept-level test-time learning can compete with token memory, recurrent state, and TTT-style hidden-model updates under matched state budgets.

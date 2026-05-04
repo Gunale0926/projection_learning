@@ -1,7 +1,7 @@
 \section{Conceptual Attention}
 \label{sec:main-ca}
 
-Motivated by the preceding refine-or-repair theory, we propose CA as a fixed-capacity sequence layer. The general DGM picture allows the information structure to grow by accepting new distinctions; the fixed-bank CA layer proposed here instead allocates a bounded set of concept identities in advance and tests whether forward-time writes into those identities can replace token-indexed attention memory. A concept slot is a persistent address for a prediction-relevant information cell, or in the soft implementation a differentiable proxy for such a cell. It is not assumed to be a human-interpretable semantic label. A token can repair the payload by writing a new value; training can learn better read/write projections; and the concept budget $C$ controls how many runtime distinctions the layer can keep active.
+Motivated by the preceding refine-or-repair theory, we propose CA as a fixed-capacity sequence layer. The general DGM picture allows the information structure to grow by accepting new distinctions; the main experimental CA layer takes the controlled specialization used in the code: it allocates a bounded bank of fixed random concept identities in advance, keeps all slots active, and updates only their value memories during the forward pass. A concept slot is a persistent address for a prediction-relevant information cell, or in the soft implementation a differentiable proxy for such a cell. It is not assumed to be a human-interpretable semantic label. A token can repair the payload by writing a new value; training can learn better read/write projections; and the concept budget $C$ controls how many writable concept cells the layer can maintain. The graph-growing and edge-gated CA variant in the appendix is the dynamic refinement implementation; the main MQAR and CALM experiments use the fixed-bank, edge-free path.
 
 Operationally, CA is an attention layer whose memory is a fixed bank of concept identities rather than a table of token keys and values. The runtime interaction is bipartite: tokens read from and write to concept slots using attention weights. Each layer has $C$ concept slots and $H$ heads. For head $h$, slot $j$ has a fixed unit address
 \begin{align*}
@@ -9,7 +9,7 @@ a_{hj}\in \mathbb{R}^{d_a},
 \qquad
 \|a_{hj}\|_2=1 .
 \end{align*}
-The addresses are initialized once and remain fixed; they are concept identities, not online sequence state. The online state for a sequence is the value memory
+The addresses are initialized once as random unit vectors and remain fixed; they are concept identities, not online sequence state. The online state for a sequence is the value memory
 \begin{align*}
 M_b\in\mathbb{R}^{H\times C\times d_v^c},
 \end{align*}
@@ -53,7 +53,7 @@ g_t=\sigma(w_g^\top x_t+b_g).
 The query and key maps learn how tokens address the fixed concept identities. The value map learns what payload should be stored in concept memory, and the write gate learns how much a token should modify memory.
 
 \paragraph{Dense concept read.}
-CA reads by applying the standard attention softmax over concept slots rather than over prefix tokens. Let $\gamma>0$ be a learned read scale. For token $t$ in block $b$,
+CA reads by applying the standard attention softmax over concept slots rather than over prefix tokens. In the fixed-bank path all $C$ slots are active from the start, so there is no sparse retrieval or edge gate in the main experiments. Let $\gamma>0$ be a learned read scale. For token $t$ in block $b$,
 \begin{align*}
 \alpha_{thj}
 =
@@ -66,7 +66,7 @@ The multi-head output is
 \begin{align*}
 y_t=O[z_{t1};\ldots;z_{tH}].
 \end{align*}
-This is ordinary differentiable attention except that the keys are fixed concept identities and the values are runtime concept memories.
+This is ordinary differentiable attention except that the keys are fixed concept identities and the values are runtime concept memories. The Triton path used in the implementation fuses the score computation, masking over active slots, softmax, value aggregation, and the corresponding backward computations for this dense read. The kernel is a systems realization of the displayed operation; it does not change the statistical model class.
 
 \paragraph{Continuous concept write.}
 CA uses a read-before-write protocol. The tokens in a block first read the memory state $M_b$; after those outputs are emitted, the block writes its values into memory to produce $M_{b+1}$. For a write delay $\delta\ge0$, define
@@ -90,7 +90,16 @@ M_{b+1,hj}
 \mathbf{1}_{t\ge \delta}
 g_t\beta_{thj}v_{th}.
 \end{align*}
-The write is continuous: every valid token can write to every concept with a different weight, and the soft weights make the write path differentiable during training.
+The write is continuous: every valid token can write to every concept with a different weight, and the soft weights make the write path differentiable during training. The current fixed-bank code implements this update as a dense block write; the dynamic graph path also has a fused retention-and-scatter commit kernel for hard assigned writes.
+
+\begin{proposition}[Block-causal CA]
+\label{prop:main-block-ca}
+For block size $B$, all CA outputs for positions in a block $[s,e)$ are functions of the entering memory $M_b$ and the hidden states $x_{s:e}$, while writes from that block affect only $M_{b+1}$ and later blocks. When $B=1$, this is the exact token-streaming read-before-write recurrence. When $B>1$, it is a coarser causal recurrence with block latency $B$, and the online state size remains $C H d_v^c$.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+The read equations for every $t\in[s,e)$ use the same entering memory $M_b$. The displayed write equation then deterministically maps $(M_b,x_{s:e})$ to $M_{b+1}$. Induction over blocks gives causality at block boundaries. Setting $e=s+1$ gives the token-streaming recurrence.
+\end{proof}
 
 \paragraph{Trainable retention.}
 The factor $\rho_{bh}\in(0,1]$ controls how much old concept memory survives when a new block is written. CA computes tokenwise positive decay rates $\lambda_{th}$ and accumulates them over the block:
@@ -106,7 +115,7 @@ A_h=A_0+\sum_{i<h}\operatorname{softplus}(\Delta_i),
 combined with a learned input-dependent step size and optional position-adaptive scaling. This gives CA the same kind of trainable forgetting mechanism used by modern recurrent mixers, but the recurrence acts on concept value memory rather than on token-indexed state.
 
 \paragraph{Training and inference.}
-During training, CA is optimized end-to-end with the task loss. Gradients flow through the read weights $\alpha$, the write weights $\beta$, the written values $v_t$, the write gate $g_t$, and the retention factors $\rho_{bh}$. The concept addresses $a_{hj}$ are fixed identities, so the model learns to use them by changing the query, key, value, gate, retention, and output projections. During inference, the learned parameters are fixed. The concept memory $M_b$ is still updated by the same forward rule, so future tokens condition on information written from the observed prefix. This is the sense in which CA performs test-time learning: it learns the contents of a bounded memory during the forward pass, without running backpropagation at inference time.
+During training, CA is optimized end-to-end with the task loss. In the fixed-bank experiments, gradients flow through the read weights $\alpha$, the write weights $\beta$, the written values $v_t$, the write gate $g_t$, the retention factors $\rho_{bh}$, and the block-to-block value-memory recurrence. Blocking reduces the recurrent depth from the token length to the number of blocks and exposes dense matrix operations for the fused read kernel. The concept addresses $a_{hj}$ are fixed identities, so the model learns to use them by changing the query, key, value, gate, retention, read-scale, and output projections. During inference, the learned parameters are fixed. The concept memory $M_b$ is still updated by the same forward rule, so future blocks condition on information written from the observed prefix. This is the sense in which CA performs test-time learning: it learns the contents of a bounded memory during the forward pass, without running backpropagation at inference time.
 
 \paragraph{Relation to ordinary attention.}
 Standard causal attention computes
@@ -123,6 +132,6 @@ where the memory basis is the set of prefix token positions. CA computes
 \sum_{j=1}^{C}
 \operatorname{softmax}_j(q_t^\top a_j)M_{tj},
 \end{align*}
-where the memory basis is a fixed set of concept identities and only the value contents $M_{tj}$ evolve over the prefix. Thus CA is not a different loss or optimizer around attention. It is an attention replacement that moves the read/write memory from tokens to concepts.
+where the memory basis is a fixed set of concept identities and $M_{tj}$ denotes the latest concept value state visible to token $t$ under the chosen streaming or block-causal schedule. Thus CA is not a different loss or optimizer around attention. It is an attention replacement that moves the read/write memory from tokens to concepts.
 
 The appendix gives the larger graph-growing DGM algorithm and the CALM training details. The main text keeps the fixed-bank layer explicit because this is the architectural proposal evaluated here: a bounded concept-memory attention layer derived from the repair/refinement separation.

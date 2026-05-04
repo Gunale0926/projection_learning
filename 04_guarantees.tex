@@ -1,7 +1,7 @@
 \section{Guarantees}
 \label{sec:guarantees}
 
-The guarantees are deliberately scoped. They do not assert global optimality of CA, nor do they assert that a deep backbone can always discover the right representation. They formalize the paper's decision rule: repair-only learners are limited by the Bayes risk of their current partition; useful refinements change the Bayes action; statistically guarded refinement accepts only distinctions whose held-out consequence value clears complexity and concentration margins; and CA implements this operation as a dynamic graph data structure. Full proof details are in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
+The guarantees are deliberately scoped. They do not assert global optimality of CA, nor do they assert that a deep backbone can always discover the right representation. They formalize the paper's decision rule: repair-only learners are limited by the Bayes risk of their current partition; useful refinements change the Bayes action; statistically guarded refinement accepts only distinctions whose held-out consequence value clears complexity and concentration margins; fixed-bank CA tests preallocated concept memory as a bounded repair substrate; and graph-growing CA implements literal accepted refinements as a dynamic graph data structure. Full proof details are in Appendices~\ref{app:refinement-proofs}, \ref{app:value-proofs}, and \ref{app:algorithm-bridge-proofs}.
 
 \paragraph{1. Error decomposes into two gaps.}
 Theorem~\ref{thm:error-decomposition} states that for current predictor $f_t$, current partition $\Pi_t$, and candidate refined partition $\Pi^\star$,
