@@ -20,9 +20,9 @@ current sequence \citep{sun2020test,sun2025learning}.
 CGA adopts the same high-level goal, namely to let inference-time computation
 learn from the observed prefix, but changes the learning object.
 The hidden state in CGA is not a linear model or MLP whose weights are updated;
-it is a concept-indexed sufficient-statistic memory.
-The update is therefore forward-only: route a write, decay old statistics, and
-scatter-add gated key/value/count statistics.
+it is a concept-indexed value memory.
+The update is therefore forward-only at inference: read concepts, decay old
+values, and add gated continuous writes.
 This makes CGA complementary to TTT.
 TTT explores expressive hidden states as trainable inner models; CGA explores
 expressive hidden states as writable concept memories with attention-style
@@ -41,17 +41,17 @@ token positions.
 Cache language models, $k$NN-LMs, retrieval-augmented systems, fast weights,
 online ridge or RLS memories, Memory Networks, Neural Turing Machines, and
 Differentiable Neural Computers all use forms of stateful retrieval or local
-memory repair
+memory update
 \citep{grave2017improving,khandelwal2020generalization,lewis2020retrieval,ba2016using,schlag2021linear,crammer2006online,weston2015memory,graves2014neural,graves2016hybrid}.
 CGA shares the associative-memory goal but keeps the decoder-block interface of
 attention: each token reads from concept slots and writes back through a gated
 causal update.
 
-\paragraph{Routing and capacity.}
+\paragraph{Writable capacity.}
 Mixture-of-experts, Switch Transformers, and Product-Key Memory route tokens or
 queries to trained capacity
 \citep{shazeer2017outrageously,fedus2022switch,lample2019large}.
-CGA also routes writes, but the routed capacity is runtime state rather than a
-bank of trained expert parameters.
+CGA also weights writes across concept slots, but the writable capacity is
+runtime value state rather than a bank of trained expert parameters.
 The fixed concept count $C$ makes this capacity explicit and state-equalizable
 against recurrent mixers.

@@ -12,38 +12,38 @@ X+\operatorname{CGA}(\operatorname{Norm}(X)).
 \]
 The block has the same external shape contract as attention,
 $[B,L,d_{\rm model}]\mapsto[B,L,d_{\rm model}]$.
-The surrounding MLP, residual stream, layer normalization, embeddings, and
-language-model head are otherwise standard decoder components.
+The residual stream, layer normalization, embeddings, and language-model head
+are otherwise standard decoder components.
+In a Transformer-style decoder, CGA can be paired with the usual MLP sublayer.
+For the state-matched PoST LM runs, the default implementation uses the same
+mixer-only residual scaffold as the Mamba-2 baseline; an MLP sublayer is an
+explicit configuration option rather than part of the main comparison.
 
-\subsection{Causal concept attention}
+\subsection{Fixed concept memory}
 
-At layer $\ell$, token $t$ produces read query, write key, write value, write
-gate, and retention-decay projections:
+At layer $\ell$, CGA-LM keeps a fixed bank of $C$ concept identities
+$a_{\ell hj}\in\mathbb{R}^{d_a}$ for each head $h$ and concept slot $j$.
+These identities are fixed addresses shared across sequences.
+The online state is the value memory
+\[
+M_t^\ell\in\mathbb{R}^{H\times C\times d_v^c}.
+\]
+Each token produces read queries, write keys, write values, write gates, and
+retention-decay projections:
 \[
 q_t=Q_\ell x_t,\qquad k_t=K_\ell x_t,\qquad v_t=V_\ell x_t,\qquad
 g_t=\sigma(w_g^\top x_t+b_g).
 \]
-The layer-local CGA state is a bounded concept graph
-\[
-\mathcal{G}_t^\ell
-=
-\left(
-\{(a_j,s^k_{jh},s^v_{jh},n_{jh})_{h=1}^{H}\}_{j=1}^{N_t},
-E_t^\ell
-\right),
-\qquad N_t\le C.
-\]
-The graph can create concepts and distinction edges online.
-The read is causal: token $t$ reads only concept contents produced by earlier
+The read is causal: token $t$ reads only concept values produced by earlier
 writes.
-For eligible concept slots $E_t^\ell$,
+For concept slots $j=1,\ldots,C$,
 \[
 \alpha_{thj}
 =
-\operatorname{softmax}_{j\in E_t^\ell}
-\left(\gamma_\ell q_{th}^\top c_{j h}\right),
+\operatorname{softmax}_{j}
+\left(\gamma_\ell q_{th}^\top a_{\ell hj}\right),
 \qquad
-z_{th}=\sum_{j\in E_t^\ell}\alpha_{thj}m_{j h},
+z_{th}=\sum_{j=1}^{C}\alpha_{thj}M_{t,hj}^\ell,
 \qquad
 y_t=O_\ell[z_{t1};\ldots;z_{tH}].
 \]
@@ -55,60 +55,68 @@ multi-head attention does.
 
 The update order is the same during training and autoregressive inference:
 \[
-\text{read from }\mathcal{G}_t^\ell
+\text{read from }M_t^\ell
 \rightarrow
 \text{emit }y_t
 \rightarrow
 \text{decay and write }(k_t,v_t,g_t)
 \rightarrow
-\text{update }\mathcal{G}_{t+1}^\ell .
+\text{update }M_{t+1}^\ell .
 \]
 This prevents a token from reading its own write.
 The inference-time update is the test-time learning mechanism in CGA-LM:
-the model weights are fixed, but the concept graph changes after every causal
-block and future tokens condition on that updated graph.
+the model weights are fixed, but the concept value memory changes after the
+causal write and future tokens condition on that updated memory.
+
+For a delayed write key $\bar k_t=k_{t-\delta}$, CGA computes write weights
+\[
+\beta_{thj}
+=
+\operatorname{softmax}_{j}
+\left(\gamma_\ell \bar k_{th}^\top a_{\ell hj}\right).
+\]
+With retention factor $\rho_{th}$, the token-level streaming update is
+\[
+M_{t+1,hj}^{\ell}
+=
+\rho_{th}M_{t,hj}^{\ell}
++g_t\beta_{thj}v_{th}.
+\]
+For parallel training, the implementation groups tokens into causal blocks:
+all tokens in a block read the memory from before the block, then their writes
+are accumulated into one block update. Setting block size one recovers the
+exact token-streaming update.
+
 Both MQAR and language-model variants use a learned write gate.
-For general text, the update includes a trainable retention factor
-$\rho_h=\exp(-\sum_t\lambda_{th})$ over old concept statistics, with the
-default PoST-style ordered decay parameterization and an optional free per-head
-parameterization for ablation.
+The current experiments also use a trainable retention factor with a PoST-style
+ordered decay parameterization. This is a parameterization choice for the
+forgetting spectrum, not the definition of CGA itself; CGA can be run with a
+free retention parameterization for ablations.
 
 \subsection{Training boundary}
 
 Slow neural parameters are trained by ordinary next-token backpropagation
-through the CGA read path.
-The concept-graph routing state is detached:
-\[
-\mathcal{G}_{t+1}^\ell
-=
-\operatorname{CGAWrite}
-\left(
-\operatorname{stopgrad}(\mathcal{G}_t^\ell),
-\operatorname{stopgrad}(k_t),
-v_t,
-g_t,
-\rho_t
-\right).
-\]
-Thus CGA-LM is not a backprop-free language model.
-It is an attention replacement whose fast state is updated by a forward-time
-concept-memory rule while the slow projections are trained end-to-end.
-The gated value content and retention factors remain differentiable through
-future reads; routing, concept allocation, key statistics, counts, anchors, and
-edges are detached.
+through both the CGA read and the continuous write.
+Gradients flow through the read weights, write weights, value projection, write
+gate, retention factors, and output projection.
+At inference time there is no gradient step and no update to model weights.
+The only state that changes is the forward-updated concept value memory.
+Thus CGA-LM is not a backprop-free language model and not a test-time optimizer
+over hidden model weights.
+It is an attention replacement whose fast state is a bounded concept memory.
 
 \begin{algorithm}[H]
 \caption{\textsc{CGALayerForward}}
 \label{alg:cga-lm}
 \begin{algorithmic}[1]
-\State \textbf{Input:} hidden states $x_{1:L}$, empty concept graph $\mathcal{G}_0$
+\State \textbf{Input:} hidden states $x_{1:L}$, fixed concept identities
+$a_{1:C}$, zero value memory $M_0$
 \For{causal blocks}
-\State project block queries, write keys, and values
-\State read graph-eligible concepts with continuous attention weights
+\State project block queries, write keys, values, gates, and retention rates
+\State read fixed concept memory with continuous attention weights
 \State emit block outputs through the output projection
-\State form write pairs, write gates, and retention factors
-\State propose new concepts and route writes to proposed or existing concepts
-\State decay old concept statistics, scatter-add new statistics, and commit graph updates
+\State form delayed write keys and write weights
+\State decay old value memory and add gated continuous writes
 \EndFor
 \State \Return contextualized hidden states
 \end{algorithmic}
@@ -117,10 +125,99 @@ edges are detached.
 \subsection{Scaling path}
 
 The reference CGA implementation uses dense concept reads.
-This is appropriate for state-equalized MQAR where the concept budget is small.
-For larger concept banks, fused dense-read kernels, sparse concept retrieval,
-and sharded concept banks are systems work.
+This is appropriate for state-equalized MQAR and for the first language-model
+runs with $C=128$.
+The large-scale implementation target is a fused dense CGA kernel that combines
+concept-score computation, softmax, value read, retention, and gated write
+accumulation inside the mixer.
+For substantially larger concept banks, sparse concept retrieval and sharded
+concept banks become systems work.
 The paper therefore separates the architectural claim from the kernel claim:
 CGA changes the memory basis of attention from tokens to concepts; optimized
 implementations should then choose dense or sparse concept attention depending
 on the concept budget.
+
+\section{Language-Model Evaluation Details}
+\label{app:lm-eval-details}
+
+This appendix specifies the large-scale CGA-LM experiment in
+Section~\ref{sec:exp-cga-lm}.
+The goal is to match the PoST language-model evaluation protocol while changing
+only the sequence mixer.
+All models are pretrained as base language models and evaluated without
+instruction tuning or in-context examples.
+
+\subsection{Training protocol}
+
+\begin{table}[h]
+\centering
+\caption{CGA-LM training protocol for the large language-model evaluation.}
+\label{tab:cga-lm-train-config}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Training data & FineWeb-Edu~\citep{lozhkov2024fineweb} \\
+Training context length $T_{\rm train}$ & 2,048 \\
+Tokenizer & Llama-3.1 tokenizer~\citep{dubey2024llama} \\
+Hardware & $8\times$ H200 \\
+Optimizer & AdamW~\citep{loshchilov2019decoupled} \\
+Warmup & 1\% of total steps \\
+Precision & BF16 mixed precision \\
+Gradient clipping & $\|\nabla\|_2 \le 1.0$ \\
+Training tokens (180M / 440M) & $4$B / $9$B \\
+Learning rate (180M / 440M) & $6\times10^{-4}$ / $3\times10^{-4}$, cosine to $10^{-5}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{State-matched CGA configuration}
+
+The CGA state is matched to the recurrent state size used by the PoST Mamba-2
+configurations.
+For Mamba-2, the per-layer runtime state is
+$d_{\rm inner}d_{\rm state}$.
+For CGA-LM, the online state is $C H d_v^c$.
+We therefore use $C=128$ and $d_v^c=64$ at both scales:
+
+\begin{table}[h]
+\centering
+\caption{State-matched CGA-LM configurations. Concept identities are fixed
+layer parameters; the online state is only the concept value memory.}
+\label{tab:cga-lm-config}
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Parameter} & \textbf{180M} & \textbf{440M} \\
+\midrule
+$d_{\rm model}$ & 768 & 1,024 \\
+Number of layers & 24 & 48 \\
+Heads $H$ & 24 & 32 \\
+Concepts $C$ & 128 & 128 \\
+Concept value width $d_v^c$ & 64 & 64 \\
+CGA online state $C H d_v^c$ & 196,608 & 262,144 \\
+Matched Mamba-2 state $d_{\rm inner}d_{\rm state}$ & 1,536$\times$128 & 2,048$\times$128 \\
+Concept identities & fixed random unit addresses & fixed random unit addresses \\
+Read/write addressing & untied projections & untied projections \\
+Retention & trainable, PoST-style parameterization & trainable, PoST-style parameterization \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\subsection{Evaluation protocol}
+
+We use the Language Model Evaluation Harness~\citep{gao2024framework} in a
+zero-shot setting.
+The reported tasks are LAMBADA, HellaSwag, PIQA, ARC-Easy, ARC-Challenge,
+WinoGrande, and OpenBookQA, matching Table~\ref{tab:lm-eval}.
+For reproducibility and systems comparison, each checkpoint should report:
+validation loss, validation perplexity, zero-shot task metrics, training tokens
+per second, prefill latency, decode latency, parameter count, online state
+size, and CGA diagnostics for write gate, read scale, retention, and decay.
+The latency table is generated by
+\path{scripts/benchmark_lm_latency.py}, which uses synthetic tokens so that
+all checkpoints are measured with identical batch size, context length, dtype,
+and hardware.

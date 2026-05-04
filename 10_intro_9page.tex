@@ -22,10 +22,10 @@ CGA keeps the familiar attention read,
 but changes the objects being read.
 Instead of a token-indexed key-value table, each layer maintains a fixed bank
 of $C$ concept slots.
-Each slot has an address $c_{tj}$, value memory $m_{tj}$, and count statistics
-that evolve causally over the prefix.
+Each slot has a fixed concept identity and a value memory $m_{tj}$ that evolves
+causally over the prefix.
 The read is attention over concepts; the write is a gated
-sufficient-statistic update into the concept bank.
+continuous update into the concept bank.
 Thus the layer is attention-like in its readout but recurrent-memory-like in
 its state:
 \[
@@ -52,7 +52,7 @@ test-time-training sequence layers \citep{sun2025learning}.
 TTT layers make the hidden state a small model and update that model by a
 self-supervised learning step on the test sequence.
 CGA instead makes the hidden state a concept-indexed memory and updates that
-memory by a forward-only sufficient-statistic rule.
+memory by a forward-only continuous write rule.
 Both mechanisms let a model adapt to information observed at inference time.
 The difference is the object being learned:
 \[
@@ -94,11 +94,11 @@ run an inference-time backward pass.
 \foreach \i in {1,2,3,4,5} {
   \draw[arr,gray] (qc) -- (c\i);
 }
-\node[lab,align=center,text width=3.0cm] at (5.05,-1.05) {read over concept slots; writes repair slot state};
+\node[lab,align=center,text width=3.0cm] at (5.05,-1.05) {read over fixed concepts; writes update value memory};
 \end{tikzpicture}
 \caption{CGA changes the memory object of attention. Standard attention reads
 from token memory. CGA performs a continuous attention read over a fixed bank of
-runtime concept slots whose contents are updated causally.}
+concept identities whose value memories are updated causally.}
 \label{fig:cga-vs-token-attention}
 \end{figure}
 
@@ -109,21 +109,21 @@ This paper makes three contributions.
     continuously from concept slots and updates them with gated writes and
     trainable retention decay while model weights stay fixed at inference time.
     \item \textbf{Theory.} We formalize CGA as attention over an online
-    sufficient-statistic memory, specifying the state space, causal read/write
-    equations, state-size scaling, scan-friendly update structure, and
-    backpropagation boundary needed to compare it to recurrent, attention-like,
-    and TTT-style sequence mixers.
+    concept value memory, specifying the state space, causal read/write
+    equations, state-size scaling, block-scan update structure, and training
+    boundary needed to compare it to recurrent, attention-like, and TTT-style
+    sequence mixers.
     \item \textbf{Evaluation.} We implement CGA in the PoST/Zoology framework
-    and evaluate it as an attention-like sequence mixer on state-equalized
-    multi-query associative recall, with small language-model experiments as
-    the scaling target.
+    and evaluate it as an attention-like sequence mixer on two standard
+    tracks: state-equalized multi-query associative recall and matched
+    language-model pretraining with zero-shot downstream evaluation at
+    180M--440M scale.
 \end{itemize}
 
 The claim boundary is important.
-CGA is not presented as a fully optimized replacement for every attention
-kernel.
+CGA is not presented as a new tokenizer, loss, or inference-time optimizer.
 It is a method proposal for changing the memory basis of attention from tokens
-to runtime concepts.
+to fixed runtime concepts.
 The current implementation trains slow projections by backpropagation, while
 the concept-memory update itself is a forward-time operation.
 This places CGA between attention, external memory, and efficient recurrent
