@@ -19,6 +19,19 @@ implementation, $c_j,m_j,n_j$ are head-wise sufficient statistics.
 The concept budget $C$ is a model hyperparameter analogous to a recurrent-state
 budget.
 Unlike token attention, $N_b$ need not grow with the sequence length.
+The value memory may use a concept bottleneck dimension $d_v^c$ smaller than
+the ordinary attention head value dimension. This separates association
+capacity from payload width: at a fixed runtime-state budget, CGA can allocate
+more concept slots by storing narrower concept values and projecting the
+concatenated concept readout back to $d_{\rm model}$.
+For address dimension $d_a$, value bottleneck $d_v^c$, and $H$ heads, the
+persistent per-sequence state scales as
+\[
+S_{\rm CGA}
+=
+C\left[H(d_a+d_v^c+1)+2d_a+4\right],
+\]
+counting key sums, value sums, counts, anchors, edge normals, and graph masks.
 
 \paragraph{Dense concept read.}
 Given normalized query $q_t$ and active concept addresses $c_j$, CGA reads by

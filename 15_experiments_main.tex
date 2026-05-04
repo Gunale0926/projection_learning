@@ -32,10 +32,21 @@ d_{\rm state}=d_{\rm model}/(2H).
 \]
 These correspond to target runtime-state budgets
 $d_{\rm model}^2/H\in\{64{\rm K},32{\rm K},16{\rm K}\}$.
-For each grid point, the concept budget $C$ is chosen as the largest integer
-whose CGA state size does not exceed the target budget.
-The resulting concept budgets are $C=96$ for $(512,4)$, $C=54$ for $(512,8)$,
-and $C=47$ for $(256,4)$.
+For MQAR, a concept slot is intended to hold an association, so the target
+concept capacity is tied to the largest training key-value count rather than to
+the sequence length.
+The curriculum reaches $128$ key-value pairs, and the main grid targets at
+least $1.25\times128=160$ concept slots.
+For each grid point we then choose a per-head concept value bottleneck $d_v^c$
+so that the persistent CGA state
+\[
+S_{\rm CGA}=C\left[H(d_a+d_v^c+1)+2d_a+4\right]
+\]
+does not exceed $d_{\rm model}^2/H$.
+The value bottleneck is rounded down to an eight-dimensional alignment, and
+the remaining budget is used to increase $C$.
+This gives $(C,d_v^c)=(167,72)$ for $(512,4)$, $(182,16)$ for $(512,8)$, and
+$(186,8)$ for $(256,4)$, all within the same target state budgets.
 Each grid point is run with the same three-point learning-rate sweep
 $\{10^{-3.5},10^{-3},10^{-2.5}\}$.
 The implementation uses dense concept reads, untied read/write address
