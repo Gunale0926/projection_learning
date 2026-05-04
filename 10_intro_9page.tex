@@ -47,6 +47,25 @@ length $T$, giving a dense read cost of $O(TC)$ when $C\ll T$.
 At a fixed runtime-state budget, CGA can trade the number of concept slots
 against the per-slot value width.
 
+This gives a different answer to the same question that motivates
+test-time-training sequence layers \citep{sun2025learning}.
+TTT layers make the hidden state a small model and update that model by a
+self-supervised learning step on the test sequence.
+CGA instead makes the hidden state a concept-indexed memory and updates that
+memory by a forward-only sufficient-statistic rule.
+Both mechanisms let a model adapt to information observed at inference time.
+The difference is the object being learned:
+\[
+\begin{array}{ll}
+\text{TTT:} & \text{test-time learning of hidden model weights},\\
+\text{CGA:} & \text{test-time learning of concept-memory contents}.
+\end{array}
+\]
+We use ``learning'' here in the operational stateful sense: future predictions
+condition on a state estimated from the observed prefix.
+CGA does not update the global model parameters during inference and does not
+run an inference-time backward pass.
+
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}[x=1cm,y=1cm,>=stealth]
@@ -86,12 +105,14 @@ runtime concept slots whose contents are updated causally.}
 This paper makes three contributions.
 \begin{itemize}
     \item \textbf{Architecture.} We introduce fixed-bank Concept Graph
-    Attention, a causal mixer that reads continuously from concept slots and
-    updates them with gated writes and trainable retention decay.
+    Attention, a causal mixer with test-time concept learning: it reads
+    continuously from concept slots and updates them with gated writes and
+    trainable retention decay while model weights stay fixed at inference time.
     \item \textbf{Theory.} We formalize CGA as attention over an online
-    sufficient-statistic memory and give the state, compute, and
-    backpropagation boundary needed to compare it to recurrent and
-    attention-like sequence mixers.
+    sufficient-statistic memory, specifying the state space, causal read/write
+    equations, state-size scaling, scan-friendly update structure, and
+    backpropagation boundary needed to compare it to recurrent, attention-like,
+    and TTT-style sequence mixers.
     \item \textbf{Evaluation.} We implement CGA in the PoST/Zoology framework
     and evaluate it as an attention-like sequence mixer on state-equalized
     multi-query associative recall, with small language-model experiments as
@@ -108,4 +129,4 @@ the concept-memory update itself is a forward-time operation.
 This places CGA between attention, external memory, and efficient recurrent
 mixers: it uses differentiable content-addressed reads like attention, but the
 state being read is a compact, updateable concept memory rather than the entire
-prefix token table.
+prefix token table or a set of test-time-trained hidden weights.

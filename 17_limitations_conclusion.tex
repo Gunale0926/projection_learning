@@ -9,6 +9,9 @@ default, but its best time-scale allocation for large language modeling remains
 empirical.
 \item Fixed-bank CGA removes online slot-allocation complexity, but it makes
 the concept count $C$ a real capacity hyperparameter.
+\item CGA's test-time learning is prefix-local in the current formulation: the
+concept bank is reset per sequence unless a separate persistent-memory protocol
+is added.
 \item The experiments are sequence-modeling tests, not a complete large-scale
 language-model SOTA claim.
 \end{itemize}
@@ -28,7 +31,7 @@ before it can be treated as a large-model systems result.
 The main point is the memory-basis replacement.
 Attention reads from token-indexed memory.
 CGA reads from concept-indexed memory whose contents are updated by a causal
-forward-time rule.
+forward-time rule during inference.
 This gives a clean attention-compatible path for testing whether concept-level
-runtime state can compete with token memory and recurrent state under matched
-state budgets.
+test-time learning can compete with token memory, recurrent state, and
+TTT-style hidden-model updates under matched state budgets.

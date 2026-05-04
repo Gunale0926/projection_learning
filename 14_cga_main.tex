@@ -37,6 +37,21 @@ Slot priors are fixed layer buffers rather than per-sequence runtime state.
 The important scaling point is that $S_{\rm CGA}$ depends on $C$, not on the
 context length.
 
+\paragraph{What learns at inference time.}
+During training, CGA learns slow parameters: projections, output maps, write
+gates, and retention parameters.
+During inference, these slow parameters are fixed.
+What changes is the per-sequence concept memory $\mathcal{M}_b$.
+After each block, the layer updates key statistics, value statistics, and count
+statistics using the prefix it has just observed.
+We call this \emph{test-time concept learning}: it is learning because later
+predictions condition on a concept state estimated online from the test prefix,
+but it is not test-time gradient descent on model weights.
+This distinction is central to the method.
+The hidden state is not a token cache, because writes aggregate information into
+concept slots; it is not a learned inner-loop model, because the update is a
+forward-only sufficient-statistic rule.
+
 \paragraph{Dense concept read.}
 Given normalized query $q_{th}$ and concept addresses $c_{jh}$, CGA reads by
 continuous attention over concept slots:
@@ -161,7 +176,7 @@ This is why CGA can be viewed as a memory-basis replacement for attention:
 the read remains attention, but the state being attended to is concept-indexed
 rather than token-indexed.
 
-\paragraph{Backpropagation boundary.}
+\paragraph{Learning and backpropagation boundary.}
 CGA trains its slow parameters end-to-end:
 embeddings, read/write projections, output projections, retention parameters,
 and the language-model head receive gradient from the task loss.
@@ -170,10 +185,11 @@ state trajectory.
 Routing decisions, key sums, counts, and slot priors are detached fast state.
 The gated value content remains differentiable so that future concept reads can
 train the value projection, write gate, and retention decay.
-Thus CGA is not a backprop-free language model.
+Thus CGA is neither a backprop-free language model nor a test-time optimizer
+over model parameters.
 It is an attention-compatible state layer whose fast memory update is a
-forward-time associative operation while slow neural parameters are trained by
-ordinary backpropagation.
+forward-time associative learning operation while slow neural parameters are
+trained by ordinary backpropagation.
 
 \begin{algorithm}[t]
 \caption{\textsc{ConceptGraphAttentionForward}}

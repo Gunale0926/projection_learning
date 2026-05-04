@@ -13,6 +13,21 @@ Our experiments place CGA in this comparison class: CGA is an attention-like
 causal mixer whose persistent state is a bounded concept memory rather than a
 token table.
 
+\paragraph{Test-time learning layers.}
+TTT layers frame sequence modeling as test-time learning: the hidden state is a
+small model, and the state update is a self-supervised training step on the
+current sequence \citep{sun2020test,sun2025learning}.
+CGA adopts the same high-level goal, namely to let inference-time computation
+learn from the observed prefix, but changes the learning object.
+The hidden state in CGA is not a linear model or MLP whose weights are updated;
+it is a concept-indexed sufficient-statistic memory.
+The update is therefore forward-only: route a write, decay old statistics, and
+scatter-add gated key/value/count statistics.
+This makes CGA complementary to TTT.
+TTT explores expressive hidden states as trainable inner models; CGA explores
+expressive hidden states as writable concept memories with attention-style
+readout.
+
 \paragraph{Attention variants.}
 Sparse attention, sliding-window attention, grouped-query attention, and
 compressed-memory attention mainly alter which token keys and values are read

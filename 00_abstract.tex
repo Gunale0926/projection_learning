@@ -13,11 +13,14 @@ over the prefix.
 Theoretically, fixed-bank CGA is an attention-compatible state layer with a
 clear scan-friendly update: reads are differentiable concept attention, while
 writes are local associative-memory repairs with detached routing and
-differentiable value/gate paths. This separates slow neural training from fast
-runtime state mutation without requiring an inference-time backward pass.
+differentiable value/gate paths. This gives CGA \emph{test-time concept
+learning}: at inference, model weights remain fixed, but the concept memory is
+learned from the observed prefix by a forward-only update. This separates slow
+neural training from fast runtime state mutation without requiring an
+inference-time backward pass.
 Empirically, we evaluate CGA in the PoST/Zoology sequence-modeling framework on
 state-equalized multi-query associative recall and a small causal
 language-model setup. The intended comparison class is modern efficient
 attention alternatives such as Mamba, RWKV, GDN, and TTT-style stateful layers:
-CGA keeps attention-like retrieval, but moves the persistent state from a token
-table to a bounded, updateable concept memory.
+CGA keeps attention-like retrieval, but moves the persistent state from token
+memory or learned test-time weights to a bounded, updateable concept memory.

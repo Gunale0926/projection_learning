@@ -59,6 +59,9 @@ The update order is the same during training and autoregressive inference:
 \text{update }\mathcal{M}_{t+1}^\ell .
 \]
 This prevents a token from reading its own write.
+The inference-time update is the test-time learning mechanism in CGA-LM:
+the model weights are fixed, but the concept bank changes after every causal
+block and future tokens condition on that updated bank.
 Both MQAR and language-model variants use a learned write gate.
 For general text, the update includes a trainable retention factor
 $\rho_h=\exp(-\sum_t\lambda_{th})$ over old concept statistics, with the
