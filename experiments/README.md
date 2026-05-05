@@ -1,16 +1,16 @@
 # Experiments
 
-The paper keeps only two empirical tracks.
+The paper uses two empirical tracks, both backed by the PoST framework.
 
-1. MQAR in the PoST framework:
-   `../PoST_dev/zoology/zoology/experiments/cga_mqar.py`
+1. MQAR state-equalized grid:
+   `../PoST_dev/zoology/zoology/experiments/ca_mqar.py`
 
-2. TinyCGA-LM in this repository:
-   `experiments/train_tiny_cga_lm.py`
+2. CALM language-model pretraining:
+   `../PoST_dev/trainer.py --arch calm`
 
-3. Final same-corpus perplexity for LM checkpoints:
-   `experiments/eval_final_ppl.py`
+Final same-corpus perplexity for LM checkpoints is evaluated with:
+`experiments/eval_final_ppl.py`
 
-Older CIFAR test-time adaptation, readout-only language-model memory, and
-synthetic refinement diagnostics were removed from the main experiment tree
-because they test different claims.
+Older CIFAR test-time adaptation, tiny language-model scripts, readout-only
+language-model memory, and synthetic refinement diagnostics are not part of the
+current paper because they test different claims.

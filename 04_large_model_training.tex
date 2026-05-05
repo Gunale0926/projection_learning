@@ -61,7 +61,32 @@ M_{t+1,hj}^{\ell}
 \rho_{th}M_{t,hj}^{\ell}
 +g_t\beta_{thj}v_{th}.
 \end{align*}
-For parallel training, the implementation groups tokens into causal blocks: all tokens in a block read the memory from before the block, then their writes are accumulated into one block update. Setting block size one recovers the exact token-streaming update. For block size $B>1$, CA is causal at block boundaries rather than at every token: writes from token $t$ become visible to later blocks, not to later tokens in the same block. This is the implementation used for the reported runs because it exposes the dense concept read and write matrices to GPU kernels.
+For parallel training, CA groups tokens into causal blocks. All tokens in a block read the memory from before the block; after the reads, the block writes are accumulated into one affine update. For block $b=[s,e)$, define
+\begin{align*}
+U_{b,hj}^{\ell}
+=
+\sum_{t=s}^{e-1}
+\mathbf{1}_{t\ge \delta}
+g_t\beta_{thj}v_{th},
+\qquad
+\rho_{bh}^{\ell}
+=
+\prod_{t=s}^{e-1}\rho_{th}^{\ell}.
+\end{align*}
+The block transition is
+\begin{align*}
+M_{b+1,hj}^{\ell}
+=
+\rho_{bh}^{\ell}M_{b,hj}^{\ell}
++U_{b,hj}^{\ell}.
+\end{align*}
+Thus each block is summarized by an affine map $(\rho_b,U_b)$. These summaries compose associatively:
+\begin{align*}
+(\rho_2,U_2)\odot(\rho_1,U_1)
+=
+(\rho_2\rho_1,\ U_2+\rho_2U_1),
+\end{align*}
+with identity $(1,0)$. The prefix memory before every block can therefore be recovered by an exclusive associative scan over the block summaries. This is exact for the block-causal CA layer and exposes $O(\log N_{\rm block})$ cross-block parallel depth. Setting block size one recovers the exact token-streaming recurrence; using block size $B>1$ gives a coarser causal schedule in which writes become visible to later blocks rather than to later tokens inside the same block.
 
 Both MQAR and language-model variants use a learned write gate initialized with negative bias and regularized by a small L1 penalty. The current experiments also use a trainable retention factor with a PoST-style ordered decay parameterization, input-dependent step sizes in a bounded range, and optional position-adaptive scaling. These are parameterization choices for stable allocation of forgetting time scales, not the definition of CA itself; CA can be run with a free retention parameterization for ablations.
 
@@ -75,20 +100,18 @@ Slow neural parameters are trained by ordinary next-token backpropagation throug
 \begin{algorithmic}[1]
 \State \textbf{Input:} hidden states $x_{1:L}$, fixed concept identities
 $a_{1:C}$, zero value memory $M_0$
-\For{causal blocks}
-\State project block queries, write keys, values, gates, and retention rates
-\State read fixed concept memory with continuous attention weights
+\State project all queries, write keys, values, gates, and retention rates
+\State form each block summary $(\rho_b,U_b)$ independently
+\State compute all block prefix memories by exclusive associative scan over summaries
+\State read the scanned prefix memory inside each block with continuous concept attention
 \State emit block outputs through the output projection
-\State form delayed write keys and write weights
-\State decay old value memory and add gated continuous writes
-\EndFor
 \State \Return contextualized hidden states
 \end{algorithmic}
 \end{algorithm}
 
 \subsection{Scaling path}
 
-The reference CA implementation uses dense concept reads. This is appropriate for state-equalized MQAR and for the first language-model runs with $C=128$. The current CUDA path includes fused Triton kernels for the dense read: concept-score computation, active-slot masking, softmax, value aggregation, route-score output, and the corresponding backward passes. The dynamic graph path also includes a fused retention-and-scatter value commit kernel for hard assigned writes. The fixed-bank write used in the main experiments is the dense block update in the equations above, implemented as batched concept softmax and accumulation. These kernels change constants and memory traffic, not the mathematical CA layer. For substantially larger concept banks, sparse concept retrieval, fused fixed-bank write kernels, and sharded concept banks become systems work. The paper therefore separates the architectural claim from the kernel claim: CA changes the memory basis of attention from tokens to concepts; optimized implementations should then choose dense or sparse concept attention depending on the concept budget.
+The mathematical scaling path is the affine block scan above. The reported experiments use dense concept reads and dense block writes, which is appropriate for state-equalized MQAR and for the first language-model runs with $C=128$. An optimized system can fuse concept scoring, softmax, block-summary construction, the associative scan, and block reads, but this is an implementation of the same equations rather than a separate algorithm. For substantially larger concept banks, sparse concept retrieval and sharded concept banks become systems work. The architectural claim is independent of those choices: CA changes the memory basis of attention from tokens to concepts, while the scan algebra supplies the parallel recurrent evaluation.
 
 \section{Language-Model Evaluation Details}
 \label{app:lm-eval-details}

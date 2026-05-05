@@ -66,7 +66,7 @@ The multi-head output is
 \begin{align*}
 y_t=O[z_{t1};\ldots;z_{tH}].
 \end{align*}
-This is ordinary differentiable attention except that the keys are fixed concept identities and the values are runtime concept memories. The Triton path used in the implementation fuses the score computation, masking over active slots, softmax, value aggregation, and the corresponding backward computations for this dense read. The kernel is a systems realization of the displayed operation; it does not change the statistical model class.
+This is ordinary differentiable attention except that the keys are fixed concept identities and the values are runtime concept memories. The dense read can be fused in an optimized implementation, but this is only a systems realization of the displayed operation; it does not change the statistical model class.
 
 \paragraph{Continuous concept write.}
 CA uses a read-before-write protocol. The tokens in a block first read the memory state $M_b$; after those outputs are emitted, the block writes its values into memory to produce $M_{b+1}$. For a write delay $\delta\ge0$, define
@@ -90,7 +90,37 @@ M_{b+1,hj}
 \mathbf{1}_{t\ge \delta}
 g_t\beta_{thj}v_{th}.
 \end{align*}
-The write is continuous: every valid token can write to every concept with a different weight, and the soft weights make the write path differentiable during training. The current fixed-bank code implements this update as a dense block write; the dynamic graph path also has a fused retention-and-scatter commit kernel for hard assigned writes.
+The write is continuous: every valid token can write to every concept with a different weight, and the soft weights make the write path differentiable during training. The main fixed-bank experiments use this dense block write directly.
+
+\paragraph{Parallel block scan.}
+The block update above is an affine map on the concept value memory. Define the block write summary
+\begin{align*}
+U_{b,hj}
+=
+\sum_{t=s}^{e-1}
+\mathbf{1}_{t\ge \delta}
+g_t\beta_{thj}v_{th}.
+\end{align*}
+Then block $b$ maps its entering memory to its exiting memory by
+\begin{align*}
+F_b(M)_{hj}
+=
+\rho_{bh}M_{hj}+U_{b,hj}.
+\end{align*}
+The pair $(\rho_b,U_b)$ depends only on the hidden states inside the block, so all block summaries can be formed independently once the layer inputs are known. These summaries form a monoid under affine composition:
+\begin{align*}
+(\rho_2,U_2)\odot(\rho_1,U_1)
+=
+\left(\rho_2\rho_1,\,
+U_2+\rho_2U_1\right),
+\end{align*}
+where $\rho$ is broadcast over concept and value dimensions. The identity element is $(1,0)$, and associativity follows from associativity of function composition. Therefore the prefix memory before block $b$ is
+\begin{align*}
+M_b
+=
+\left(F_{b-1}\circ\cdots\circ F_0\right)(M_0),
+\end{align*}
+and all block prefix memories can be computed by an exclusive associative scan over $(\rho_b,U_b)$. This is exact for the displayed block-causal CA layer: the scan changes the evaluation order of the block recurrence, not the mathematical layer. For fixed block size, the cross-block dependency has parallel depth $O(\log N_{\rm block})$ instead of a serial dependency over all blocks. Setting the block size to one recovers an exact token-streaming scan.
 
 \begin{proposition}[Block-causal CA]
 \label{prop:main-block-ca}

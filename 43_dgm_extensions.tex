@@ -104,7 +104,7 @@ If the write path is detached and uses rank-one local repair, the write overhead
 \begin{align*}
 O(dd_q+C_{\mathrm{ret}}(N_t,d_q)+Q_N d_q+\abs{N}(d_q+dr)).
 \end{align*}
-For a block of length $L$, the CA state history need not be stored for backpropagation; the additional activation memory is the selected read computation, not the full sequence of memory states. The CALM mixer replaces the $\abs{N}dr$ adapter term by sparse concept lookup, edge-gated value aggregation, and detached graph-write costs.
+For a block of length $L$, the CA state history need not be stored for backpropagation in detached sparse-adapter variants; the additional activation memory is the selected read computation, not the full sequence of memory states. This is not the large-model CALM implementation used in the main experiments. The implemented CALM mixer uses a dense static concept bank with learned addresses, differentiable concept read/write weights, gated value writes, and an exact chunked concept-memory scan.
 \end{theorem}
 
 The concept bank can be sharded by the same principle used in retrieval and sparse expert systems. Each device owns a subset of concepts. A query is routed to a small set of shards, each shard returns local top-$k$ candidates, and a final top-$k$ merge selects the memories used by the read path. Only selected memories receive gradients. Detached writes are sent back to the owning shards.
