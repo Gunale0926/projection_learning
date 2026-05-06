@@ -5,8 +5,8 @@ The paper uses two empirical tracks, both backed by the PoST framework.
 1. MQAR state-equalized grid:
    `../PoST_dev/zoology/zoology/experiments/ca_mqar.py`
 
-2. CALM language-model pretraining:
-   `../PoST_dev/trainer.py --arch calm`
+2. CoM language-model pretraining:
+   `../PoST_dev/trainer.py --arch com`
 
 Final same-corpus perplexity for LM checkpoints is evaluated with:
 `experiments/eval_final_ppl.py`

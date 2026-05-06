@@ -1,42 +1,68 @@
 \section{Conceptual Attention as a Data Structure for Refinable Partitions}
 \label{sec:algorithms}
 
-This appendix describes the graph-growing CA extension that realizes literal partition refinement. The main experiments use the simpler fixed-bank specialization from Section~\ref{sec:main-ca}: concept identities are preallocated, all slots are active, edge gates are disabled, and the online operation is gated value-memory repair inside a bounded concept bank. The distinction matters for claims. The fixed-bank layer tests whether preallocated concept capacity and forward-time repair can replace token-indexed memory; the graph-growing extension below is the implementation route for accepting new distinctions online.
+This appendix describes the graph-growing CA extension that realizes literal partition refinement. The main experiments use the simpler fixed-bank specialization from Section~\ref{sec:main-ca}: concept identities are preallocated, all slots are active, edge gates are disabled, and the online operation is retained value-memory repair inside a bounded concept bank. The distinction matters for claims. The fixed-bank layer tests whether preallocated concept capacity and forward-time repair can replace token-indexed memory; the graph-growing extension below is the implementation route for accepting new distinctions online.
 
 In the graph-growing extension, CA implements refinable information structures as a graph: edges generate distinctions and nodes store repairable memories. The ingredients are related to decision-tree refinement, adaptive category creation, prototype memories, and external neural memories, but CA uses them to implement the repair/refinement distinction \citep{breiman1984classification,domingos2000mining,carpenter1987massively,grossberg2013adaptive,kohonen1990self,weston2015memory,graves2016hybrid}. The theory so far gives a diagnostic: decide whether an observed error is better explained by $\Delta_{\mathrm{repair}}$ at fixed information or by $\Delta_{\mathrm{refine}}$ from missing distinctions. A runtime implementation therefore needs a state representation that can both repair local statistics and add distinctions. Graph-growing CA is the data-structure realization of the abstract refinable-partition model.
 
-\subsection{Fixed-bank specialization and block kernels}
+\subsection{Fixed-bank specialization and chunk kernels}
 \label{sec:fixed-bank-kernel}
 
-The fixed-bank layer used for MQAR and CALM can be read as a finite concept-memory state machine. For a block of length $B$, heads $H$, concepts $C$, address width $d_a$, and value width $d_v^c$, the dense read computes
+The fixed-bank layer used for MQAR and CoM can be read as a finite concept-memory state machine. For a token $t$, heads $H$, concepts $C$, address width $d_a$, and value width $d_v^c$, the dense read computes
 \begin{align*}
-S_{b,thj}=\gamma q_{b,th}^{\top}a_{hj},
+S_{thj}=\gamma q_{th}^{\top}a_{hj},
 \qquad
-\alpha_{b,thj}=\operatorname{softmax}_j S_{b,thj},
+\alpha_{thj}=\operatorname{softmax}_j S_{thj},
 \qquad
-z_{b,th}=\sum_{j=1}^{C}\alpha_{b,thj}M_{b,hj}.
+z_{th}=\sum_{j=1}^{C}\alpha_{thj}M_{t,hj}.
 \end{align*}
 The dense write computes delayed write scores
 \begin{align*}
-R_{b,thj}=\gamma \bar k_{b,th}^{\top}a_{hj},
+R_{thj}=\gamma \bar k_{th}^{\top}a_{hj},
 \qquad
-\beta_{b,thj}=\operatorname{softmax}_j R_{b,thj},
+\beta_{thj}=\operatorname{softmax}_j R_{thj},
 \end{align*}
 and updates
 \begin{align*}
-M_{b+1,hj}
+M_{t+1,hj}
 =
-\rho_{bh}M_{b,hj}
-+
-\sum_{t=1}^{B}m_{bt}g_{bt}\beta_{b,thj}v_{b,th},
+\rho_{th}M_{t,hj}
++m_t\beta_{thj}v_{th},
 \end{align*}
-where $m_{bt}$ masks invalid delayed writes. The online state is only $M_b$, with size $C H d_v^c$; the concept identities $a_{hj}$ are fixed buffers or parameters of the layer, not sequence state.
+where $m_t$ masks invalid delayed writes. The online state is only $M_t$, with size $C H d_v^c$; the concept identities $a_{hj}$ are trainable parameters or fixed buffers of the layer, not sequence state.
 
-The arithmetic cost per block is
+For training, the implementation groups tokens into chunks and forms the exact affine summary
+\begin{align*}
+R_{b,h}=\prod_{t=s}^{e-1}\rho_{th},
+\qquad
+U_{b,hj}=
+\sum_{t=s}^{e-1}
+\left(\prod_{u=t+1}^{e-1}\rho_{uh}\right)
+m_t\beta_{thj}v_{th}.
+\end{align*}
+An exclusive scan over the associative composition
+\begin{align*}
+(R_2,U_2)\odot(R_1,U_1)=(R_2R_1,\ U_2+R_2U_1)
+\end{align*}
+recovers the entry memory for every chunk. The chunk read then adds all previous writes inside the chunk, so the result is exactly the token recurrence above. This is the implementation described in Section~\ref{sec:main-ca}.
+
+The arithmetic cost per chunk is
 \begin{align*}
 O(B H C d_a + B H C d_v^c)
 \end{align*}
-for the read and the same order for the dense write, plus projection costs shared with the surrounding decoder block. The Triton read kernel used in the current code tiles the concept, address, value, and block dimensions and applies the same equations under the implementation bounds used by the CUDA path, namely block length at most $128$, concept count at most $256$, address width at most $128$, and value width at most $256$. These bounds are engineering constraints of the fused dense kernel, not assumptions in the partition theory. Proposition~\ref{prop:main-block-ca} gives the mathematical interface: block size one is token-streaming CA, while larger blocks trade within-block memory visibility for parallelism.
+for the dense read and the same order for the dense write summary, plus projection costs shared with the surrounding decoder block. The Triton kernels tile the concept, address, value, and chunk dimensions and apply the same equations under the implementation bounds used by the CUDA path, namely chunk length at most $128$, concept count at most $256$, address width at most $128$, and value width at most $256$. These bounds are engineering constraints of the fused dense kernels, not assumptions in the partition theory. Proposition~\ref{prop:main-ca-state} gives the mathematical interface: CA has a constant-size recurrent state and linear autoregressive decoding cost.
+
+The Concept Memory variant has the same scan shape with a different payload. Its state is
+\begin{align*}
+(n_t,B_t)\in\mathbb{R}^{C}\times\mathbb{R}^{C\times d_u},
+\end{align*}
+so the online memory is $C(d_u+1)$. A dense block computes query/write responsibilities in $O(B C d_a)$, updates count and moment summaries in $O(B C d_u)$, reads normalized means in $O(B C d_u)$, and decodes the feature by a map in $O(B d_u d_{\rm model})$ when $d_u<d_{\rm model}$. Thus $d_u$ is the primary systems and statistical-capacity knob. Setting $d_u\ll d_{\rm model}$ gives a compressed sufficient statistic in the chosen consequence feature space, not an approximation to the causal scan; increasing $d_u$ increases the amount of consequence information the state can repair at fixed concept count. The direct $d_u=d_{\rm model}$ endpoint is not automatically best in the present architecture, because it removes the learned decoder used by the sketched variants and injects raw embedding moments directly into the residual stream.
+
+With $R$ retained time scales, the state becomes
+\begin{align*}
+(n_t^{(r)},B_t^{(r)})_{r=1}^{R},
+\end{align*}
+and memory/cost scale by $R$ in the count and moment terms. This is a straightforward dense extension of the same causal scan. It is not sparse retrieval and it does not change the read-before-write semantics; it only allocates several decay horizons to the same consequence statistic.
 
 \subsection{Why a graph, not a tree?}
 
@@ -695,7 +721,7 @@ n_j^+=n_j+\alpha_j(h),
 \end{align*}
 with all unselected counts unchanged. The low-cost hard-update variant is recovered by setting $\alpha_{j^\star}=1$ for the highest-weight concept and $\alpha_j=0$ for all $j\ne j^\star$. Embedding-mean memories and ridge or projection-style local repair are useful implementation variants, but they should be evaluated with calibration metrics before being used for log-loss claims.
 
-\subsection{From CA to CALM}
+\subsection{From CA to CoM}
 \label{sec:language-dgm}
 
-The generic CA object above can be attached to many local memories. For sequence models, Appendix~\ref{sec:large-model-training} gives CALM as an attention-replacement architecture with a causal read-before-write protocol and detached runtime graph updates.
+The generic CA object above can be attached to many local memories. For sequence models, Appendix~\ref{sec:large-model-training} gives CoM as an attention-replacement architecture with a causal read-before-write protocol and forward-updated concept-value memory.

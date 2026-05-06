@@ -1,7 +1,7 @@
-\section{CALM: Conceptual Attention Language Modeling}
+\section{CoM: Concept Memory Language Modeling}
 \label{sec:large-model-training}
 
-For language modeling, the world state is a prefix and the consequence is the next token. The Conceptual Attention Language Model (CALM) replaces the causal attention sublayer inside a decoder block with CA:
+For language modeling, the world state is a prefix and the consequence is the next token. Concept Memory (CoM) replaces the causal attention sublayer inside a decoder block with a concept-addressed memory update:
 \begin{align*}
 \operatorname{CABlock}(X)
 =
@@ -11,14 +11,13 @@ The block has the same external shape contract as attention, $[B,L,d_{\rm model}
 
 \subsection{Fixed concept memory}
 
-At layer $\ell$, CALM keeps a fixed bank of $C$ concept identities $a_{\ell hj}\in\mathbb{R}^{d_a}$ for each head $h$ and concept slot $j$. These identities are fixed addresses shared across sequences. The online state is the value memory
+At layer $\ell$, CoM keeps a fixed bank of $C$ concept identities $a_{\ell hj}\in\mathbb{R}^{d_a}$ for each head $h$ and concept slot $j$. These identities are sequence-independent layer parameters, initialized as random unit vectors and trained by ordinary backpropagation. They are addresses shared across sequences, not online state. The online state is the value memory
 \begin{align*}
 M_t^\ell\in\mathbb{R}^{H\times C\times d_v^c}.
 \end{align*}
-Each token produces read queries, write keys, write values, write gates, and retention-decay projections:
+Each token produces read queries, write keys, write values, and retention-decay projections:
 \begin{align*}
-q_t=Q_\ell x_t,\qquad k_t=K_\ell x_t,\qquad v_t=V_\ell x_t,\qquad
-g_t=\sigma(w_g^\top x_t+b_g).
+q_t=Q_\ell x_t,\qquad k_t=K_\ell x_t,\qquad v_t=V_\ell x_t.
 \end{align*}
 The read is causal: token $t$ reads only concept values produced by earlier writes. For concept slots $j=1,\ldots,C$,
 \begin{align*}
@@ -41,11 +40,11 @@ The update order is the same during training and autoregressive inference:
 \rightarrow
 \text{emit }y_t
 \rightarrow
-\text{decay and write }(k_t,v_t,g_t)
+\text{decay and write }(k_t,v_t)
 \rightarrow
 \text{update }M_{t+1}^\ell .
 \end{align*}
-This prevents a token from reading its own write. The inference-time update is the test-time learning mechanism in CALM: the model weights are fixed, but the concept value memory changes after the causal write and future tokens condition on that updated memory.
+This prevents a token from reading its own write. The inference-time update is the test-time learning mechanism in CoM: the model weights are fixed, but the concept value memory changes after the causal write and future tokens condition on that updated memory.
 
 For a delayed write key $\bar k_t=k_{t-\delta}$, CA computes write weights
 \begin{align*}
@@ -59,71 +58,213 @@ With retention factor $\rho_{th}$, the token-level streaming update is
 M_{t+1,hj}^{\ell}
 =
 \rho_{th}M_{t,hj}^{\ell}
-+g_t\beta_{thj}v_{th}.
++\mathbf{1}_{t\ge\delta}\beta_{thj}v_{th}.
 \end{align*}
-For parallel training, CA groups tokens into causal blocks. All tokens in a block read the memory from before the block; after the reads, the block writes are accumulated into one affine update. For block $b=[s,e)$, define
+For parallel training, CA groups tokens into chunks but keeps the same token-level recurrence. For chunk $b=[s,e)$, define the exact affine summary
 \begin{align*}
 U_{b,hj}^{\ell}
 =
 \sum_{t=s}^{e-1}
+\left(\prod_{u=t+1}^{e-1}\rho_{uh}^{\ell}\right)
 \mathbf{1}_{t\ge \delta}
-g_t\beta_{thj}v_{th},
+\beta_{thj}v_{th},
 \qquad
 \rho_{bh}^{\ell}
 =
 \prod_{t=s}^{e-1}\rho_{th}^{\ell}.
 \end{align*}
-The block transition is
+The chunk transition is
 \begin{align*}
-M_{b+1,hj}^{\ell}
+M_{e,hj}^{\ell}
 =
-\rho_{bh}^{\ell}M_{b,hj}^{\ell}
+\rho_{bh}^{\ell}M_{s,hj}^{\ell}
 +U_{b,hj}^{\ell}.
 \end{align*}
-Thus each block is summarized by an affine map $(\rho_b,U_b)$. These summaries compose associatively:
+Thus each chunk is summarized by an affine map $(\rho_b,U_b)$. These summaries compose associatively:
 \begin{align*}
 (\rho_2,U_2)\odot(\rho_1,U_1)
 =
 (\rho_2\rho_1,\ U_2+\rho_2U_1),
 \end{align*}
-with identity $(1,0)$. The prefix memory before every block can therefore be recovered by an exclusive associative scan over the block summaries. This is exact for the block-causal CA layer and exposes $O(\log N_{\rm block})$ cross-block parallel depth. Setting block size one recovers the exact token-streaming recurrence; using block size $B>1$ gives a coarser causal schedule in which writes become visible to later blocks rather than to later tokens inside the same block.
+with identity $(1,0)$. The prefix memory before every chunk can therefore be recovered by an exclusive associative scan over the chunk summaries. After the scan, the implementation computes exact causal reads inside each chunk:
+\begin{align*}
+M_{t,hj}^{\ell}
+=
+\left(\prod_{u=s}^{t-1}\rho_{uh}^{\ell}\right)M_{s,hj}^{\ell}
++
+\sum_{r=s}^{t-1}
+\left(\prod_{u=r+1}^{t-1}\rho_{uh}^{\ell}\right)
+\mathbf{1}_{r\ge\delta}\beta_{rhj}v_{rh}.
+\end{align*}
+Thus the chunked implementation is mathematically equivalent to the streaming read-before-write recurrence. The block size controls kernel tiling and scan granularity, not a different causal model.
 
-Both MQAR and language-model variants use a learned write gate initialized with negative bias and regularized by a small L1 penalty. The current experiments also use a trainable retention factor with a PoST-style ordered decay parameterization, input-dependent step sizes in a bounded range, and optional position-adaptive scaling. These are parameterization choices for stable allocation of forgetting time scales, not the definition of CA itself; CA can be run with a free retention parameterization for ablations.
+The current fixed-bank CoM path writes every valid token with unit mass through the concept write distribution, while delayed-key runs use only the causal valid-write mask. The experiments use a trainable retention factor with a PoST-style ordered decay parameterization, input-dependent step sizes in a bounded range, and optional position-adaptive scaling. These are parameterization choices for stable allocation of forgetting time scales, not the definition of CA itself; CA can be run with a free retention parameterization for ablations.
+
+\paragraph{First-principles update constraint.}
+The state update must be more than a compressed token table. Under log loss, a useful runtime state is one that preserves or creates prediction-relevant distinctions in the prefix; a rule that only pools token values into slots can repair local averages, but it has no reason to form a local predictive model. The right test-time object is therefore a predictive statistic in concept coordinates: after observing a prefix event, the state should update the conditional predictor used by future concept queries, without running backpropagation at test time.
+
+\paragraph{Gradient-free Concept Memory.}
+Let $c_t\in\Delta^{C-1}$ be the concept responsibility of the context used to predict a consequence $Y_t$; in a language model, $Y_t$ is the next observed token or a learned consequence feature of that token. A concept-memory update is first-principled when it is the closed-form online estimator for the local prediction problem. For squared loss in a target feature space $u(Y_t)\in\mathbb{R}^{d_u}$, the sufficient statistics are discounted responsibility mass and first moment:
+\begin{align*}
+n_{t+1}
+&=
+\lambda_t n_t+c_t,
+&
+B_{t+1}
+&=
+\lambda_t B_t+c_t u(Y_t)^\top .
+\end{align*}
+The read used by a future query $q_t$ is the normalized conditional mean
+\begin{align*}
+z_t
+=
+q_t^\top
+\left[
+\operatorname{diag}(n_t+\alpha)^{-1}
+\left(B_t+\alpha \mathbf{1}\mu_0^\top\right)
+\right].
+\end{align*}
+This update is causal, online, and gradient-free. It is not a write gate: $c_t$ is the concept responsibility of the observed event, $n_t$ is the accumulated evidence for each concept, and the normalization prevents frequent concepts from merely accumulating larger vector norms.
+
+For log loss with a finite vocabulary, the exact conjugate analogue is a concept-indexed categorical statistic
+\begin{align*}
+A_{t+1,jv}
+=
+\lambda_t A_{t,jv}+c_{tj}\mathbf{1}\{Y_t=v\},
+\qquad
+n_{t+1,j}
+=
+\lambda_t n_{tj}+c_{tj},
+\end{align*}
+and the fast prediction is
+\begin{align*}
+p_t(v)
+=
+\sum_{j=1}^{C}
+q_{tj}
+\frac{A_{t,jv}+\alpha p_0(v)}{n_{tj}+\alpha}.
+\end{align*}
+This is the Bayes-optimal repair inside a fixed concept partition for the multinomial-Dirichlet model. A full $C\times |V|$ table is usually too large, so the practical CoM form stores low-rank token features or residual logit factors instead of full vocabulary counts, but the statistical target is the same: the runtime state estimates a local conditional consequence distribution, not a hidden-value cache.
+
+The scalable implementation chooses a consequence feature map
+\begin{align*}
+u(Y_t)=R e(Y_t)\in\mathbb{R}^{d_u},
+\end{align*}
+where $e(Y_t)$ is the output-embedding feature of the observed token and $R$ may be the identity or a fixed low-dimensional sketch. The fast state size is then $C(d_u+1)$ rather than $C(d_{\rm model}+1)$ or $C|V|$. This compression is not sparse retrieval: every concept can still be read and updated. It is the sufficient statistic for the chosen predictive feature space. A learned decoder $D:\mathbb{R}^{d_u}\to\mathbb{R}^{d_{\rm model}}$ maps the read feature back to the residual stream, while the test-time update of $(n_t,B_t)$ remains the closed-form forward update above.
+
+The dimension $d_u$ is therefore not a cosmetic hyperparameter. It is the information capacity of the repaired consequence statistic. If $d_u$ is too small, the concept state can identify a useful prefix condition but cannot carry enough consequence information for the decoder. If $d_u=d_{\rm model}$ and the implementation simply returns the raw embedding moment, the model also loses the learned decoder $D$ that maps the statistic into the residual coordinates preferred by the backbone. The empirical design point that follows from this view is intermediate: use a large consequence sketch with a learned decoder, e.g. $d_u<d_{\rm model}$ but not extremely compressed, while keeping the update itself gradient-free.
+
+The linear-map variant keeps the same principle but lets concepts interact through a ridge predictor. Let
+\begin{align*}
+S_t\in\mathbb{R}^{C\times d_v}
+\end{align*}
+be a fast concept map, read by
+\begin{align*}
+z_t=q_t^\top S_t,
+\end{align*}
+and defined as the ridge solution
+\begin{align*}
+S_t
+=
+\left(\alpha I+\sum_{s<t}\omega_s c_s c_s^\top\right)^{-1}
+\left(\sum_{s<t}\omega_s c_s u(Y_s)^\top\right).
+\end{align*}
+Its exact streaming update is the recursive least-squares correction
+\begin{align*}
+g_t
+&=
+\frac{P_t c_t}{\lambda_t+c_t^\top P_t c_t},
+&
+S_{t+1}
+&=
+S_t+g_t\left(u(Y_t)-c_t^\top S_t\right)^\top,
+\\
+P_{t+1}
+&=
+\lambda_t^{-1}\left(P_t-g_t c_t^\top P_t\right).
+\end{align*}
+Diagonal or scalar approximations to $P_t$ recover normalized LMS and delta-rule memories. The commonly used delta update
+\begin{align*}
+S_{t+1}
+=
+\Lambda_t\left[
+S_t+\eta_h k_t\left(v_t-k_t^\top S_t\right)^\top
+\right].
+\end{align*}
+is therefore best understood as a cheap approximation to a normalized predictive estimator, not as the definition of CoM. The crucial requirements are: the target is a consequence $Y_t$ or its predictive feature, $q_t$ and $c_t$ are attention-style responsibilities over concept identities, and the update is a closed-form online repair of the predictor. This is the forward-only analogue of TTT, but the inner learner is a sufficient-statistic memory rather than a neural network trained by inner backpropagation \citep{schlag2021linear,sun2025learning,yang2025gated}. Causality fixes the order: prediction at position $t$ reads state built from observations before the predicted consequence, and the observation is written only for future predictions.
 
 \subsection{Training boundary}
 
-Slow neural parameters are trained by ordinary next-token backpropagation through both the CA read and the continuous write. In the fixed-bank implementation used by CALM, gradients flow through the read weights, write weights, value projection, write gate, retention factors, output projection, and the block-to-block value-memory recurrence. The dynamic graph bookkeeping path can detach routing state, but that is not the main fixed-bank experimental path. At inference time there is no gradient step and no update to model weights. The only state that changes is the forward-updated concept value memory. Thus CALM is not a backprop-free language model and not a test-time optimizer over hidden model weights. It is an attention replacement whose fast state is a bounded concept memory.
+There are two separate questions. The first is the fast-state update at test time. For the Concept Memory above, this update is gradient-free: it is an online update of counts, moments, or a closed-form least-squares predictor in concept coordinates. No inference-time loss is differentiated and no model weight is changed. The second question is how to obtain the slow feature maps that produce concept responsibilities, target features, and output logits. The current fixed-bank CoM experiments train those slow neural parameters by ordinary next-token backpropagation, then freeze them at inference. A stricter backprop-free variant would fix or locally learn these feature maps and rely only on the sufficient-statistic updates, but that is a different systems point from the CA state update itself.
+
+This boundary matters for claims. The older additive CA mixer is a bounded attention replacement with a forward-updated concept-value memory. CoM is stronger: its fast state is an explicit online predictor of consequences under the current concept partition. Both perform test-time state learning without inner backpropagation. Only the current slow backbone training uses backpropagation.
+
+\begin{algorithm}[H]
+\caption{\textsc{ConceptMemoryStep}}
+\label{alg:concept-memory}
+\begin{algorithmic}[1]
+\State \textbf{Input:} query responsibilities $q_t$, write responsibilities $c_t$, consequence feature $u(Y_t)$, state $(n_t,B_t)$
+\State read normalized concept means $\mu_{t,j}=(B_{t,j}+\alpha\mu_0)/(n_{t,j}+\alpha)$
+\State emit fast prediction feature $z_t=\sum_j q_{tj}\mu_{t,j}$
+\State after the causal consequence is observed, update evidence
+\State $n_{t+1}\leftarrow \lambda_t n_t+c_t$
+\State $B_{t+1}\leftarrow \lambda_t B_t+c_tu(Y_t)^\top$
+\State \Return $z_t,(n_{t+1},B_{t+1})$
+\end{algorithmic}
+\end{algorithm}
+
+The same interface can be implemented with categorical counts for exact log-loss repair, with low-rank token features for scalable logits, or with RLS statistics when cross-concept linear prediction is needed. In all cases the state mutation is a deterministic forward update of sufficient statistics. The systems-critical dimension is $d_u$: reducing it lowers the scan state, the concept read, and the activation footprint without changing the causal order or the statistical interpretation.
+
+\paragraph{CoM design.}
+These observations separate two architectural roles. The slow backbone should compute a strong context representation under the usual parameter budget. The fast Concept Memory should be a dense predictive repair module over that representation. Thus the simplest parameter-matched CoM uses a wider local/gated backbone and a single dense global Concept Memory after the final normalization:
+\begin{align*}
+h_{1:L}=\operatorname{Backbone}_\theta(x_{1:L}),
+\qquad
+\tilde h_t=h_t+D\!\left(\sum_{j=1}^C q_{tj}\frac{B_{t,j}}{n_{t,j}+\alpha}\right),
+\end{align*}
+where all $C$ concepts are queried and updated for every token. This is not sparse concept routing. The speed path is low-rank consequence compression $d_u\ll d_{\rm model}$ and a fused dense scan over $(n,B)$, not top-$k$ selection. A layerwise variant can attach the same dense Concept Memory after each block, but it changes the systems tradeoff: it gives more test-time learners while repeating the same consequence signal many times. The first parameter-matched design point therefore tests the global dense memory before adding layerwise memories.
+
+The same notation also permits multiple retained time scales:
+\begin{align*}
+n_{t+1}^{(r)}=\lambda_r n_t^{(r)}+c_t,
+\qquad
+B_{t+1}^{(r)}=\lambda_r B_t^{(r)}+c_tu(Y_t)^\top,
+\qquad
+z_t=\sum_r \pi_{tr}\sum_j q_{tj}\frac{B_{t,j}^{(r)}}{n_{t,j}^{(r)}+\alpha}.
+\end{align*}
+This is a natural extension, but it is not the current main mechanism. In preliminary LM probes, learned global or token-dependent scale mixing often collapsed to one dominant time scale, while fixed uniform mixing slowed training without improving loss. The stronger signal was the consequence-feature capacity $d_u$, not the number of retention scales. Likewise, injecting CoM into intermediate blocks is a useful ablation of where the fast state enters the computation, but the current dense implementation was substantially slower and did not outperform the single global CoM. We therefore treat multi-scale and in-block CoM as systems/design ablations, and use the global dense CoM with a sufficiently large consequence sketch as the primary CoM prototype.
 
 \begin{algorithm}[H]
 \caption{\textsc{CALayerForward}}
-\label{alg:calm}
+\label{alg:com}
 \begin{algorithmic}[1]
-\State \textbf{Input:} hidden states $x_{1:L}$, fixed concept identities
+\State \textbf{Input:} hidden states $x_{1:L}$, learned concept identities
 $a_{1:C}$, zero value memory $M_0$
-\State project all queries, write keys, values, gates, and retention rates
-\State form each block summary $(\rho_b,U_b)$ independently
-\State compute all block prefix memories by exclusive associative scan over summaries
-\State read the scanned prefix memory inside each block with continuous concept attention
-\State emit block outputs through the output projection
+\State project all queries, write keys, values, and retention rates
+\State form dense read and write weights over concept identities
+\State form each exact chunk summary $(\rho_b,U_b)$ independently
+\State compute all chunk prefix memories by exclusive associative scan over summaries
+\State read each chunk using its prefix memory plus exact within-chunk prior writes
+\State emit chunk outputs through the output projection
 \State \Return contextualized hidden states
 \end{algorithmic}
 \end{algorithm}
 
 \subsection{Scaling path}
 
-The mathematical scaling path is the affine block scan above. The reported experiments use dense concept reads and dense block writes, which is appropriate for state-equalized MQAR and for the first language-model runs with $C=128$. An optimized system can fuse concept scoring, softmax, block-summary construction, the associative scan, and block reads, but this is an implementation of the same equations rather than a separate algorithm. For substantially larger concept banks, sparse concept retrieval and sharded concept banks become systems work. The architectural claim is independent of those choices: CA changes the memory basis of attention from tokens to concepts, while the scan algebra supplies the parallel recurrent evaluation.
+The mathematical scaling path is the affine chunk scan above. The reported experiments use dense concept reads and dense writes, which is appropriate for state-equalized MQAR and for the first language-model runs with $C=128$. An optimized system can fuse concept scoring, softmax, chunk-summary construction, the associative scan, and exact chunk reads, but this is an implementation of the same equations rather than a separate algorithm. For Concept Memory, the analogous kernel fuses responsibility scoring, count/moment construction in dimension $d_u$, exact discounted prefix scan, normalized read, and the final low-rank decode. For substantially larger concept banks, sharded concept banks are the primary systems path; sparse retrieval is an optional acceleration rather than the architectural claim. CA changes the memory basis of attention from tokens to concepts, while the scan algebra supplies the parallel recurrent evaluation.
 
 \section{Language-Model Evaluation Details}
 \label{app:lm-eval-details}
 
-This appendix specifies the large-scale CALM experiment summarized in Section~\ref{sec:main-experiments}. The goal is to match the PoST language-model evaluation protocol while changing only the sequence mixer. All models are pretrained as base language models and evaluated without instruction tuning or in-context examples.
+This appendix specifies the large-scale CoM experiment summarized in Section~\ref{sec:main-experiments}. The goal is to match the PoST language-model evaluation protocol while changing only the sequence mixer. All models are pretrained as base language models and evaluated without instruction tuning or in-context examples.
 
 \subsection{Training protocol}
 
 \begin{table}[ht]
 \centering
-\caption{CALM training protocol for the large language-model evaluation.}
-\label{tab:calm-train-config}
+\caption{CoM training protocol for the large language-model evaluation.}
+\label{tab:com-train-config}
 \small
 \begin{tabular}{@{}ll@{}}
 \toprule
@@ -143,14 +284,14 @@ Learning rate (180M / 440M) & $6\times10^{-4}$ / $3\times10^{-4}$, cosine to $10
 \end{tabular}
 \end{table}
 
-\subsection{State-matched CA configuration}
+\subsection{CoM configuration}
 
-The CA state is matched to the recurrent state size used by the PoST Mamba-2 configurations. For Mamba-2, the per-layer runtime state is $d_{\rm inner}d_{\rm state}$. For CALM, the online state is $C H d_v^c$. We therefore use $C=128$ and $d_v^c=64$ at both scales:
+For Mamba-2, the per-layer runtime state is $d_{\rm inner}d_{\rm state}$. For CoM, the online state is $C H d_v^c$. The code exposes $C$, $H$, and $d_v^c$ independently, so the experiment can trade concept-memory budget against parameter count and channel-mixing capacity. The current 180M preset uses the stable parameter-matched fused CoM block from the codebase; the 440M preset keeps the larger state-matched CA value width.
 
 \begin{table}[ht]
 \centering
-\caption{State-matched CALM configurations. Concept identities are fixed layer parameters; the online state is only the concept value memory.}
-\label{tab:calm-config}
+\caption{CoM configurations used by the current experiment scripts. Concept identities are learned layer parameters; the online state is only the concept value memory.}
+\label{tab:com-config}
 \small
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lll@{}}
@@ -158,27 +299,32 @@ The CA state is matched to the recurrent state size used by the PoST Mamba-2 con
 \textbf{Parameter} & \textbf{180M} & \textbf{440M} \\
 \midrule
 $d_{\rm model}$ & 768 & 1,024 \\
-Number of layers & 24 & 48 \\
-Heads $H$ & 24 & 32 \\
+Number of layers & 12 & 48 \\
+Heads $H$ & 12 & 32 \\
 Concepts $C$ & 128 & 128 \\
-Concept value width $d_v^c$ & 64 & 64 \\
+Concept value width $d_v^c$ & 128 & 64 \\
 Block size & 128 & 128 \\
 Write-key shift & 0 & 0 \\
+Write rule & unit mass on valid tokens & unit mass on valid tokens \\
+Fused mixer block & yes, expansion 2 & yes, expansion 2 \\
+External MLP ratio & 0 & 0 \\
 CA online state $C H d_v^c$ & 196,608 & 262,144 \\
 Matched Mamba-2 state $d_{\rm inner}d_{\rm state}$ & 1,536$\times$128 & 2,048$\times$128 \\
-Concept identities & fixed random unit addresses & fixed random unit addresses \\
+Concept identities & learned unit addresses & learned unit addresses \\
 Concept edges & disabled in fixed-bank runs & disabled in fixed-bank runs \\
 Read/write addressing & untied projections & untied projections \\
 Retention & trainable, PoST-style parameterization & trainable, PoST-style parameterization \\
-Dense read kernel & Triton enabled & Triton enabled \\
+Exact chunk-scan kernel & Triton enabled & Triton enabled \\
 \bottomrule
 \end{tabular}
 }
 \end{table}
 
+The dense full-CoM preset pays the concept-memory cost in every layer. The code also exposes layer-budget placement: setting \texttt{ca\_every\_n\_layers}=4 keeps the same read-before-write CA recurrence but runs it only once per four fused mixer blocks, while intervening blocks use the local gated path. This is a compute-allocation ablation for the older layerwise CA mixer, not the main CoM direction. The current CoM prototype instead uses a dense global CoM over all $C$ concepts and varies the consequence width $d_u$. A separate residual branch-scale ablation initializes the CA output multiplier below one; this changes how strongly the CA read is injected into the block, not whether or how tokens write to memory.
+
 \subsection{Evaluation protocol}
 
-We use the Language Model Evaluation Harness~\citep{gao2024framework} in a zero-shot setting. The reported tasks are LAMBADA, HellaSwag, PIQA, ARC-Easy, ARC-Challenge, WinoGrande, and OpenBookQA, matching the protocol in Section~\ref{sec:main-experiments}. LAMBADA perplexity is not mixed into the main zero-shot table; final next-token perplexity is measured by \path{experiments/eval_final_ppl.py} on the last $n$ samples of the same corpus used for training, using the training tokenizer and non-overlapping $2048$-token windows. For reproducibility and systems comparison, each checkpoint should report: final same-corpus negative log likelihood and perplexity, zero-shot task metrics, training tokens per second, prefill latency, decode latency, parameter count, online state size, and CA diagnostics for write gate, read scale, retention, and decay. The latency table is generated by \path{scripts/benchmark_lm_latency.py}, which uses synthetic tokens so that all checkpoints are measured with identical batch size, context length, dtype, and hardware.
+We use the Language Model Evaluation Harness~\citep{gao2024framework} in a zero-shot setting. The reported tasks are LAMBADA, HellaSwag, PIQA, ARC-Easy, ARC-Challenge, WinoGrande, and OpenBookQA, matching the protocol in Section~\ref{sec:main-experiments}. LAMBADA perplexity is not mixed into the main zero-shot table; final next-token perplexity is measured by \path{experiments/eval_final_ppl.py} on the last $n$ samples of the same corpus used for training, using the training tokenizer and non-overlapping $2048$-token windows. For reproducibility and systems comparison, each checkpoint should report: final same-corpus negative log likelihood and perplexity, zero-shot task metrics, training tokens per second, prefill latency, decode latency, parameter count, online state size, and CA diagnostics for read scale, slot usage, retention, and decay. The latency table is generated by \path{scripts/benchmark_lm_latency.py}, which uses synthetic tokens so that all checkpoints are measured with identical batch size, context length, dtype, and hardware.
 
 \begin{table}[ht]
 \centering
@@ -190,9 +336,9 @@ We use the Language Model Evaluation Harness~\citep{gao2024framework} in a zero-
 \textbf{Model} & \textbf{Corpus slice} & \textbf{Scored tokens} & \textbf{PPL}$\downarrow$ \\
 \midrule
 Mamba-2 180M & train tail & -- & -- \\
-CALM 180M & train tail & -- & -- \\
+CoM 180M & train tail & -- & -- \\
 Mamba-2 440M & train tail & -- & -- \\
-CALM 440M & train tail & -- & -- \\
+CoM 440M & train tail & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}

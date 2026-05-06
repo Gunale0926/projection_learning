@@ -28,7 +28,7 @@ def register_post_models(code_path: str | None) -> None:
     try:
         from models import Mamba2PoSTConfig, Mamba2PoSTForCausalLM
         from models import RWKV7Config, RWKV7PoSTForCausalLM
-        from models.calm import CALMConfig, CALMForCausalLM
+        from models.com import CoMConfig, CoMForCausalLM
         from models.dgm_lm import DGMLMConfig, DGMLMForCausalLM
         from models.post_gated_deltanet import GDNPoSTForCausalLM, GatedDeltaNetConfig
     except Exception as exc:
@@ -42,8 +42,8 @@ def register_post_models(code_path: str | None) -> None:
     AutoModelForCausalLM.register(GatedDeltaNetConfig, GDNPoSTForCausalLM)
     AutoConfig.register("dgm_lm", DGMLMConfig)
     AutoModelForCausalLM.register(DGMLMConfig, DGMLMForCausalLM)
-    AutoConfig.register("calm", CALMConfig)
-    AutoModelForCausalLM.register(CALMConfig, CALMForCausalLM)
+    AutoConfig.register("com", CoMConfig)
+    AutoModelForCausalLM.register(CoMConfig, CoMForCausalLM)
 
 
 def load_dataset_tail(args: argparse.Namespace):
@@ -153,7 +153,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model-path", required=True, help="Path or HF id of the final checkpoint.")
     parser.add_argument("--tokenizer", default=None, help="Tokenizer path or HF id. Defaults to --model-path.")
-    parser.add_argument("--custom-code-path", default="../PoST_dev", help="Path containing custom PoST/CALM model classes.")
+    parser.add_argument("--custom-code-path", default="../PoST_dev", help="Path containing custom PoST/CoM model classes.")
     parser.add_argument("--dataset-name", default="HuggingFaceFW/fineweb-edu", help="Hugging Face dataset name.")
     parser.add_argument("--dataset-config", default="sample-100BT", help="Dataset config.")
     parser.add_argument("--data-path", default=None, help="Optional load_from_disk dataset path.")
